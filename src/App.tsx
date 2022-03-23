@@ -9,15 +9,34 @@ import "./styles.css";
 import "react-reflex/styles.css";
 import "./dark.css";
 
+const testState = {
+  fabricCanvas: null,
+  state:	{
+    userSettings: {
+      name: "Inspector Payne"
+    },
+    
+    project: { 
+      settings: {
+        theme: "dark"
+      },
+      globalObjects: { "2131-eww2w-2312-dadaa": {},
+              "wda1-ew21-dhftft-2313": {},
+      },
+      scenes: [ {"2131-eww2w-2312-dadaa": {left: 0, top: 0}},
+          {"2131-eww2w-2312-dadaa": {left: 50, top: 0}}
+      ]
+    }
+  }
+}
+
 interface globalContextType {
   fabricCanvas: fabric.Canvas | null;
-  userSettings: Object;
-  documentSettings: Object;
+  state: any
 }
 const globalContext = React.createContext<globalContextType>({
   fabricCanvas: null,
-  userSettings: {},
-  documentSettings: {}
+  state: null
 });
 
 class App extends Component {
@@ -30,6 +49,7 @@ class App extends Component {
       userSettings: {},
       documentSettings: {}
     };
+    this.state = testState.state
   }
   initFabricCanvas = (domCanvas: HTMLCanvasElement) => {
     this.fabricCanvas = new fabric.Canvas(domCanvas);

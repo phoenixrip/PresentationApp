@@ -11,6 +11,7 @@ const InspectorContainer = (props: Object) => {
       <Button onClick={() => context.fabricCanvas?.clear()} type="primary">
         Clear
       </Button>
+      <p>{context.state.userSettings.name}</p>
     </>
   );
 };
