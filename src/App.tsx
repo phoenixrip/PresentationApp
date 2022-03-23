@@ -42,15 +42,15 @@ class App extends Component {
     );
     return this.setState({ isInitted: true });
   };
+
   render() {
+    const contextValue: any = {
+      fabricCanvas: this.fabricCanvas,
+      state: this.state
+    };
     return (
       <div>
-        <globalContext.Provider
-          value={{
-            fabricCanvas: this.fabricCanvas,
-            state: this.state
-          }}
-        >
+        <globalContext.Provider value={contextValue}>
           <ReflexContainer
             orientation="vertical"
             style={{ width: "100vw", height: "100vh" }}
