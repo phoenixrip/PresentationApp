@@ -35,7 +35,7 @@ class App extends Component {
                     propagateDimensions={true}
                     propagateDimensionsRate={1}
                   >
-                    <FabricCanvasContainer dimensions={{}} />
+                    <FabricCanvasContainer dimensions={{width: 100, height: 100}} />
                   </ReflexElement>
                   <ReflexElement
                     size={200}

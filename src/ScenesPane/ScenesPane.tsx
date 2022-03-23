@@ -1,2 +1,2 @@
-const ScenesPane = (props) => <div>Scenes divane</div>;
+const ScenesPane = (props: Object) => <div>Scenes divane</div>;
 export { ScenesPane };
