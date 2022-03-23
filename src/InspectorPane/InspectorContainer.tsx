@@ -5,13 +5,14 @@ import { globalContextType } from "../App";
 
 const InspectorContainer = (props: Object) => {
   const context: globalContextType = useContext(globalContext);
+  const selection = context.fabricCanvas?.getActiveObject()
   console.log({ context });
   return (
     <>
       <Button onClick={() => context.fabricCanvas?.clear()} type="primary">
         Clear
       </Button>
-      <p>{context.state.userSettings.name}</p>
+      <pre>{selection && JSON.stringify(selection, null, 4)}</pre>
     </>
   );
 };

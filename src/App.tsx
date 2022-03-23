@@ -21,10 +21,11 @@ fabric.Object.prototype.set({
   borderColor: '#70ABFF'
 })
 
-
 const testState = {
   fabricCanvas: null,
   state: {
+    tick: true,
+    isInitted: false,
     userSettings: {
       name: "Inspector Payne"
     },
@@ -73,30 +74,44 @@ const testState = {
   }
 }
 
+interface globalAppStateType {
+    tick: Boolean,
+    isInitted: Boolean,
+    project: {
+      settings: Object,
+      globalObjects: Object,
+      scenes: Array<Object>
+    },
+    editorState: {
+      activeSceneIndex: Number
+    },
+    userSettings: {
+      name: String
+    }
+}
+
 interface globalContextType {
   fabricCanvas: fabric.Canvas | null;
-  state: any
+  state: globalAppStateType
 }
+
 const globalContext = React.createContext<globalContextType>({
   fabricCanvas: null,
-  state: null
+  state: testState.state
 });
 
-class App extends Component {
+class App extends Component<{}, globalAppStateType> {
   fabricCanvas: fabric.Canvas | null;
   constructor(props: Object) {
     super(props);
     this.fabricCanvas = null;
-    this.state = {
-      isInitted: false,
-      userSettings: {},
-      documentSettings: {}
-    };
     this.state = testState.state
   }
 
   initFabricCanvas = (domCanvas: HTMLCanvasElement) => {
     this.fabricCanvas = new fabric.Canvas(domCanvas);
+    this.fabricCanvas.on("after:render", this.updateTick)
+    
     const exampleRect: fabric.Rect = new fabric.Rect({
       width: 200,
       height: 200,
@@ -105,6 +120,8 @@ class App extends Component {
     this.fabricCanvas.add(exampleRect)
     return this.setState({ isInitted: true });
   };
+
+  updateTick = () => { console.log(this.state.tick); return this.setState({tick: !this.state.tick})} 
 
   render() {
     const contextValue: any = {
