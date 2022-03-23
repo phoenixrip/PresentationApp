@@ -16,7 +16,6 @@ class FabricCanvasContainer extends Component<FabricCamvasContainerProps> {
     this.domCanvas = null;
   }
   componentDidMount() {
-    console.log(this.domCanvas);
     this.props.initFabricCanvas(this.domCanvas);
   }
 
@@ -35,7 +34,7 @@ class FabricCanvasContainer extends Component<FabricCamvasContainerProps> {
   render() {
     return (
       <div>
-        <canvas ref={(c) => (this.domCanvas = c)} id="c" />
+        <canvas ref={(c) => (this.domCanvas = c)} />
       </div>
     );
   }

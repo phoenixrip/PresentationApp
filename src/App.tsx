@@ -8,24 +8,67 @@ import { InspectorContainer } from "./InspectorPane/InspectorContainer";
 import "./styles.css";
 import "react-reflex/styles.css";
 import "./dark.css";
+import { LayersPaneContainer } from "./LayersPane/LayersPaneContainer";
+
+fabric.Object.prototype.set({
+  hoverCursor: 'default',
+  originX: 'center',
+  originY: 'center',
+  cornerStyle: 'circle',
+  transparentCorners: false,
+  cornerColor: '#4AB9D1',
+  cornerStrokeColor: '#fff',
+  borderColor: '#70ABFF'
+})
+
 
 const testState = {
   fabricCanvas: null,
-  state:	{
+  state: {
     userSettings: {
       name: "Inspector Payne"
     },
-    
-    project: { 
+    project: {
       settings: {
-        theme: "dark"
+        theme: "dark",
+        dimensions: {
+          width: 896,
+          height: 504
+        }
       },
-      globalObjects: { "2131-eww2w-2312-dadaa": {},
-              "wda1-ew21-dhftft-2313": {},
+      globalObjects: {
+        "2131-eww2w-2312-dadaa": {
+          type: 'rect',
+          fill: 'orange',
+        },
+        "wda1-ew21-dhftft-2313": {
+          type: 'circle',
+          radius: 20
+        },
       },
-      scenes: [ {"2131-eww2w-2312-dadaa": {left: 0, top: 0}},
-          {"2131-eww2w-2312-dadaa": {left: 50, top: 0}}
+      scenes: [
+        {
+          sceneSettings: {},
+          activeSceneObjects: {
+            "2131-eww2w-2312-dadaa": {
+              left: 0,
+              top: 0
+            }
+          }
+        },
+        {
+          sceneSettings: {},
+          activeSceneObjects: {
+            "2131-eww2w-2312-dadaa": {
+              left: 50,
+              top: 0
+            }
+          }
+        }
       ]
+    },
+    editorState: {
+      activeSceneIndex: 0
     }
   }
 }
@@ -51,15 +94,15 @@ class App extends Component {
     };
     this.state = testState.state
   }
+
   initFabricCanvas = (domCanvas: HTMLCanvasElement) => {
     this.fabricCanvas = new fabric.Canvas(domCanvas);
-    this.fabricCanvas.add(
-      new fabric.Rect({
-        width: 200,
-        height: 200,
-        fill: "orange"
-      })
-    );
+    const exampleRect: fabric.Rect = new fabric.Rect({
+      width: 200,
+      height: 200,
+      fill: "orange"
+    })
+    this.fabricCanvas.add(exampleRect)
     return this.setState({ isInitted: true });
   };
 
@@ -75,21 +118,21 @@ class App extends Component {
             orientation="vertical"
             style={{ width: "100vw", height: "100vh" }}
           >
-            <ReflexElement minSize={100} maxSize={250}>
+            <ReflexElement minSize={100} maxSize={250} size={180}>
               <ScenesPane />
             </ReflexElement>
             <ReflexSplitter />
             <ReflexElement>
               <ReflexContainer orientation="horizontal">
-                <ReflexElement size={78}>
-                  <div style={{ height: "100%", backgroundColor: "purple" }}>
+                <ReflexElement size={50}>
+                  <div style={{ height: "100%", backgroundColor: "#29252F" }}>
                     Toolbar
                   </div>
                 </ReflexElement>
                 <ReflexElement>
                   <ReflexContainer orientation="vertical">
-                    <ReflexElement size={200} minSize={200}>
-                      Layers
+                    <ReflexElement size={200} minSize={200} maxSize={400}>
+                      <LayersPaneContainer />
                     </ReflexElement>
                     <ReflexSplitter />
                     <ReflexElement
@@ -102,7 +145,7 @@ class App extends Component {
                       />
                     </ReflexElement>
                     <ReflexElement
-                      size={200}
+                      size={300}
                       style={{ backgroundColor: "green" }}
                     >
                       <InspectorContainer />
