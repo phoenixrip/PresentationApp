@@ -6,16 +6,21 @@ const { Panel } = Collapse;
 import { CirclePicker } from 'react-color';
 import { fabric } from "fabric";
 import { Canvas } from "fabric/fabric-impl";
+import { PositionControlPanel } from "./ControlPanels/PositionControlPanel";
 
 const InspectorContainer = (props: Object) => {
   const context: globalContextType = useContext(globalContext);
   const selection: any | undefined = context.fabricCanvas?.getActiveObject()
+  const setOnFabricObject: Function = context.setOnFabricObject
 
-  const setOnSelection = (setting: String, val: any) => {
-    selection.set(setting, val)
-    selection.setCoords();
-    selection.canvas.renderAll()
-  }
+
+
+  // const setOnObjectShadow = (obj: fabric.Object, setting: string, val: any) => {
+  //   if (obj && typeof obj.shadow === "object") {
+  //     obj.shadow[setting] = val
+  //     obj?.setCoords();
+  //     obj?.canvas?.renderAll()
+  // }
 
   const setOnSelectionShadow = (setting: string, val: any) => {
     selection.shadow[setting] = val
@@ -23,7 +28,11 @@ const InspectorContainer = (props: Object) => {
     selection.canvas.renderAll()
   }
 
-  if (selection) console.log(selection)
+  const getStrokeDashState = () => {
+    return "lol"
+  }
+
+  if (selection) console.log("strokedash", !selection?.strokeDashArray)
   return (
     <>
       {!selection &&
@@ -40,12 +49,12 @@ const InspectorContainer = (props: Object) => {
                 max={1000}
                 precision={0}
                 value={selection.width}
-                onChange={(e) => { setOnSelection("width", e) }} />
+                onChange={(e) => { setOnFabricObject(selection, "width", e) }} />
               <Switch
                 checkedChildren={"Moveable x"}
                 unCheckedChildren={"Locked x"}
                 checked={!selection.lockMovementX}
-                onChange={e => setOnSelection("lockMovementX", !e)}
+                onChange={e => setOnFabricObject(selection, "lockMovementX", !e)}
               />
               <InputNumber addonBefore="Height:"
                 addonAfter="px"
@@ -53,12 +62,12 @@ const InspectorContainer = (props: Object) => {
                 max={1000}
                 precision={0}
                 value={selection.height}
-                onChange={(e) => { setOnSelection("height", e) }} />
+                onChange={(e) => { setOnFabricObject(selection, "height", e) }} />
               <Switch
                 checkedChildren={"Moveable y"}
                 unCheckedChildren={"Locked y"}
                 checked={!selection.lockMovementY}
-                onChange={e => setOnSelection("lockMovementY", !e)}
+                onChange={e => setOnFabricObject(selection, "lockMovementY", !e)}
               />
               <InputNumber addonBefore="Angle:"
                 addonAfter="°"
@@ -66,27 +75,27 @@ const InspectorContainer = (props: Object) => {
                 max={360}
                 precision={0}
                 value={selection.angle}
-                onChange={(e) => { setOnSelection("angle", e) }} />
+                onChange={(e) => { setOnFabricObject(selection, "angle", e) }} />
               <InputNumber addonBefore="Skew X:"
                 addonAfter="px"
                 min={-1000}
                 max={1000}
                 precision={0}
                 value={selection.skewX}
-                onChange={(e) => { setOnSelection("skewX", e) }} />
+                onChange={(e) => { setOnFabricObject(selection, "skewX", e) }} />
               <InputNumber addonBefore="Skew Y:"
                 addonAfter="px"
                 min={-1000}
                 max={1000}
                 precision={0}
                 value={selection.skewY}
-                onChange={(e) => { setOnSelection("skewY", e) }} />
+                onChange={(e) => { setOnFabricObject(selection, "skewY", e) }} />
 
               <Switch
                 checkedChildren={"Rotatable"}
                 unCheckedChildren={"Rotation locked"}
                 checked={!selection.lockRotation}
-                onChange={e => setOnSelection("lockRotation", !e)}
+                onChange={e => setOnFabricObject(selection, "lockRotation", !e)}
               />
               {//TODO: lockScalingX is the only thing checked for both scaling locks
                 //Should we also onchange lockScalingX/Y also lock the other=
@@ -96,8 +105,8 @@ const InspectorContainer = (props: Object) => {
                 unCheckedChildren={"Scaling locked"}
                 checked={!selection.lockScalingX}
                 onChange={e => {
-                  setOnSelection("lockScalingX", !e)
-                  setOnSelection("lockScalingY", !e)
+                  setOnFabricObject(selection, "lockScalingX", !e)
+                  setOnFabricObject(selection, "lockScalingY", !e)
                 }}
               />
               {//TODO: lockSkewingX is the only thing checked for both skewing locks
@@ -108,48 +117,31 @@ const InspectorContainer = (props: Object) => {
                 unCheckedChildren={"Skewing locked"}
                 checked={!selection.lockSkewingX}
                 onChange={e => {
-                  setOnSelection("lockSkewingX", !e)
-                  setOnSelection("lockSkewingY", !e)
+                  setOnFabricObject(selection, "lockSkewingX", !e)
+                  setOnFabricObject(selection, "lockSkewingY", !e)
                 }}
               />
             </Panel>
             <Panel header="Position" key="2">
-              <InputNumber addonBefore="X:"
-                addonAfter="px"
-                min={0}
-                max={1000}
-                precision={0}
-                value={selection.left}
-                onChange={(e) => { setOnSelection("left", e) }} />
-              <InputNumber addonBefore="Y:"
-                addonAfter="px"
-                min={0}
-                max={1000}
-                precision={0}
-                value={selection.top}
-                onChange={(e) => { setOnSelection("top", e) }} />
-              <Button onClick={() => setOnSelection("flipX", !selection.flipX)}> Flip Horizontal</Button>
-              <Button onClick={() => setOnSelection("flipY", !selection.flipY)}> Flip Vertical</Button>
-              <Button onClick={() => setOnSelection("angle", selection.angle + 90)}>Rotate</Button>
-              <Button onClick={() => setOnSelection("angle", selection.angle - 90)}>Rotate other way</Button>
+              <PositionControlPanel></PositionControlPanel>
             </Panel>
             <Panel header="Fill" key="3">
               <CirclePicker
                 color={selection.fill}
                 onChange={e => {
-                  setOnSelection("fill", `rgba(${e.rgb.r},${e.rgb.g},${e.rgb.b},${e.rgb.a})`)
+                  setOnFabricObject(selection, "fill", `rgba(${e.rgb.r},${e.rgb.g},${e.rgb.b},${e.rgb.a})`)
                 }} />
               {/* <ChromePicker
                 color={selection.fill}
                 onChange={e => {
-                  setOnSelection("fill", `rgba(${e.rgb.r},${e.rgb.g},${e.rgb.b},${e.rgb.a})`)
+                  setOnFabricObject(selection, "fill", `rgba(${e.rgb.r},${e.rgb.g},${e.rgb.b},${e.rgb.a})`)
                 }} /> */}
             </Panel>
             <Panel header="Border" key="4">
               <CirclePicker
                 color={selection.stroke || "rgba(0,0,0,0)"}
                 onChange={e => {
-                  setOnSelection("stroke", `rgba(${e.rgb.r},${e.rgb.g},${e.rgb.b},${e.rgb.a})`)
+                  setOnFabricObject(selection, "stroke", `rgba(${e.rgb.r},${e.rgb.g},${e.rgb.b},${e.rgb.a})`)
                 }} />
               <InputNumber
                 addonBefore="Thickness"
@@ -158,13 +150,14 @@ const InspectorContainer = (props: Object) => {
                 max={1000}
                 value={selection.strokeWidth || 0}
                 onChange={e => {
-                  setOnSelection("strokeWidth", e)
+                  setOnFabricObject(selection, "strokeWidth", e)
                 }} />
 
-              <Radio.Group defaultValue="a" size="small" style={{ marginTop: 16 }}>
-                <Radio.Button value="dotted">Hangzhou</Radio.Button>
-                <Radio.Button value="dashed">Shanghai</Radio.Button>
-                <Radio.Button value="large-dashed">Beijing</Radio.Button>
+              <Radio.Group value={getStrokeDashState()} size="small" style={{ marginTop: 16 }}>
+                <Radio.Button value="solid" onClick={() => { }}>-</Radio.Button>
+                <Radio.Button value="dotted" onClick={() => { }}>...</Radio.Button>
+                <Radio.Button value="dashed" onClick={() => { }}>---</Radio.Button>
+                <Radio.Button value="large-dashed" onClick={() => { }}>- -</Radio.Button>
               </Radio.Group>
             </Panel>
             <Panel header="Shadow" key="5">
@@ -174,10 +167,10 @@ const InspectorContainer = (props: Object) => {
                 checked={selection?.shadow}
                 onChange={e => {
                   if (selection?.shadow) {
-                    setOnSelection("shadow", undefined)
+                    setOnFabricObject(selection, "shadow", undefined)
                     return
                   } else {
-                    setOnSelection("shadow", new fabric.Shadow("50px 50px 50px rgba(0,0,0,1)"))
+                    setOnFabricObject(selection, "shadow", new fabric.Shadow("50px 50px 50px rgba(0,0,0,1)"))
                   }
                 }}
               />

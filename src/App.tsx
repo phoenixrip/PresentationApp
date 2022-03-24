@@ -101,7 +101,8 @@ interface globalAppStateType {
 interface globalContextType {
   fabricCanvas: fabric.Canvas | null;
   state: globalAppStateType,
-  handleAddRect: Function
+  handleAddRect: Function,
+  setOnFabricObject: Function
 }
 
 const globalContext = React.createContext<globalContextType>({} as globalContextType);
@@ -228,12 +229,22 @@ class App extends Component<{}, globalAppStateType> {
     )
   }
 
+  setOnFabricObject = (obj: fabric.Object, setting: string, val: any) => {
+    if (obj) {
+      obj.set({ [setting]: val })
+      obj.setCoords();
+      obj?.canvas?.renderAll()
+    }
+  }
+
   render() {
     const contextValue: any = {
       fabricCanvas: this.fabricCanvas,
       state: this.state,
-      handleAddRect: this.handleAddRect
+      handleAddRect: this.handleAddRect,
+      setOnFabricObject: this.setOnFabricObject
     };
+
     return (
       <div>
         <globalContext.Provider value={contextValue}>
