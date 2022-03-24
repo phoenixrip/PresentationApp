@@ -167,6 +167,17 @@ class App extends Component<{}, globalAppStateType> {
       // }
     })
 
+    //Add event listener on rescale to set width/height to width/height * scaleX/scaleY and scaleX/scaleY to 1
+    this.fabricCanvas.on("object:scaling", function(e: any) {
+      const target = e.target
+      if(target) {
+        target.set("width", target.width * target.scaleX)
+        target.set("height", target.height * target.scaleY)
+        target.set("scaleX", 1)
+        target.set("scaleY", 1)
+      }
+    });
+
     const exampleRect1: fabric.Rect = new fabric.Rect({
       width: 200,
       height: 200,
