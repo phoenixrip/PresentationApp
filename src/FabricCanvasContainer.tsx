@@ -1,43 +1,44 @@
 import { fabric } from "fabric";
 import React, { Component } from "react";
 
-type FabricCamvasContainerProps = {
+type CanvasPanePropsTypes = {
   initFabricCanvas: Function;
+  updateCanvasPaneDimensions: Function,
   dimensions: {
     width: number;
     height: number;
   };
 };
 
-class FabricCanvasContainer extends Component<FabricCamvasContainerProps> {
+class CanvasPane extends Component<CanvasPanePropsTypes> {
   domCanvas: HTMLCanvasElement | null;
-  constructor(props: FabricCamvasContainerProps) {
+  div: HTMLDivElement | null;
+  constructor(props: CanvasPanePropsTypes) {
     super(props);
     this.domCanvas = null;
+    this.div = null
   }
   componentDidMount() {
-    this.props.initFabricCanvas(this.domCanvas);
+    const width = this.div?.offsetWidth
+    const height = this.div?.offsetHeight
+    this.props.initFabricCanvas(this.domCanvas, { width, height })
   }
 
-  // componentDidUpdate(prevProps: FabricCamvasContainerProps, prevState: Object) {
-  //   if (
-  //     prevProps.dimensions.width !== this.props.dimensions.width ||
-  //     prevProps.dimensions.height !== this.props.dimensions.height
-  //   ) {
-  //     console.log("raw update size - ", this.props.dimensions);
-  //     this.fabricCanvas?.setDimensions({
-  //       width: this.props.dimensions.width,
-  //       height: this.props.dimensions.height
-  //     });
-  //   }
-  // }
+  componentDidUpdate(prevProps: CanvasPanePropsTypes, prevState: Object) {
+    if (
+      prevProps.dimensions.width !== this.props.dimensions.width ||
+      prevProps.dimensions.height !== this.props.dimensions.height
+    ) {
+      return this.props.updateCanvasPaneDimensions(this.props.dimensions)
+    }
+  }
   render() {
     return (
-      <div>
+      <div style={{ width: '100%', height: '100%' }} ref={d => this.div = d}>
         <canvas ref={(c) => (this.domCanvas = c)} />
       </div>
     );
   }
 }
 
-export default FabricCanvasContainer;
+export default CanvasPane;
