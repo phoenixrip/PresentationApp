@@ -171,8 +171,8 @@ class App extends Component<{}, globalAppStateType> {
     this.fabricCanvas.on("object:scaling", function(e: any) {
       const target = e.target
       if(target) {
-        target.set("width", target.width * target.scaleX)
-        target.set("height", target.height * target.scaleY)
+        target.set("width", Math.round(target.width * target.scaleX))
+        target.set("height", Math.round(target.height * target.scaleY))
         target.set("scaleX", 1)
         target.set("scaleY", 1)
       }
