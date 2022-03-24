@@ -18,7 +18,9 @@ fabric.Object.prototype.set({
   transparentCorners: false,
   cornerColor: '#4AB9D1',
   cornerStrokeColor: '#fff',
-  borderColor: '#70ABFF'
+  borderColor: '#70ABFF',
+  lockScalingFlip: true,
+  paintFirst: "stroke"
 })
 
 const testState = {
@@ -171,8 +173,10 @@ class App extends Component<{}, globalAppStateType> {
     this.fabricCanvas.on("object:scaling", function(e: any) {
       const target = e.target
       if(target) {
-        target.set("width", Math.round(target.width * target.scaleX))
-        target.set("height", Math.round(target.height * target.scaleY))
+        const width = Math.round(target.width * target.scaleX) || 1
+        const height = Math.round(target.height * target.scaleY) || 1
+        target.set("width", width)
+        target.set("height", height)
         target.set("scaleX", 1)
         target.set("scaleY", 1)
       }
