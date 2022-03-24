@@ -264,7 +264,6 @@ class App extends Component<{}, globalAppStateType> {
                     </ReflexElement>
                     <ReflexElement
                       size={300}
-                      style={{ backgroundColor: "green" }}
                     >
                       <InspectorContainer />
                     </ReflexElement>
