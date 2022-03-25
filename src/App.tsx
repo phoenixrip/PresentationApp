@@ -9,15 +9,13 @@ import "./styles.css";
 import "react-reflex/styles.css";
 import "./dark.css";
 import { LayersPaneContainer } from "./LayersPane/LayersPaneContainer";
-import { debounce } from "./Utils/debounce";
+// import { debounce } from "./Utils/debounce";
 import { throttle } from "./Utils/throttle";
 import { ToolbarContainer } from "./Toolbar/ToolbarContainer";
-import { faSortAmountDownAlt } from "@fortawesome/free-solid-svg-icons";
 
 
 import { SizeType } from 'antd/lib/config-provider/SizeContext'
 import { SceneType } from "./Types/sceneType";
-import { objectMethod } from "@babel/types";
 
 fabric.Object.prototype.set({
   cornerStyle: 'circle',
@@ -212,28 +210,23 @@ class App extends Component<{}, globalAppStateType> {
   initFabricCanvas = (domCanvas: HTMLCanvasElement, canvasPaneDimensions: { width: number, height: number }) => {
     const projectDimensions = this.state.project.settings.dimensions
     const c = this.fabricCanvas = new fabric.Canvas(domCanvas, {
-      backgroundColor: '#141414'
+      backgroundColor: '#141414',
+      width: canvasPaneDimensions.width,
+      height: canvasPaneDimensions.height
     });
+    // Center the project viewport withing the full-Pane-Sized fabricCanvas
     const widthMove = (canvasPaneDimensions.width - projectDimensions.width) / 2
     const heightMove = (canvasPaneDimensions.height - projectDimensions.height) / 2
-    // const widthScale = canvasPaneDimensions.width / projectDimensions.width
-    // const heightScale = canvasPaneDimensions.height / projectDimensions.height
-    // const totalWidthMove = projectDimensions.width * widthScale
-    // const totalHeightMove = projectDimensions.height * heightScale
-    console.log({
-      widthMove,
-      heightMove
-    })
     const vpt = c?.viewportTransform || []
-    console.log(`vpt init: ${vpt}`)
     vpt[4] = widthMove
     vpt[5] = heightMove
     c.setViewportTransform(vpt)
-    console.log(c.viewportTransform)
-    this.fabricCanvas.setDimensions(canvasPaneDimensions)
 
     // CANVAS EVENT HOOKS
+    // React state tick on render
     this.fabricCanvas.on("after:render", throttle(this.updateTick, 100))
+
+    // Mouse wheel zoom
     this.fabricCanvas.on('mouse:wheel', function (opt) {
       var delta = opt.e.deltaY;
       var zoom = c?.getZoom() || 1
@@ -261,19 +254,20 @@ class App extends Component<{}, globalAppStateType> {
       // }
     })
 
-    //Add event listener on rescale to set width/height to width/height * scaleX/scaleY and scaleX/scaleY to 1
+    // Add event listener on rescale to set width/height to width/height * scaleX/scaleY and scaleX/scaleY to 1
+    // We may want to implemenet a specific function for other objects here
+    //  eg. Circles need to update their radius instead of their width + height
     this.fabricCanvas.on("object:scaling", function (e: any) {
       const target = e.target
-      if (target) {
+      if (target && target.type === 'rect') {
+        console.log('rect scaling')
         const width = Math.round(target.width * target.scaleX) || 1
         const height = Math.round(target.height * target.scaleY) || 1
-        target.set("width", width)
-        target.set("height", height)
-        target.set("scaleX", 1)
-        target.set("scaleY", 1)
+        target.set({ width, height, scaleX: 1, scaleY: 1 })
       }
     });
 
+    // Init complete editor state
     const json: any = { objects: Object.values(this.state.project.globalObjects) }
     this.fabricCanvas.loadFromJSON(json, () => {
       this.initViewportRect()
