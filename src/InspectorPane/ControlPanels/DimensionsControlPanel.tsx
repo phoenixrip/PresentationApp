@@ -1,69 +1,81 @@
-import { useContext } from "react";
-import { globalContext } from "../../App";
-import { globalContextType } from "../../App";
-import { InputNumber, Switch } from "antd"
+import { useContext } from "react"
+import { globalContext } from "../../App"
+import { globalContextType } from "../../App"
+import { InputNumber, Switch, Button } from "antd"
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCoffee, faLock, faUnlock } from '@fortawesome/free-solid-svg-icons'
 
 function DimensionsControlPanel() {
-    const context: globalContextType = useContext(globalContext);
+    const context: globalContextType = useContext(globalContext)
     const selection: any | undefined = context.fabricCanvas?.getActiveObject()
     const setOnFabricObject: Function = context.setOnFabricObject
 
     return (
         <>
-            <InputNumber addonBefore="Width:"
-                addonAfter="px"
+            <Button size={context.state.editorState.antdSize} icon={<FontAwesomeIcon icon={faUnlock} />} />
+            <InputNumber
+                size={context.state.editorState.antdSize}
+                addonBefore="Width:"
+                addonAfter={<Switch
+                    checkedChildren={<FontAwesomeIcon icon={faUnlock} />}
+                    unCheckedChildren={<FontAwesomeIcon icon={faLock} />}
+                    checked={!selection.lockMovementX}
+                    onChange={e => setOnFabricObject(selection, "lockMovementX", !e)}
+                />}
                 min={0}
                 max={1000}
                 precision={0}
                 value={selection.width}
                 onChange={(e) => { setOnFabricObject(selection, "width", e) }} />
-            <Switch
-                checkedChildren={"Moveable x"}
-                unCheckedChildren={"Locked x"}
-                checked={!selection.lockMovementX}
-                onChange={e => setOnFabricObject(selection, "lockMovementX", !e)}
-            />
-            <InputNumber addonBefore="Height:"
-                addonAfter="px"
+
+            <InputNumber
+                size={context.state.editorState.antdSize}
+                addonBefore="Height:"
+                addonAfter={<Switch
+                    checkedChildren={"Moveable y"}
+                    unCheckedChildren={"Locked y"}
+                    checked={!selection.lockMovementY}
+                    onChange={e => setOnFabricObject(selection, "lockMovementY", !e)}
+                />}
                 min={0}
                 max={1000}
                 precision={0}
                 value={selection.height}
                 onChange={(e) => { setOnFabricObject(selection, "height", e) }} />
-            <Switch
-                checkedChildren={"Moveable y"}
-                unCheckedChildren={"Locked y"}
-                checked={!selection.lockMovementY}
-                onChange={e => setOnFabricObject(selection, "lockMovementY", !e)}
-            />
-            <InputNumber addonBefore="Angle:"
-                addonAfter="°"
+
+            <InputNumber
+                size={context.state.editorState.antdSize}
+                addonBefore="Angle:"
+                addonAfter={<Switch
+                    checkedChildren={"Rotatable"}
+                    unCheckedChildren={"Rotation locked"}
+                    checked={!selection.lockRotation}
+                    onChange={e => setOnFabricObject(selection, "lockRotation", !e)}
+                />}
                 min={-360}
                 max={360}
                 precision={0}
                 value={selection.angle}
                 onChange={(e) => { setOnFabricObject(selection, "angle", e) }} />
-            <InputNumber addonBefore="Skew X:"
+            <InputNumber
+                size={context.state.editorState.antdSize}
+                addonBefore="Skew X:"
                 addonAfter="px"
                 min={-1000}
                 max={1000}
                 precision={0}
                 value={selection.skewX}
                 onChange={(e) => { setOnFabricObject(selection, "skewX", e) }} />
-            <InputNumber addonBefore="Skew Y:"
+            <InputNumber
+                size={context.state.editorState.antdSize}
+                addonBefore="Skew Y:"
                 addonAfter="px"
                 min={-1000}
                 max={1000}
                 precision={0}
                 value={selection.skewY}
                 onChange={(e) => { setOnFabricObject(selection, "skewY", e) }} />
-
-            <Switch
-                checkedChildren={"Rotatable"}
-                unCheckedChildren={"Rotation locked"}
-                checked={!selection.lockRotation}
-                onChange={e => setOnFabricObject(selection, "lockRotation", !e)}
-            />
             {//TODO: lockScalingX is the only thing checked for both scaling locks
                 //Should we also onchange lockScalingX/Y also lock the other=
             }

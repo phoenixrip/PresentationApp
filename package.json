@@ -9,6 +9,9 @@
   ],
   "main": "src/index.tsx",
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^6.1.1",
+    "@fortawesome/free-solid-svg-icons": "^6.1.1",
+    "@fortawesome/react-fontawesome": "^0.1.18",
     "@types/fabric": "4.5.7",
     "antd": "4.19.3",
     "fabric": "5.2.1",

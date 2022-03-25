@@ -12,6 +12,10 @@ import { LayersPaneContainer } from "./LayersPane/LayersPaneContainer";
 import { debounce } from "./Utils/debounce";
 import { throttle } from "./Utils/throttle";
 import { ToolbarContainer } from "./Toolbar/ToolbarContainer";
+import { faSortAmountDownAlt } from "@fortawesome/free-solid-svg-icons";
+
+
+import { SizeType } from 'antd/lib/config-provider/SizeContext'
 
 fabric.Object.prototype.set({
   cornerStyle: 'circle',
@@ -75,7 +79,8 @@ const testState = {
       ]
     },
     editorState: {
-      activeSceneIndex: 0
+      activeSceneIndex: 0,
+      antdSize: "small" as SizeType
     }
   }
 }
@@ -96,6 +101,7 @@ interface globalAppStateType {
   },
   editorState: {
     activeSceneIndex: number
+    antdSize: SizeType
   },
   userSettings: {
     name: String
