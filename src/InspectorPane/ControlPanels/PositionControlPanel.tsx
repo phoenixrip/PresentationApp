@@ -12,14 +12,14 @@ function PositionControlPanel() {
         <>
         <InputNumber addonBefore="X:"
                 addonAfter="px"
-                min={0}
+                min={-1000}
                 max={1000}
                 precision={0}
                 value={selection.left}
                 onChange={(e) => { setOnFabricObject(selection, "left", e) }} />
               <InputNumber addonBefore="Y:"
                 addonAfter="px"
-                min={0}
+                min={-1000}
                 max={1000}
                 precision={0}
                 value={selection.top}
