@@ -47,6 +47,7 @@ const testState = {
       },
       globalObjects: {
         "2131-eww2w-2312-dadaa": {
+          uniqueGlobalId: "2131-eww2w-2312-dadaa",
           angle: 0,
           clipTo: null,
           fill: "#29477F",
@@ -80,6 +81,7 @@ const testState = {
           y: 0
         },
         "wda1-ew21-dhftft-2313": {
+          uniqueGlobalId: "wda1-ew21-dhftft-2313",
           angle: 0,
           clipTo: null,
           fill: "rgb(166,111,213)",
@@ -114,7 +116,8 @@ const testState = {
         {
           sceneSettings: {},
           activeSceneObjects: {
-            "2131-eww2w-2312-dadaa": {}
+            "2131-eww2w-2312-dadaa": {top: 0, left: 0} as fabric.IObjectOptions,
+            "wda1-ew21-dhftft-2313": {top: 100, left: 100} as fabric.IObjectOptions
           },
           undoHistory: [],
           redoHistory: []
@@ -122,7 +125,8 @@ const testState = {
         {
           sceneSettings: {},
           activeSceneObjects: {
-            "2131-eww2w-2312-dadaa": {}
+            "2131-eww2w-2312-dadaa": {top: 400, left: 400} as fabric.IObjectOptions,
+            "wda1-ew21-dhftft-2313": {top: 500, left: 500} as fabric.IObjectOptions
           },
           undoHistory: [],
           redoHistory: []
@@ -171,10 +175,12 @@ const globalContext = React.createContext<globalContextType>({} as globalContext
 class App extends Component<{}, globalAppStateType> {
   fabricCanvas: fabric.Canvas | null;
   throttledSetNewCanvasPaneDimensions: Function
+  liveObjectsDict: { [key: string]: fabric.Object}
 
   constructor(props: Object) {
     super(props);
     this.fabricCanvas = null;
+    this.liveObjectsDict = {}
     this.throttledSetNewCanvasPaneDimensions = throttle(this.setNewCanvasPanelDimensions, 300)
     this.state = testState.state
   }
@@ -244,38 +250,42 @@ class App extends Component<{}, globalAppStateType> {
       }
     });
 
-    const viewPortRectOptions = {
+    const json: any = { objects: Object.values(this.state.project.globalObjects) }
+    this.fabricCanvas.loadFromJSON(json, () => {
+      this.initViewportRect()
+
+      const currentScene = this.state.project.scenes[this.state.editorState.activeSceneIndex]
+      console.log(currentScene)
+
+      for(const [uniqueGlobalId, sceneObjectOptions] of Object.entries(currentScene.activeSceneObjects)) {
+        const activeObject = this.liveObjectsDict[uniqueGlobalId]
+        activeObject.set(sceneObjectOptions)
+      }
+
+      this.fabricCanvas?.requestRenderAll()
+    }, (options: any, object: any, a: any) => {
+      this.liveObjectsDict[options.uniqueGlobalId] = object
+    })
+
+    return this.setState({ isInitted: true });
+  }
+
+  initViewportRect = () => {
+    const viewportRect = new fabric.Rect({
       width: this.state.project.settings.dimensions.width,
       height: this.state.project.settings.dimensions.height,
       fill: undefined,
       stroke: 'blue',
       strokeDashArray: [11, 8],
       selectable: false,
-      evented: false,
-      top: 0,
-      left: 0
-    }
-
-    const json: any = { objects: [viewPortRectOptions, ...Object.values(this.state.project.globalObjects)] }
-    this.fabricCanvas.loadFromJSON(json, () => {
-      const viewportRect = new fabric.Rect({
-        width: this.state.project.settings.dimensions.width,
-        height: this.state.project.settings.dimensions.height,
-        fill: undefined,
-        stroke: 'blue',
-        strokeDashArray: [11, 8],
-        selectable: false,
-        evented: false
-      })
-      if (this.fabricCanvas) {
-        this?.fabricCanvas
-          .add(viewportRect)
-          .sendToBack(viewportRect)
-        this?.fabricCanvas.requestRenderAll()
-      }
+      evented: false
     })
 
-    return this.setState({ isInitted: true });
+    if (this.fabricCanvas) {
+      this.fabricCanvas
+        .add(viewportRect)
+        .sendToBack(viewportRect)
+    }
   }
 
   updateCanvasPaneDimensions = (newDimensions: fabric.ICanvasDimensions) => {
