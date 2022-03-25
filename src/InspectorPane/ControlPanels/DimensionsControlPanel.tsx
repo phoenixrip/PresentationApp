@@ -13,7 +13,6 @@ function DimensionsControlPanel() {
 
     return (
         <>
-            <Button size={context.state.editorState.antdSize} icon={<FontAwesomeIcon icon={faUnlock} />} />
             <InputNumber
                 size={context.state.editorState.antdSize}
                 addonBefore="Width:"
@@ -33,8 +32,8 @@ function DimensionsControlPanel() {
                 size={context.state.editorState.antdSize}
                 addonBefore="Height:"
                 addonAfter={<Switch
-                    checkedChildren={"Moveable y"}
-                    unCheckedChildren={"Locked y"}
+                    checkedChildren={<FontAwesomeIcon icon={faUnlock} />}
+                    unCheckedChildren={<FontAwesomeIcon icon={faLock} />}
                     checked={!selection.lockMovementY}
                     onChange={e => setOnFabricObject(selection, "lockMovementY", !e)}
                 />}
@@ -48,8 +47,8 @@ function DimensionsControlPanel() {
                 size={context.state.editorState.antdSize}
                 addonBefore="Angle:"
                 addonAfter={<Switch
-                    checkedChildren={"Rotatable"}
-                    unCheckedChildren={"Rotation locked"}
+                    checkedChildren={<FontAwesomeIcon icon={faUnlock} />}
+                    unCheckedChildren={<FontAwesomeIcon icon={faLock} />}
                     checked={!selection.lockRotation}
                     onChange={e => setOnFabricObject(selection, "lockRotation", !e)}
                 />}

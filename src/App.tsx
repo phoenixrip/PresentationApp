@@ -16,6 +16,8 @@ import { faSortAmountDownAlt } from "@fortawesome/free-solid-svg-icons";
 
 
 import { SizeType } from 'antd/lib/config-provider/SizeContext'
+import { SceneType } from "./Types/sceneType";
+import { objectMethod } from "@babel/types";
 
 fabric.Object.prototype.set({
   cornerStyle: 'circle',
@@ -45,22 +47,74 @@ const testState = {
       },
       globalObjects: {
         "2131-eww2w-2312-dadaa": {
-          type: 'rect',
-          fill: 'orange',
+          angle: 0,
+          clipTo: null,
+          fill: "#29477F",
+          flipX: false,
+          flipY: false,
+          height: 150,
+          left: 300,
+          opacity: 1,
+          overlayFill: null,
+          rx: 0,
+          ry: 0,
+          scaleX: 1,
+          scaleY: 1,
+          shadow: {
+            blur: 5,
+            color: "rgba(94, 128, 191, 0.5)",
+            offsetX: 10,
+            offsetY: 10
+          },
+          stroke: null,
+          strokeDashArray: null,
+          strokeLineCap: "butt",
+          strokeLineJoin: "miter",
+          strokeMiterLimit: 10,
+          strokeWidth: 1,
+          top: 150,
+          type: "rect",
+          visible: true,
+          width: 150,
+          x: 0,
+          y: 0
         },
         "wda1-ew21-dhftft-2313": {
-          type: 'circle',
-          radius: 20
+          angle: 0,
+          clipTo: null,
+          fill: "rgb(166,111,213)",
+          flipX: false,
+          flipY: false,
+          height: 200,
+          left: 300,
+          opacity: 1,
+          overlayFill: null,
+          radius: 100,
+          scaleX: 1,
+          scaleY: 1,
+          shadow: {
+            blur: 20,
+            color: "#5b238A",
+            offsetX: -20,
+            offsetY: -10
+          },
+          stroke: null,
+          strokeDashArray: null,
+          strokeLineCap: "butt",
+          strokeLineJoin: "miter",
+          strokeMiterLimit: 10,
+          strokeWidth: 1,
+          top: 400,
+          type: "circle",
+          visible: true,
+          width: 200
         },
       },
       scenes: [
         {
           sceneSettings: {},
           activeSceneObjects: {
-            "2131-eww2w-2312-dadaa": {
-              left: 0,
-              top: 0
-            }
+            "2131-eww2w-2312-dadaa": {}
           },
           undoHistory: [],
           redoHistory: []
@@ -68,10 +122,7 @@ const testState = {
         {
           sceneSettings: {},
           activeSceneObjects: {
-            "2131-eww2w-2312-dadaa": {
-              left: 50,
-              top: 0
-            }
+            "2131-eww2w-2312-dadaa": {}
           },
           undoHistory: [],
           redoHistory: []
@@ -97,7 +148,7 @@ interface globalAppStateType {
       }
     },
     globalObjects: Object,
-    scenes: Array<Object>
+    scenes: Array<SceneType>
   },
   editorState: {
     activeSceneIndex: number
@@ -181,9 +232,9 @@ class App extends Component<{}, globalAppStateType> {
     })
 
     //Add event listener on rescale to set width/height to width/height * scaleX/scaleY and scaleX/scaleY to 1
-    this.fabricCanvas.on("object:scaling", function(e: any) {
+    this.fabricCanvas.on("object:scaling", function (e: any) {
       const target = e.target
-      if(target) {
+      if (target) {
         const width = Math.round(target.width * target.scaleX) || 1
         const height = Math.round(target.height * target.scaleY) || 1
         target.set("width", width)
@@ -193,29 +244,37 @@ class App extends Component<{}, globalAppStateType> {
       }
     });
 
-    const exampleRect1: fabric.Rect = new fabric.Rect({
-      width: 200,
-      height: 200,
-      fill: "orange"
-    })
-    const exampleRect2: fabric.Rect = new fabric.Rect({
-      width: 100,
-      height: 300,
-      fill: "green"
-    })
-    const viewportRect = new fabric.Rect({
+    const viewPortRectOptions = {
       width: this.state.project.settings.dimensions.width,
       height: this.state.project.settings.dimensions.height,
       fill: undefined,
       stroke: 'blue',
       strokeDashArray: [11, 8],
       selectable: false,
-      evented: false
+      evented: false,
+      top: 0,
+      left: 0
+    }
+
+    const json: any = { objects: [viewPortRectOptions, ...Object.values(this.state.project.globalObjects)] }
+    this.fabricCanvas.loadFromJSON(json, () => {
+      const viewportRect = new fabric.Rect({
+        width: this.state.project.settings.dimensions.width,
+        height: this.state.project.settings.dimensions.height,
+        fill: undefined,
+        stroke: 'blue',
+        strokeDashArray: [11, 8],
+        selectable: false,
+        evented: false
+      })
+      if (this.fabricCanvas) {
+        this?.fabricCanvas
+          .add(viewportRect)
+          .sendToBack(viewportRect)
+        this?.fabricCanvas.requestRenderAll()
+      }
     })
-    this.fabricCanvas
-      .add(viewportRect)
-      .add(exampleRect1)
-      .add(exampleRect2)
+
     return this.setState({ isInitted: true });
   }
 
