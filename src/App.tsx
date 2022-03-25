@@ -57,7 +57,9 @@ const testState = {
               left: 0,
               top: 0
             }
-          }
+          },
+          undoHistory: [],
+          redoHistory: []
         },
         {
           sceneSettings: {},
@@ -66,7 +68,9 @@ const testState = {
               left: 50,
               top: 0
             }
-          }
+          },
+          undoHistory: [],
+          redoHistory: []
         }
       ]
     },
