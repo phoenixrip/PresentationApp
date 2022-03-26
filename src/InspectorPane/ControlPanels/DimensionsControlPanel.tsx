@@ -6,6 +6,10 @@ import { InputNumber, Switch, Button } from "antd"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCoffee, faLock, faUnlock } from '@fortawesome/free-solid-svg-icons'
 
+import { calculateFromString } from '../../Utils/calculateFromString.js'
+
+console.log(calculateFromString("2+2"))
+
 function DimensionsControlPanel() {
     const context: globalContextType = useContext(globalContext)
     const selection: any | undefined = context.fabricCanvas?.getActiveObject()
@@ -22,6 +26,7 @@ function DimensionsControlPanel() {
                     checked={!selection.lockMovementX}
                     onChange={e => setOnFabricObject(selection, "lockMovementX", !e)}
                 />}
+                parser={e =>{ return calculateFromString(e)}}
                 min={0}
                 max={1000}
                 precision={0}
