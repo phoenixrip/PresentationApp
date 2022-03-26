@@ -197,12 +197,15 @@ class App extends Component<{}, globalAppStateType> {
 
   renderActiveScene = (renderScreenIndex: number) => {
     const currentSceneObject = this.state.project.scenes[renderScreenIndex]
-    console.log(currentSceneObject)
 
     for (const [uniqueGlobalId, sceneObjectOptions] of Object.entries(currentSceneObject.activeSceneObjects)) {
       const activeObject = this.liveObjectsDict[uniqueGlobalId]
+      const globalObjects = this.state.project.globalObjects
+      const globalObjectSettings: {} = this.state.project.globalObjects[uniqueGlobalId as keyof typeof globalObjects]
+
       activeObject
-        .set(sceneObjectOptions)
+        .set(globalObjectSettings) //Reset to global settings
+        .set(sceneObjectOptions) // Set specific scene options
         .setCoords()
     }
   }
@@ -318,8 +321,14 @@ class App extends Component<{}, globalAppStateType> {
     )
   }
 
-  setOnFabricObject = (obj: fabric.Object, setting: string, val: any) => {
+  //TODO: Temporarily set obj to any instead of fabric.Object since we reference attribute .uniqueGlobalId which is monkeypatched on
+  setOnFabricObject = (obj: any, setting: string, val: any) => {
     if (obj) {
+      // get active scene and options for object in active scene then add/modify corresponding setting to value
+      const activeScene = this.state.project.scenes[this.state.editorState.activeSceneIndex]
+      let currentOptions = activeScene.activeSceneObjects[obj?.uniqueGlobalId]
+      activeScene.activeSceneObjects[obj?.uniqueGlobalId] = { ...currentOptions, [setting]: val }
+
       obj.set({ [setting]: val })
       obj.setCoords();
       obj?.canvas?.renderAll()
