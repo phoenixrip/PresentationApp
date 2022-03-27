@@ -15,186 +15,58 @@ import { ToolbarContainer } from "./Toolbar/ToolbarContainer";
 
 
 import { SizeType } from 'antd/lib/config-provider/SizeContext'
-import { SceneType } from "./Types/sceneType";
+// import { SceneType } from "./Types/sceneType";
+import { setFabricDefaults } from "./Utils/SetFabricDefaults";
+import { ProjectDataTypes } from "./Types/ProjectDataTypes";
+// import { ProjectDataStateTypes } from "./AppController";
 
-fabric.Object.prototype.set({
-  cornerStyle: 'circle',
-  transparentCorners: false,
-  cornerColor: '#4AB9D1',
-  cornerStrokeColor: '#fff',
-  borderColor: '#70ABFF',
-  lockScalingFlip: true,
-  paintFirst: "stroke"
-})
+setFabricDefaults()
 
-const testState = {
-  fabricCanvas: null,
-  state: {
-    tick: true,
-    isInitted: false,
-    userSettings: {
-      name: "Inspector Payne"
-    },
-    project: {
-      settings: {
-        theme: "dark",
-        dimensions: {
-          width: 896,
-          height: 504
-        }
-      },
-      globalObjects: {
-        "2131-eww2w-2312-dadaa": {
-          uniqueGlobalId: "2131-eww2w-2312-dadaa",
-          angle: 0,
-          clipTo: null,
-          fill: "#29477F",
-          flipX: false,
-          flipY: false,
-          height: 150,
-          left: 300,
-          opacity: 1,
-          overlayFill: null,
-          rx: 0,
-          ry: 0,
-          scaleX: 1,
-          scaleY: 1,
-          shadow: {
-            blur: 5,
-            color: "rgba(94, 128, 191, 0.5)",
-            offsetX: 10,
-            offsetY: 10
-          },
-          stroke: null,
-          strokeDashArray: null,
-          strokeLineCap: "butt",
-          strokeLineJoin: "miter",
-          strokeMiterLimit: 10,
-          strokeWidth: 1,
-          top: 150,
-          type: "rect",
-          visible: true,
-          width: 150,
-          x: 0,
-          y: 0,
-          firstOccurenceIndex: 1
-        },
-        "wda1-ew21-dhftft-2313": {
-          uniqueGlobalId: "wda1-ew21-dhftft-2313",
-          angle: 0,
-          clipTo: null,
-          fill: "rgb(166,111,213)",
-          flipX: false,
-          flipY: false,
-          height: 200,
-          left: 300,
-          opacity: 1,
-          overlayFill: null,
-          radius: 100,
-          scaleX: 1,
-          scaleY: 1,
-          shadow: {
-            blur: 20,
-            color: "#5b238A",
-            offsetX: -20,
-            offsetY: -10
-          },
-          stroke: null,
-          strokeDashArray: null,
-          strokeLineCap: "butt",
-          strokeLineJoin: "miter",
-          strokeMiterLimit: 10,
-          strokeWidth: 1,
-          top: 400,
-          type: "circle",
-          visible: true,
-          width: 200,
-          firstOccurenceIndex: 1
-        },
-      },
-      scenes: [
-        {
-          sceneSettings: {},
-          activeSceneObjects: {
-            "2131-eww2w-2312-dadaa": { top: 0, left: 0 } as fabric.IObjectOptions,
-            "wda1-ew21-dhftft-2313": { top: 100, left: 100 } as fabric.IObjectOptions
-          },
-          undoHistory: [],
-          redoHistory: []
-        },
-        {
-          sceneSettings: {},
-          activeSceneObjects: {
-            "2131-eww2w-2312-dadaa": { top: 400, left: 400 } as fabric.IObjectOptions,
-            "wda1-ew21-dhftft-2313": { top: 500, left: 500 } as fabric.IObjectOptions
-          },
-          undoHistory: [],
-          redoHistory: []
-        }
-      ]
-    },
-    editorState: {
-      activeSceneIndex: 0,
-      antdSize: "small" as SizeType
-    }
-  }
+interface EditorPropsTypes {
+  project: ProjectDataTypes
 }
 
-interface globalAppStateType {
+interface EditorStateTypes {
   tick: Boolean,
   isInitted: Boolean,
-  project: {
-    settings: {
-      theme: String,
-      dimensions: {
-        width: number,
-        height: number,
-      }
-    },
-    globalObjects: Object,
-    scenes: Array<SceneType>
-  },
-  editorState: {
-    activeSceneIndex: number
-    antdSize: SizeType
-  },
-  userSettings: {
-    name: String
-  }
+  project: ProjectDataTypes,
+  activeSceneIndex: number,
+  antdSize: SizeType
 }
 
-interface globalContextType {
+interface EditorContextTypes {
   fabricCanvas: fabric.Canvas | null;
-  state: globalAppStateType,
+  state: EditorStateTypes,
   handleAddRect: Function,
   setOnFabricObject: Function,
   setActiveSceneIndex: Function
 }
 
-const globalContext = React.createContext<globalContextType>({} as globalContextType);
+const editorContext = React.createContext<EditorContextTypes>({} as EditorContextTypes);
 
-class Editor extends Component<{}, globalAppStateType> {
+class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
   fabricCanvas: fabric.Canvas | null;
   throttledSetNewCanvasPaneDimensions: Function
   liveObjectsDict: { [key: string]: fabric.Object }
 
-  constructor(props: Object) {
+  constructor(props: EditorPropsTypes) {
     super(props);
     this.fabricCanvas = null;
     this.liveObjectsDict = {}
     this.throttledSetNewCanvasPaneDimensions = throttle(this.setNewCanvasPanelDimensions, 300)
-    this.state = testState.state
+    this.state = {
+      tick: true,
+      isInitted: false,
+      project: props.project,
+      activeSceneIndex: 0,
+      antdSize: "small" as SizeType
+    }
   }
 
   setActiveSceneIndex = (newSceneIndex: number) => {
     this.renderActiveScene(newSceneIndex)
     this.fabricCanvas?.requestRenderAll()
-    return this.setState({
-      editorState: {
-        ...this.state.editorState,
-        activeSceneIndex: newSceneIndex
-      }
-    })
+    return this.setState({ activeSceneIndex: newSceneIndex })
   }
 
   renderActiveScene = (renderScreenIndex: number) => {
@@ -260,12 +132,11 @@ class Editor extends Component<{}, globalAppStateType> {
     })
 
     // Add event listener on rescale to set width/height to width/height * scaleX/scaleY and scaleX/scaleY to 1
-    // We may want to implemenet a specific function for other objects here
-    //  eg. Circles need to update their radius instead of their width + height
+    // TODO: We may want to implemenet a specific function for other objects here
+    //eg. Circles need to update their radius instead of their width + height
     this.fabricCanvas.on("object:scaling", function (e: any) {
       const target = e.target
       if (target && target.type === 'rect') {
-        console.log('rect scaling')
         const width = Math.round(target.width * target.scaleX) || 1
         const height = Math.round(target.height * target.scaleY) || 1
         target.set({ width, height, scaleX: 1, scaleY: 1 })
@@ -276,7 +147,7 @@ class Editor extends Component<{}, globalAppStateType> {
     const json: any = { objects: Object.values(this.state.project.globalObjects) }
     this.fabricCanvas.loadFromJSON(json, () => {
       this.initViewportRect()
-      this.renderActiveScene(this.state.editorState.activeSceneIndex)
+      this.renderActiveScene(this.state.activeSceneIndex)
       this.fabricCanvas?.requestRenderAll()
     }, (options: any, object: any, a: any) => {
       this.liveObjectsDict[options.uniqueGlobalId] = object
@@ -327,7 +198,7 @@ class Editor extends Component<{}, globalAppStateType> {
   setOnFabricObject = (obj: any, setting: string, val: any) => {
     if (obj) {
       // get active scene and options for object in active scene then add/modify corresponding setting to value
-      const activeScene = this.state.project.scenes[this.state.editorState.activeSceneIndex]
+      const activeScene = this.state.project.scenes[this.state.activeSceneIndex]
       let currentOptions = activeScene.activeSceneObjects[obj?.uniqueGlobalId]
 
       //TODO: USE SETSTATE HERE
@@ -351,7 +222,7 @@ class Editor extends Component<{}, globalAppStateType> {
 
     return (
       <div>
-        <globalContext.Provider value={contextValue}>
+        <editorContext.Provider value={contextValue}>
           <ReflexContainer
             orientation="vertical"
             style={{ width: "100vw", height: "100vh" }}
@@ -391,11 +262,11 @@ class Editor extends Component<{}, globalAppStateType> {
               </ReflexContainer>
             </ReflexElement>
           </ReflexContainer>
-        </globalContext.Provider>
+        </editorContext.Provider>
       </div>
     );
   }
 }
 
-export { Editor, globalContext };
-export type { globalContextType };
+export { Editor, editorContext };
+export type { EditorContextTypes };

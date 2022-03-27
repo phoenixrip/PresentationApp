@@ -1,10 +1,10 @@
 import { useContext } from "react";
-import { globalContext, globalContextType } from "../../Editor";
+import { editorContext, EditorContextTypes } from "../../Editor";
 import { CirclePicker } from 'react-color';
 import { Button, InputNumber, Collapse, Switch, Radio } from 'antd';
 
 function BorderControlPanel() {
-  const context: globalContextType = useContext(globalContext);
+  const context: EditorContextTypes = useContext(editorContext);
   const selection: any | undefined = context.fabricCanvas?.getActiveObject()
   const setOnFabricObject: Function = context.setOnFabricObject
 

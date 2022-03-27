@@ -1,10 +1,10 @@
 import { useContext } from "react";
-import { globalContext, globalContextType } from "../Editor";
+import { editorContext, EditorContextTypes } from "../Editor";
 import c from './ScenesPane.module.css'
 
 const ScenesPane = (props: Object) => {
-  const context: globalContextType = useContext(globalContext)
-  const currentScreenIndex = context.state.editorState.activeSceneIndex
+  const context: EditorContextTypes = useContext(editorContext)
+  const currentScreenIndex = context.state.activeSceneIndex
   return (
     <div className={c.container}>
       {
@@ -14,7 +14,7 @@ const ScenesPane = (props: Object) => {
             return (
               <div
                 key={`ScenePill${sceneIndex}`}
-                onClick={() => { context.setActiveSceneIndex(sceneIndex)}}
+                onClick={() => { context.setActiveSceneIndex(sceneIndex) }}
                 className={`${c.scenePill} ${isCurrent ? c.current : c.idle}`}>
                 <div className={c.sceneTitleContainer}>
                   Scene {sceneIndex + 1}

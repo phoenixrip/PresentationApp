@@ -1,27 +1,27 @@
 import { useContext } from "react";
-import { globalContext, globalContextType } from "../../Editor";
+import { editorContext, EditorContextTypes } from "../../Editor";
 import { CirclePicker } from 'react-color';
 import { Button, InputNumber, Collapse, Switch, Radio } from 'antd';
 import { fabric } from "fabric";
 
 function ShadowControlPanel() {
-    const context: globalContextType = useContext(globalContext);
+    const context: EditorContextTypes = useContext(editorContext);
     const selection: any | undefined = context.fabricCanvas?.getActiveObject()
     const setOnFabricObject: Function = context.setOnFabricObject
 
-      // const setOnObjectShadow = (obj: fabric.Object, setting: string, val: any) => {
-  //   if (obj && typeof obj.shadow === "object") {
-  //     obj.shadow[setting] = val
-  //     obj?.setCoords();
-  //     obj?.canvas?.renderAll()
-  // }
+    // const setOnObjectShadow = (obj: fabric.Object, setting: string, val: any) => {
+    //   if (obj && typeof obj.shadow === "object") {
+    //     obj.shadow[setting] = val
+    //     obj?.setCoords();
+    //     obj?.canvas?.renderAll()
+    // }
 
     const setOnSelectionShadow = (setting: string, val: any) => {
         selection.shadow[setting] = val
         selection.setCoords();
         selection.canvas.renderAll()
-      }
-    
+    }
+
 
     return (
         <>

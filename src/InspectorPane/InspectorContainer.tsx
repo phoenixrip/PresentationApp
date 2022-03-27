@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { globalContext, globalContextType  } from "../Editor";
+import { editorContext, EditorContextTypes } from "../Editor";
 import { Button, InputNumber, Collapse, Switch, Radio } from 'antd';
 const { Panel } = Collapse;
 import { CirclePicker } from 'react-color';
@@ -12,7 +12,7 @@ import { BorderControlPanel } from "./ControlPanels/BorderControlPanel";
 import { ShadowControlPanel } from "./ControlPanels/ShadowControlPanel";
 
 const InspectorContainer = (props: Object) => {
-  const context: globalContextType = useContext(globalContext);
+  const context: EditorContextTypes = useContext(editorContext);
   const selection: any | undefined = context.fabricCanvas?.getActiveObject()
   const setOnFabricObject: Function = context.setOnFabricObject
 
