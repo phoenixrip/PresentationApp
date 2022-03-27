@@ -17,7 +17,7 @@ import { ToolbarContainer } from "./Toolbar/ToolbarContainer";
 import { SizeType } from 'antd/lib/config-provider/SizeContext'
 // import { SceneType } from "./Types/sceneType";
 import { setFabricDefaults } from "./Utils/SetFabricDefaults";
-import { ProjectDataTypes } from "./Types/ProjectDataTypes";
+import { ProjectDataTypes, SceneType } from "./Types/ProjectDataTypes";
 import { CustomFabricObject } from "./Types/CustomFabricTypes";
 // import { ProjectDataStateTypes } from "./AppController";
 
@@ -199,16 +199,33 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
   setOnFabricObject = (obj: CustomFabricObject, setting: string, val: any) => {
     if (obj) {
       // get active scene and options for object in active scene then add/modify corresponding setting to value
+
+
       const activeScene = this.state.project.scenes[this.state.activeSceneIndex]
       let currentOptions = activeScene.activeSceneObjects[obj?.uniqueGlobalId]
-
-      //TODO: USE SETSTATE HERE
-      activeScene.activeSceneObjects[obj?.uniqueGlobalId] = { ...currentOptions, [setting]: val }
-
+      let newSettings = { ...currentOptions, [setting]: val }
+      const newSceneActiveObjectsObject = {
+        ...activeScene.activeSceneObjects,
+        [obj?.uniqueGlobalId]: newSettings
+      }
 
       obj.set({ [setting]: val })
       obj.setCoords();
       obj?.canvas?.renderAll()
+
+      return this.setState({
+        project: {
+          ...this.state.project,
+          scenes: this.state.project.scenes.map((currSceneObject: SceneType, currScreenIndex: number) => {
+            if (currScreenIndex !== this.state.activeSceneIndex) return currSceneObject
+            const newSceneObject = {
+              ...currSceneObject,
+              activeSceneObjects: newSceneActiveObjectsObject
+            }
+            return newSceneObject
+          })
+        }
+      })
     }
   }
 
