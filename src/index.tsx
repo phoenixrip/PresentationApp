@@ -1,6 +1,6 @@
 import { render } from "react-dom";
 
-import { App } from "./App";
+import { AppController } from "./AppController"
 
 const rootElement = document.getElementById("root");
-render(<App />, rootElement);
+render(<AppController />, rootElement);

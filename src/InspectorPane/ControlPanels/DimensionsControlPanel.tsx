@@ -1,6 +1,5 @@
 import { useContext } from "react"
-import { globalContext } from "../../App"
-import { globalContextType } from "../../App"
+import { globalContext, globalContextType } from "../../Editor";
 import { InputNumber, Switch, Button } from "antd"
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'

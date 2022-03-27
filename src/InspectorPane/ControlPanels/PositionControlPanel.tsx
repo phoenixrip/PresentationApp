@@ -1,6 +1,5 @@
 import { useContext } from "react";
-import { globalContext } from "../../App";
-import { globalContextType } from "../../App";
+import { globalContext, globalContextType } from "../../Editor";
 import { Button, InputNumber } from "antd"
 
 function PositionControlPanel() {

@@ -76,7 +76,8 @@ const testState = {
           visible: true,
           width: 150,
           x: 0,
-          y: 0
+          y: 0,
+          firstOccurenceIndex: 1
         },
         "wda1-ew21-dhftft-2313": {
           uniqueGlobalId: "wda1-ew21-dhftft-2313",
@@ -107,7 +108,8 @@ const testState = {
           top: 400,
           type: "circle",
           visible: true,
-          width: 200
+          width: 200,
+          firstOccurenceIndex: 1
         },
       },
       scenes: [
@@ -171,7 +173,7 @@ interface globalContextType {
 
 const globalContext = React.createContext<globalContextType>({} as globalContextType);
 
-class App extends Component<{}, globalAppStateType> {
+class Editor extends Component<{}, globalAppStateType> {
   fabricCanvas: fabric.Canvas | null;
   throttledSetNewCanvasPaneDimensions: Function
   liveObjectsDict: { [key: string]: fabric.Object }
@@ -200,7 +202,7 @@ class App extends Component<{}, globalAppStateType> {
 
     for (const [uniqueGlobalId, sceneObjectOptions] of Object.entries(currentSceneObject.activeSceneObjects)) {
       const activeObject = this.liveObjectsDict[uniqueGlobalId]
-      const globalObjects = this.state.project.globalObjects
+      const globalObjects = this.state.project.globalObjects // used to type uniqueGlobalId as keyof globalObjects
       const globalObjectSettings: {} = this.state.project.globalObjects[uniqueGlobalId as keyof typeof globalObjects]
 
       activeObject
@@ -327,7 +329,10 @@ class App extends Component<{}, globalAppStateType> {
       // get active scene and options for object in active scene then add/modify corresponding setting to value
       const activeScene = this.state.project.scenes[this.state.editorState.activeSceneIndex]
       let currentOptions = activeScene.activeSceneObjects[obj?.uniqueGlobalId]
+
+      //TODO: USE SETSTATE HERE
       activeScene.activeSceneObjects[obj?.uniqueGlobalId] = { ...currentOptions, [setting]: val }
+
 
       obj.set({ [setting]: val })
       obj.setCoords();
@@ -392,5 +397,5 @@ class App extends Component<{}, globalAppStateType> {
   }
 }
 
-export { App, globalContext };
+export { Editor, globalContext };
 export type { globalContextType };

@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { globalContext, globalContextType } from "../App";
+import { globalContext, globalContextType } from "../Editor";
 import c from './ScenesPane.module.css'
 
 const ScenesPane = (props: Object) => {

@@ -1,6 +1,5 @@
 import { useContext } from "react";
-import { globalContext } from "../../App";
-import { globalContextType } from "../../App";
+import { globalContext, globalContextType } from "../../Editor";
 import { CirclePicker } from 'react-color';
 import { Button, InputNumber, Collapse, Switch, Radio } from 'antd';
 import { fabric } from "fabric";
