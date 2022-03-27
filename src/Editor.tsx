@@ -18,7 +18,7 @@ import { SizeType } from 'antd/lib/config-provider/SizeContext'
 // import { SceneType } from "./Types/sceneType";
 import { setFabricDefaults } from "./Utils/SetFabricDefaults";
 import { ProjectDataTypes, SceneType } from "./Types/ProjectDataTypes";
-import { CustomFabricObject } from "./Types/CustomFabricTypes";
+import { CustomFabricCircle, CustomFabricObject } from "./Types/CustomFabricTypes";
 // import { ProjectDataStateTypes } from "./AppController";
 
 setFabricDefaults()
@@ -67,7 +67,7 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
 
   setActiveSceneIndex = (newSceneIndex: number) => {
     //not unselecting active object can create issues when a group is selected and scene changed
-    this.fabricCanvas?.discardActiveObject() 
+    this.fabricCanvas?.discardActiveObject()
     this.renderActiveScene(newSceneIndex)
     this.fabricCanvas?.requestRenderAll()
     return this.setState({ activeSceneIndex: newSceneIndex })
@@ -90,18 +90,39 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
   }
 
   handleActiveSelectionDragCompleted(activeSelection: fabric.ActiveSelection) {
-    if (this.fabricCanvas) { //shuts up Typescript
-      const activeSelectionObjects = activeSelection.getObjects()
-      this.fabricCanvas.discardActiveObject() //Unselect on canvas
-
-      for (const obj of activeSelectionObjects) {
-        this.setOnGlobalObject(obj as CustomFabricObject, { top: obj.top, left: obj.left })
-      }
-
-      const reselection = new fabric.ActiveSelection(activeSelectionObjects, {canvas: this.fabricCanvas})
-      this.fabricCanvas.setActiveObject(reselection)
-      this.fabricCanvas.requestRenderAll()
+    const activeSelectionObjects = activeSelection.getObjects()
+    this.fabricCanvas?.discardActiveObject() //Unselect on canvas
+    for (const obj of activeSelectionObjects) {
+      this.setOnGlobalObject(obj as CustomFabricObject, { top: obj.top, left: obj.left })
     }
+
+    const reselection = new fabric.ActiveSelection(activeSelectionObjects, { canvas: this.fabricCanvas as fabric.Canvas })
+    this.fabricCanvas?.setActiveObject(reselection)
+    this.fabricCanvas?.requestRenderAll()
+  }
+
+  handleActiveSelectionScaleCompleted(activeSelection: fabric.ActiveSelection) {
+    const activeSelectionObjects = activeSelection.getObjects()
+    this.fabricCanvas?.discardActiveObject() //Unselect on canvas
+    for (const obj of activeSelectionObjects) {
+      switch (obj.type) {
+        case "rect":
+          this.setOnGlobalObject(obj as CustomFabricObject, { height: obj.height, width: obj.width })
+          break
+        case "circle":
+          // TODO: FIX THIS UGLY SHIT
+          // TODO: SCALING PERSISTS BUT NOT POSITIONING
+              // RESET THE TOP AND LEFT TO BEFORE RADIUS CHANGE
+          this.setOnGlobalObject(obj as CustomFabricCircle , { radius: (obj as CustomFabricCircle).radius } )
+          break
+        default:
+          break
+      }
+    }
+
+    const reselection = new fabric.ActiveSelection(activeSelectionObjects, { canvas: this.fabricCanvas as fabric.Canvas })
+    this.fabricCanvas?.setActiveObject(reselection)
+    this.fabricCanvas?.requestRenderAll()
   }
 
   initFabricCanvas = (domCanvas: HTMLCanvasElement, canvasPaneDimensions: { width: number, height: number }) => {
@@ -151,40 +172,104 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       // }
     })
 
-    // Add event listener on rescale to set width/height to width/height * scaleX/scaleY and scaleX/scaleY to 1
-    // TODO: Add all object types
-    // ? This could also go on object:modified so it only runs when the transform is finished if performance is an issue
-
-    this.fabricCanvas.on("object:scaling", function (e: any) {
-      const target = e.target
-      switch (target.type) {
-        case "rect":
-          const width = Math.round(target.width * target.scaleX) || 1
-          const height = Math.round(target.height * target.scaleY) || 1
-          target.set({ width: width, height: height, scaleX: 1, scaleY: 1 })
-          break
-        case "circle":
-          const radius = Math.round(target.radius * target.scaleX) || 1
-          target.set({ radius: radius, scaleX: 1, scaleY: 1 })
-          break
-        default:
-          break
-      }
-    });
 
     //Hook into Fabrics events 
     this.fabricCanvas.on("object:modified", (e: any) => {
       console.log("object:modfied", e)
+      // Because of nesting switch functions all Actions should follow the same order, as well as types being in the same order
+      // Actions:
+      // Drag
+      // Scale
+      //
+      // Types:
+      // Rect
+      // Circle
+
+      // First run all functions that scale width/height/radius and reset scale to 1 so that functions that register changes
+      // have consistent data
+      if (e.target.type === "activeSelection") {
+        switch (e.action) {
+          case "scale":
+            const newScaleX = e.target.scaleX
+            const newScaleY = e.target.scaleY
+
+            //Scale width and height of group:
+            const width = Math.round(e.target.width * newScaleX) || 1
+            const height = Math.round(e.target.height * newScaleY) || 1
+            e.target.set({ width: width, height: height, scaleX: 1, scaleY: 1 })
+
+            // Iterate through all objects in group and rescale
+            // Calculate new left and top relative to new group scale
+            for (const obj of e.target.getObjects()) {
+              const left = Math.round(obj.left * newScaleX)
+              const top = Math.round(obj.top * newScaleY)
+
+              switch (obj.type) {
+                case "rect":
+                  const width = Math.round(obj.width * newScaleX) || 1
+                  const height = Math.round(obj.height * newScaleY) || 1
+                  obj.set({ width: width, height: height, scaleX: 1, scaleY: 1, top: top, left: left })
+                  break
+                case "circle":
+                  const radius = Math.round(obj.radius * newScaleX) || 1
+                  obj.set({ radius: radius, scaleX: 1, scaleY: 1, top: top, left: left })
+                  break
+                default:
+                  break
+              }
+            }
+            break
+          default:
+            break
+        }
+      } else {
+        switch (e.action) {
+          case "scale":
+            switch (e.target.type) {
+              case "rect":
+                const width = Math.round(e.target.width * e.target.scaleX) || 1
+                const height = Math.round(e.target.height * e.target.scaleY) || 1
+                e.target.set({ width: width, height: height, scaleX: 1, scaleY: 1 })
+                break
+              case "circle":
+                const radius = Math.round(e.target.radius * e.target.scaleX) || 1
+                e.target.set({ radius: radius, scaleX: 1, scaleY: 1 })
+                break
+              default:
+                break
+            }
+            break
+          default:
+            break
+        }
+      }
+
+      // Run functions that check what has been transformed in the target and save those to Scene/Global state
       if (e.target.type === "activeSelection") {
         switch (e.transform.action) {
           case "drag":
             this.handleActiveSelectionDragCompleted(e.target)
+            break
+          case "scale":
+            this.handleActiveSelectionScaleCompleted(e.target)
             break
           default:
             break
         }
       } else {
         switch (e.transform.action) {
+          case "scale":
+            switch (e.target.type) {
+              case "rect":
+                this.setOnGlobalObject(e.target, { height: e.target.height, width: e.target.width })
+                break
+              case "circle":
+                this.setOnGlobalObject(e.target, { radius: e.target.radius })
+                break
+              default:
+                break
+            }
+            break
           case "drag":
             this.setOnGlobalObject(e.target, { top: e.target.top, left: e.target.left })
             break

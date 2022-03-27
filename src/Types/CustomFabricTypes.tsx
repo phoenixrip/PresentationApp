@@ -1,8 +1,11 @@
 interface CustomFabricObject extends fabric.Object {
   uniqueGlobalId: string,
-  name: string
+  userSetName: string
 }
 
+interface CustomFabricCircle extends CustomFabricObject, fabric.Circle {}
+
 export type {
-  CustomFabricObject
+  CustomFabricObject,
+  CustomFabricCircle
 }
