@@ -66,23 +66,41 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
   }
 
   setActiveSceneIndex = (newSceneIndex: number) => {
+    //not unselecting active object can create issues when a group is selected and scene changed
+    this.fabricCanvas?.discardActiveObject() 
     this.renderActiveScene(newSceneIndex)
     this.fabricCanvas?.requestRenderAll()
     return this.setState({ activeSceneIndex: newSceneIndex })
   }
 
   renderActiveScene = (renderScreenIndex: number) => {
+    //Get current scene
     const currentSceneObject = this.state.project.scenes[renderScreenIndex]
 
+    // For each object in active scene
     for (const [uniqueGlobalId, sceneObjectOptions] of Object.entries(currentSceneObject.activeSceneObjects)) {
       const activeObject = this.liveObjectsDict[uniqueGlobalId]
-      const globalObjects = this.state.project.globalObjects // used to type uniqueGlobalId as keyof globalObjects
-      const globalObjectSettings: {} = this.state.project.globalObjects[uniqueGlobalId as keyof typeof globalObjects]
+      const globalObjectSettings: {} = this.state.project.globalObjects[uniqueGlobalId]
 
       activeObject
         .set(globalObjectSettings) //Reset to global settings
         .set(sceneObjectOptions) // Set specific scene options
         .setCoords()
+    }
+  }
+
+  handleActiveSelectionDragCompleted(activeSelection: fabric.ActiveSelection) {
+    if (this.fabricCanvas) { //shuts up Typescript
+      const activeSelectionObjects = activeSelection.getObjects()
+      this.fabricCanvas.discardActiveObject() //Unselect on canvas
+
+      for (const obj of activeSelectionObjects) {
+        this.setOnGlobalObject(obj as CustomFabricObject, { top: obj.top, left: obj.left })
+      }
+
+      const reselection = new fabric.ActiveSelection(activeSelectionObjects, {canvas: this.fabricCanvas})
+      this.fabricCanvas.setActiveObject(reselection)
+      this.fabricCanvas.requestRenderAll()
     }
   }
 
@@ -139,7 +157,6 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
 
     this.fabricCanvas.on("object:scaling", function (e: any) {
       const target = e.target
-      console.log(target)
       switch (target.type) {
         case "rect":
           const width = Math.round(target.width * target.scaleX) || 1
@@ -157,13 +174,23 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
 
     //Hook into Fabrics events 
     this.fabricCanvas.on("object:modified", (e: any) => {
-      console.log(e)
-      switch (e.transform.action) {
-        case "drag":
-          this.setOnGlobalObject(e.target, { top: e.target.top, left: e.target.left })
-          break
-        default:
-          break
+      console.log("object:modfied", e)
+      if (e.target.type === "activeSelection") {
+        switch (e.transform.action) {
+          case "drag":
+            this.handleActiveSelectionDragCompleted(e.target)
+            break
+          default:
+            break
+        }
+      } else {
+        switch (e.transform.action) {
+          case "drag":
+            this.setOnGlobalObject(e.target, { top: e.target.top, left: e.target.left })
+            break
+          default:
+            break
+        }
       }
     })
 
@@ -221,11 +248,12 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     if (obj) {
       // get active scene and options for object in active scene then add/modify corresponding setting to value
       const activeScene = this.state.project.scenes[this.state.activeSceneIndex]
-      let currentOptions = activeScene.activeSceneObjects[obj?.uniqueGlobalId]
+      let currentOptions = activeScene.activeSceneObjects[obj.uniqueGlobalId]
       let newSettings = { ...currentOptions, ...settings }
+
       const newSceneActiveObjectsObject = {
         ...activeScene.activeSceneObjects,
-        [obj?.uniqueGlobalId]: newSettings
+        [obj.uniqueGlobalId]: newSettings
       }
 
       return this.setState({

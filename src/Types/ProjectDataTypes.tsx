@@ -1,6 +1,6 @@
 interface ProjectDataTypes {
   settings: ProjectSettingsTypes,
-  globalObjects: Object,
+  globalObjects: {[key: string]: Object},
   scenes: Array<SceneType>
 }
 
