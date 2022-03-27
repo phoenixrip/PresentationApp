@@ -6,7 +6,8 @@ function setFabricDefaults() {
     cornerStrokeColor: '#fff',
     borderColor: '#70ABFF',
     lockScalingFlip: true,
-    paintFirst: "stroke"
+    paintFirst: "stroke",
+    name: ""
   })
 }
 

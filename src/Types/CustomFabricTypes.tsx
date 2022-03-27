@@ -1,5 +1,6 @@
 interface CustomFabricObject extends fabric.Object {
-  uniqueGlobalId: string
+  uniqueGlobalId: string,
+  name: string
 }
 
 export type {

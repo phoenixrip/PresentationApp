@@ -134,8 +134,9 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     })
 
     // Add event listener on rescale to set width/height to width/height * scaleX/scaleY and scaleX/scaleY to 1
-    // TODO: We may want to implemenet a specific function for other objects here
-    //eg. Circles need to update their radius instead of their width + height
+    // TODO: Add all object types
+    // ? This could also go on object:modified so it only runs when the transform is finished if performance is an issue
+
     this.fabricCanvas.on("object:scaling", function (e: any) {
       const target = e.target
       console.log(target)
