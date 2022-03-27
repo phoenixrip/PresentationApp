@@ -9,20 +9,6 @@ function ShadowControlPanel() {
     const selection: any | undefined = context.fabricCanvas?.getActiveObject()
     const setOnFabricObject: Function = context.setOnFabricObject
 
-    // const setOnObjectShadow = (obj: fabric.Object, setting: string, val: any) => {
-    //   if (obj && typeof obj.shadow === "object") {
-    //     obj.shadow[setting] = val
-    //     obj?.setCoords();
-    //     obj?.canvas?.renderAll()
-    // }
-
-    const setOnSelectionShadow = (setting: string, val: any) => {
-        selection.shadow[setting] = val
-        selection.setCoords();
-        selection.canvas.renderAll()
-    }
-
-
     return (
         <>
             <Switch
@@ -31,10 +17,10 @@ function ShadowControlPanel() {
                 checked={selection?.shadow}
                 onChange={e => {
                     if (selection?.shadow) {
-                        setOnFabricObject(selection, {shadow: undefined})
+                        setOnFabricObject(selection, { shadow: undefined })
                         return
                     } else {
-                        setOnFabricObject(selection, {shadow: new fabric.Shadow("50px 50px 50px rgba(0,0,0,1)")})
+                        setOnFabricObject(selection, { shadow: new fabric.Shadow("50px 50px 50px rgba(0,0,0,1)") })
                     }
                 }}
             />
@@ -46,25 +32,28 @@ function ShadowControlPanel() {
                         max={1000}
                         precision={0}
                         value={selection.shadow.blur}
-                        onChange={e => setOnSelectionShadow("blur", e)} />
+                        onChange={e => setOnFabricObject(selection, { shadow: { ...selection.shadow, blur: e } })}
+                    />
                     <CirclePicker
                         color={selection.shadow.color || "rgba(10,10,10,0.5)"}
-                        onChange={e => { setOnSelectionShadow("color", `rgba(${e.rgb.r},${e.rgb.g},${e.rgb.b},${e.rgb.a})`) }}
+                        onChange={e => setOnFabricObject(selection, { shadow: { ...selection.shadow, color: `rgba(${e.rgb.r},${e.rgb.g},${e.rgb.b},${e.rgb.a})` } })}
                     />
                     <InputNumber addonBefore="X-offset"
                         addonAfter="px"
-                        min={0}
+                        min={-1000}
                         max={1000}
                         precision={0}
                         value={selection.shadow.offsetX}
-                        onChange={e => setOnSelectionShadow("offsetX", e)} />
+                        onChange={e => setOnFabricObject(selection, { shadow: { ...selection.shadow, offsetX: e} })}
+                        />
                     <InputNumber addonBefore="Y-offset"
                         addonAfter="px"
-                        min={0}
+                        min={-1000}
                         max={1000}
                         precision={0}
                         value={selection.shadow.offsetY}
-                        onChange={e => setOnSelectionShadow("offsetY", e)} />
+                        onChange={e => setOnFabricObject(selection, { shadow: { ...selection.shadow, offsetY: e} })}
+                        />
                     <pre>{selection && JSON.stringify(selection.shadow, null, 4)}</pre>
                 </>
             }

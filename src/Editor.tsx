@@ -145,6 +145,7 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       }
     });
 
+    //Hook into Fabrics events 
     this.fabricCanvas.on("object:modified", (e: any) => {
       console.log(e)
       switch(e.transform.action) {
