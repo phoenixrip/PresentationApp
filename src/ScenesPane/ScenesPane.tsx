@@ -1,9 +1,12 @@
+import { Button } from "antd";
 import { useContext } from "react";
-import { editorContext, EditorContextTypes } from "../Editor";
+import { editorContext } from "../Editor";
+import { UseFaIcon } from "../Utils/UseFaIcon";
+import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import c from './ScenesPane.module.css'
 
 const ScenesPane = (props: Object) => {
-  const context: EditorContextTypes = useContext(editorContext)
+  const context = useContext(editorContext)
   const currentScreenIndex = context.state.activeSceneIndex
   return (
     <div className={c.container}>
@@ -24,6 +27,14 @@ const ScenesPane = (props: Object) => {
           }
         )
       }
+      <div className={c.addNewControlsContainer}>
+        <Button
+          size={context.state.antdSize}
+          icon={<UseFaIcon icon={faPlus} />}
+          type='primary'>
+          Add next scene
+        </Button>
+      </div>
     </div>
   )
 }
