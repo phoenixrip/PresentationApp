@@ -138,20 +138,29 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     //eg. Circles need to update their radius instead of their width + height
     this.fabricCanvas.on("object:scaling", function (e: any) {
       const target = e.target
-      if (target && target.type === 'rect') {
-        const width = Math.round(target.width * target.scaleX) || 1
-        const height = Math.round(target.height * target.scaleY) || 1
-        target.set({ width, height, scaleX: 1, scaleY: 1 })
+      console.log(target)
+      switch (target.type) {
+        case "rect":
+          const width = Math.round(target.width * target.scaleX) || 1
+          const height = Math.round(target.height * target.scaleY) || 1
+          target.set({ width: width, height: height, scaleX: 1, scaleY: 1 })
+          break
+        case "circle":
+          const radius = Math.round(target.radius * target.scaleX) || 1
+          target.set({ radius: radius, scaleX: 1, scaleY: 1 })
+          break
+        default:
+          break
       }
     });
 
     //Hook into Fabrics events 
     this.fabricCanvas.on("object:modified", (e: any) => {
       console.log(e)
-      switch(e.transform.action) {
+      switch (e.transform.action) {
         case "drag":
-            this.setOnGlobalObject(e.target, {top: e.target.top, left: e.target.left})
-            break
+          this.setOnGlobalObject(e.target, { top: e.target.top, left: e.target.left })
+          break
         default:
           break
       }
@@ -207,33 +216,33 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       })
     )
   }
-    setOnGlobalObject = (obj: CustomFabricObject, settings: {}) => {
-      if (obj) {
-        // get active scene and options for object in active scene then add/modify corresponding setting to value
-        const activeScene = this.state.project.scenes[this.state.activeSceneIndex]
-        let currentOptions = activeScene.activeSceneObjects[obj?.uniqueGlobalId]
-        let newSettings = { ...currentOptions, ...settings }
-        const newSceneActiveObjectsObject = {
-          ...activeScene.activeSceneObjects,
-          [obj?.uniqueGlobalId]: newSettings
-        }
-    
-        return this.setState({
-          project: {
-            ...this.state.project,
-            scenes: this.state.project.scenes.map((currSceneObject: SceneType, currScreenIndex: number) => {
-              if (currScreenIndex !== this.state.activeSceneIndex) return currSceneObject
-              return {
-                ...currSceneObject,
-                activeSceneObjects: newSceneActiveObjectsObject
-              }
-            })
-          }
-        })
+  setOnGlobalObject = (obj: CustomFabricObject, settings: {}) => {
+    if (obj) {
+      // get active scene and options for object in active scene then add/modify corresponding setting to value
+      const activeScene = this.state.project.scenes[this.state.activeSceneIndex]
+      let currentOptions = activeScene.activeSceneObjects[obj?.uniqueGlobalId]
+      let newSettings = { ...currentOptions, ...settings }
+      const newSceneActiveObjectsObject = {
+        ...activeScene.activeSceneObjects,
+        [obj?.uniqueGlobalId]: newSettings
       }
+
+      return this.setState({
+        project: {
+          ...this.state.project,
+          scenes: this.state.project.scenes.map((currSceneObject: SceneType, currScreenIndex: number) => {
+            if (currScreenIndex !== this.state.activeSceneIndex) return currSceneObject
+            return {
+              ...currSceneObject,
+              activeSceneObjects: newSceneActiveObjectsObject
+            }
+          })
+        }
+      })
     }
-  
-    setOnFabricObject = (obj: CustomFabricObject, settings: {}) => {
+  }
+
+  setOnFabricObject = (obj: CustomFabricObject, settings: {}) => {
     if (obj) {
       this.setOnGlobalObject(obj, settings)
       obj.set(settings)
