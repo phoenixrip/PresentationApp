@@ -18,6 +18,7 @@ import { SizeType } from 'antd/lib/config-provider/SizeContext'
 // import { SceneType } from "./Types/sceneType";
 import { setFabricDefaults } from "./Utils/SetFabricDefaults";
 import { ProjectDataTypes } from "./Types/ProjectDataTypes";
+import { CustomFabricObject } from "./Types/CustomFabricTypes";
 // import { ProjectDataStateTypes } from "./AppController";
 
 setFabricDefaults()
@@ -195,7 +196,7 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
   }
 
   //TODO: Temporarily set obj to any instead of fabric.Object since we reference attribute .uniqueGlobalId which is monkeypatched on
-  setOnFabricObject = (obj: any, setting: string, val: any) => {
+  setOnFabricObject = (obj: CustomFabricObject, setting: string, val: any) => {
     if (obj) {
       // get active scene and options for object in active scene then add/modify corresponding setting to value
       const activeScene = this.state.project.scenes[this.state.activeSceneIndex]
