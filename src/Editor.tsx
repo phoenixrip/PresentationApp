@@ -40,6 +40,7 @@ interface EditorContextTypes {
   state: EditorStateTypes,
   handleAddRect: Function,
   setOnFabricObject: Function,
+  setOnGlobalObject: Function
   setActiveSceneIndex: Function
 }
 
@@ -144,6 +145,17 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       }
     });
 
+    this.fabricCanvas.on("object:modified", (e: any) => {
+      console.log(e)
+      switch(e.transform.action) {
+        case "drag":
+            this.setOnGlobalObject(e.target, {top: e.target.top, left: e.target.left})
+            break
+        default:
+          break
+      }
+    })
+
     // Init complete editor state
     const json: any = { objects: Object.values(this.state.project.globalObjects) }
     this.fabricCanvas.loadFromJSON(json, () => {
@@ -194,38 +206,38 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       })
     )
   }
-
-  //TODO: Temporarily set obj to any instead of fabric.Object since we reference attribute .uniqueGlobalId which is monkeypatched on
-  setOnFabricObject = (obj: CustomFabricObject, setting: string, val: any) => {
-    if (obj) {
-      // get active scene and options for object in active scene then add/modify corresponding setting to value
-
-
-      const activeScene = this.state.project.scenes[this.state.activeSceneIndex]
-      let currentOptions = activeScene.activeSceneObjects[obj?.uniqueGlobalId]
-      let newSettings = { ...currentOptions, [setting]: val }
-      const newSceneActiveObjectsObject = {
-        ...activeScene.activeSceneObjects,
-        [obj?.uniqueGlobalId]: newSettings
+    setOnGlobalObject = (obj: CustomFabricObject, settings: {}) => {
+      if (obj) {
+        // get active scene and options for object in active scene then add/modify corresponding setting to value
+        const activeScene = this.state.project.scenes[this.state.activeSceneIndex]
+        let currentOptions = activeScene.activeSceneObjects[obj?.uniqueGlobalId]
+        let newSettings = { ...currentOptions, ...settings }
+        const newSceneActiveObjectsObject = {
+          ...activeScene.activeSceneObjects,
+          [obj?.uniqueGlobalId]: newSettings
+        }
+    
+        return this.setState({
+          project: {
+            ...this.state.project,
+            scenes: this.state.project.scenes.map((currSceneObject: SceneType, currScreenIndex: number) => {
+              if (currScreenIndex !== this.state.activeSceneIndex) return currSceneObject
+              return {
+                ...currSceneObject,
+                activeSceneObjects: newSceneActiveObjectsObject
+              }
+            })
+          }
+        })
       }
-
-      obj.set({ [setting]: val })
+    }
+  
+    setOnFabricObject = (obj: CustomFabricObject, settings: {}) => {
+    if (obj) {
+      this.setOnGlobalObject(obj, settings)
+      obj.set(settings)
       obj.setCoords();
       obj?.canvas?.renderAll()
-
-      return this.setState({
-        project: {
-          ...this.state.project,
-          scenes: this.state.project.scenes.map((currSceneObject: SceneType, currScreenIndex: number) => {
-            if (currScreenIndex !== this.state.activeSceneIndex) return currSceneObject
-            const newSceneObject = {
-              ...currSceneObject,
-              activeSceneObjects: newSceneActiveObjectsObject
-            }
-            return newSceneObject
-          })
-        }
-      })
     }
   }
 

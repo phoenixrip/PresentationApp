@@ -12,12 +12,12 @@ function FillControlPanel() {
       <CirclePicker
         color={selection.fill}
         onChange={e => {
-          setOnFabricObject(selection, "fill", `rgba(${e.rgb.r},${e.rgb.g},${e.rgb.b},${e.rgb.a})`)
+          setOnFabricObject(selection, {fill: `rgba(${e.rgb.r},${e.rgb.g},${e.rgb.b},${e.rgb.a})`})
         }} />
       {/* <ChromePicker
                 color={selection.fill}
                 onChange={e => {
-                  setOnFabricObject(selection, "fill", `rgba(${e.rgb.r},${e.rgb.g},${e.rgb.b},${e.rgb.a})`)
+                  setOnFabricObject(selection, {fill: `rgba(${e.rgb.r},${e.rgb.g},${e.rgb.b},${e.rgb.a})`})
                 }} /> */}
     </>
   )

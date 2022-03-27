@@ -17,7 +17,7 @@ function BorderControlPanel() {
       <CirclePicker
         color={selection.stroke || "rgba(0,0,0,1)"}
         onChange={e => {
-          setOnFabricObject(selection, "stroke", `rgba(${e.rgb.r},${e.rgb.g},${e.rgb.b},${e.rgb.a})`)
+          setOnFabricObject(selection, {stroke: `rgba(${e.rgb.r},${e.rgb.g},${e.rgb.b},${e.rgb.a})`})
         }} />
       <InputNumber
         addonBefore="Thickness"
@@ -26,7 +26,7 @@ function BorderControlPanel() {
         max={1000}
         value={selection.strokeWidth || 0}
         onChange={e => {
-          setOnFabricObject(selection, "strokeWidth", e)
+          setOnFabricObject(selection, {strokeWidth: e})
         }} />
 
       <Radio.Group value={getStrokeDashState()} size="small" style={{ marginTop: 16 }}>

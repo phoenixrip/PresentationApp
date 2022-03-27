@@ -23,14 +23,14 @@ function DimensionsControlPanel() {
 					checkedChildren={<FontAwesomeIcon icon={faUnlock} />}
 					unCheckedChildren={<FontAwesomeIcon icon={faLock} />}
 					checked={!selection.lockMovementX}
-					onChange={e => setOnFabricObject(selection, "lockMovementX", !e)}
+					onChange={e => setOnFabricObject(selection, {lockMovementX: !e})}
 				/>}
 				parser={e => { return calculateFromString(e) }}
 				min={0}
 				max={1000}
 				precision={0}
 				value={selection.width}
-				onChange={(e) => { setOnFabricObject(selection, "width", e) }} />
+				onChange={(e) => { setOnFabricObject(selection, {width: e}) }} />
 
 			<InputNumber
 				size={context.state.antdSize}
@@ -39,13 +39,13 @@ function DimensionsControlPanel() {
 					checkedChildren={<FontAwesomeIcon icon={faUnlock} />}
 					unCheckedChildren={<FontAwesomeIcon icon={faLock} />}
 					checked={!selection.lockMovementY}
-					onChange={e => setOnFabricObject(selection, "lockMovementY", !e)}
+					onChange={e => setOnFabricObject(selection, {lockMovementY: !e})}
 				/>}
 				min={0}
 				max={1000}
 				precision={0}
 				value={selection.height}
-				onChange={(e) => { setOnFabricObject(selection, "height", e) }} />
+				onChange={(e) => { setOnFabricObject(selection, {height: e}) }} />
 
 			<InputNumber
 				size={context.state.antdSize}
@@ -54,13 +54,13 @@ function DimensionsControlPanel() {
 					checkedChildren={<FontAwesomeIcon icon={faUnlock} />}
 					unCheckedChildren={<FontAwesomeIcon icon={faLock} />}
 					checked={!selection.lockRotation}
-					onChange={e => setOnFabricObject(selection, "lockRotation", !e)}
+					onChange={e => setOnFabricObject(selection, {lockRotation: !e})}
 				/>}
 				min={-360}
 				max={360}
 				precision={0}
 				value={selection.angle}
-				onChange={(e) => { setOnFabricObject(selection, "angle", e) }} />
+				onChange={(e) => { setOnFabricObject(selection, {angle: e}) }} />
 			<InputNumber
 				size={context.state.antdSize}
 				addonBefore="Skew X:"
@@ -69,7 +69,7 @@ function DimensionsControlPanel() {
 				max={1000}
 				precision={0}
 				value={selection.skewX}
-				onChange={(e) => { setOnFabricObject(selection, "skewX", e) }} />
+				onChange={(e) => { setOnFabricObject(selection, {skewX: e}) }} />
 			<InputNumber
 				size={context.state.antdSize}
 				addonBefore="Skew Y:"
@@ -78,7 +78,7 @@ function DimensionsControlPanel() {
 				max={1000}
 				precision={0}
 				value={selection.skewY}
-				onChange={(e) => { setOnFabricObject(selection, "skewY", e) }} />
+				onChange={(e) => { setOnFabricObject(selection, {skewY: e}) }} />
 			{//TODO: lockScalingX is the only thing checked for both scaling locks
 				//Should we also onchange lockScalingX/Y also lock the other=
 			}
@@ -87,8 +87,8 @@ function DimensionsControlPanel() {
 				unCheckedChildren={"Scaling locked"}
 				checked={!selection.lockScalingX}
 				onChange={e => {
-					setOnFabricObject(selection, "lockScalingX", !e)
-					setOnFabricObject(selection, "lockScalingY", !e)
+					setOnFabricObject(selection, {lockScalingX: !e})
+					setOnFabricObject(selection, {lockScalingY: !e})
 				}}
 			/>
 			{//TODO: lockSkewingX is the only thing checked for both skewing locks
@@ -99,8 +99,8 @@ function DimensionsControlPanel() {
 				unCheckedChildren={"Skewing locked"}
 				checked={!selection.lockSkewingX}
 				onChange={e => {
-					setOnFabricObject(selection, "lockSkewingX", !e)
-					setOnFabricObject(selection, "lockSkewingY", !e)
+					setOnFabricObject(selection, {lockSkewingX: !e})
+					setOnFabricObject(selection, {lockSkewingY: !e})
 				}}
 			/>
 		</>

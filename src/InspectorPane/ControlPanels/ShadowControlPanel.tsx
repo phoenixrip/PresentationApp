@@ -31,10 +31,10 @@ function ShadowControlPanel() {
                 checked={selection?.shadow}
                 onChange={e => {
                     if (selection?.shadow) {
-                        setOnFabricObject(selection, "shadow", undefined)
+                        setOnFabricObject(selection, {shadow: undefined})
                         return
                     } else {
-                        setOnFabricObject(selection, "shadow", new fabric.Shadow("50px 50px 50px rgba(0,0,0,1)"))
+                        setOnFabricObject(selection, {shadow: new fabric.Shadow("50px 50px 50px rgba(0,0,0,1)")})
                     }
                 }}
             />
