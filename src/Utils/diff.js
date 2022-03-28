@@ -5,8 +5,8 @@
  * @param  {Object} obj2 The object to compare against it
  * @return {Object}      An object of differences between the two
  */
-var diff = function (obj1, obj2) {
 
+var diff = function (obj1, obj2) {
     // Make sure an object to compare is provided
     if (!obj2 || Object.prototype.toString.call(obj2) !== '[object Object]') {
         return obj1;
@@ -93,7 +93,7 @@ var diff = function (obj1, obj2) {
                 diffs[key] = item2;
             }
         } else {
-            if (item1 !== item2 ) {
+            if (item1 !== item2) {
                 diffs[key] = item2;
             }
         }
@@ -115,7 +115,7 @@ var diff = function (obj1, obj2) {
     // Loop through the second object and find missing items
     for (key in obj2) {
         if (Object.prototype.hasOwnProperty.call(obj2, key)) {
-            if (!obj1[key] && obj1[key] !== obj2[key] ) {
+            if (!obj1[key] && obj1[key] !== obj2[key]) {
                 diffs[key] = obj2[key];
             }
         }
