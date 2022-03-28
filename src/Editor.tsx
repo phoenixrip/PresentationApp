@@ -77,7 +77,7 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
 
   setActiveSceneIndex = (newSceneIndex: number) => {
     //not unselecting active object can create issues when a group is selected and scene changed
-    if(this.fabricCanvas?.getActiveObject()?.type === "activeSelection") this.fabricCanvas!.discardActiveObject();
+    if (this.fabricCanvas?.getActiveObject()?.type === "activeSelection") this.fabricCanvas!.discardActiveObject();
     this.renderActiveScene(newSceneIndex);
     this.fabricCanvas?.requestRenderAll();
     return this.setState({ activeSceneIndex: newSceneIndex });
@@ -152,7 +152,6 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       // }
     });
 
-    //Hook into Fabrics events
     this.fabricCanvas.on("object:modified", (e: any) => {
       console.log("object:modfied", e);
       const isSelection = e.target.type === "activeSelection"
@@ -162,6 +161,8 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       // Reset top and left according to rescaled position without active selection
       // ------------------------------------------------------------------------
       switch (e.action) {
+        case "scaleX":
+        case "scaleY":
         case "scale":
           const newScaleX = e.target.scaleX;
           const newScaleY = e.target.scaleY;
@@ -175,13 +176,13 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
             });
           }
 
-          // get objects from activeSelection or take selected object in array so we can iterate
+          // Get objects from activeSelection or take selected object in array so we can iterate
           const objects = isSelection ? e.target.getObjects() : [e.target]
 
           // Iterate through objects in group and rescale and recalculate left and top relative to newScaleX/Y
           for (const obj of objects) {
-            const left = Math.round(obj.left * newScaleX);
-            const top = Math.round(obj.top * newScaleY);
+            const left = Math.round(obj.left * newScaleX)
+            const top = Math.round(obj.top * newScaleY)
             let newSettings = {} as fabric.IObjectOptions
 
             switch (obj.type) {
@@ -192,8 +193,7 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
                   scaleX: 1,
                   scaleY: 1,
                 }
-                //only set top and left on activeSelection:
-                if (isSelection) newSettings = { ...newSettings, top: top, left: left }
+                if (isSelection) newSettings = { ...newSettings, top: top, left: left } //only set top and left on activeSelection:
                 obj.set(newSettings);
                 break;
               case "circle":
@@ -202,8 +202,7 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
                   scaleX: 1,
                   scaleY: 1
                 } as fabric.ICircleOptions
-                //only set top and left on activeSelection:
-                if (isSelection) newSettings = { ...newSettings, top: top, left: left }
+                if (isSelection) newSettings = { ...newSettings, top: top, left: left } //only set top and left on activeSelection:
                 obj.set(newSettings);
                 break;
               default:
@@ -220,10 +219,10 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       // ------------------------------------------------------------------------
 
       //Unselect on canvas if ActiveSelection to get get Absolute position
-      if (isSelection) this.fabricCanvas!.discardActiveObject();
+      if (isSelection) this.fabricCanvas!.discardActiveObject()
 
-      // Initial state is global state + current state in scene (activeSceneObjects)
-      const oldSceneState = {...this.state.project.scenes[this.state.activeSceneIndex].activeSceneObjects}
+      // Old Scene State is global state of objects in scene + current state in scene (activeSceneObjects)
+      const oldSceneState = { ...this.state.project.scenes[this.state.activeSceneIndex].activeSceneObjects }
       for (const uniqueGlobalId in oldSceneState) {
         oldSceneState[uniqueGlobalId] = { // Combine:
           ...this.state.project.globalObjects[uniqueGlobalId], // Global settings +
@@ -252,15 +251,24 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       console.log("diff", deltaSettings)
 
       // reselect on canvas if activeSelection
-      if (isSelection) this.fabricCanvas!.setActiveObject(e.target);
+      if (isSelection) {
+        const reselection = new fabric.ActiveSelection(e.target.getObjects(), {
+          canvas: this.fabricCanvas as fabric.Canvas,
+        });
+        this.fabricCanvas?.setActiveObject(reselection);
+        this.fabricCanvas?.requestRenderAll();
+      }
 
       // Set to Scene objects
       // TODO: Rename setonglobalobject to setonobjectinactivescene?
       for (const [uniqueGlobalId, settings] of Object.entries(deltaSettings)) {
-        this.setOnGlobalObject(this.state.project.globalObjects[uniqueGlobalId] as CustomFabricObject, settings as {})
+        this.setOnGlobalObject(
+          this.state.project.globalObjects[uniqueGlobalId] as CustomFabricObject,
+          settings as {}
+        )
       }
 
-      //TODO: PUSH deltaSettings straight to undo history
+      //TODO: PUSH deltaSettings straight to undo history with e.action as name/type of action
     });
 
     // Init complete editor state

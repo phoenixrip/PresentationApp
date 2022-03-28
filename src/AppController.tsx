@@ -142,6 +142,8 @@ const dummyProjectData: ProjectDataTypes = {
     "wda1-ew21-dhftft-2313": {
       uniqueGlobalId: "wda1-ew21-dhftft-2313",
       fill: "rgb(166,111,213)",
+      startAngle:0,
+      endAngle: 360,
       height: 200,
       left: 300,
       radius: 100,
