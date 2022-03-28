@@ -13,141 +13,121 @@ import { LayersPaneContainer } from "./LayersPane/LayersPaneContainer";
 import { throttle } from "./Utils/throttle";
 import { ToolbarContainer } from "./Toolbar/ToolbarContainer";
 
-
-import { SizeType } from 'antd/lib/config-provider/SizeContext'
+import { SizeType } from "antd/lib/config-provider/SizeContext";
 // import { SceneType } from "./Types/sceneType";
 import { setFabricDefaults } from "./Utils/SetFabricDefaults";
 import { ProjectDataTypes, SceneType } from "./Types/ProjectDataTypes";
-import { CustomFabricCircle, CustomFabricObject } from "./Types/CustomFabricTypes";
+import {
+  CustomFabricCircle,
+  CustomFabricObject,
+} from "./Types/CustomFabricTypes";
 // import { ProjectDataStateTypes } from "./AppController";
 
-setFabricDefaults()
+import { diff } from "./Utils/diff";
+import { ActiveSelection } from "fabric/fabric-impl";
+
+setFabricDefaults();
 
 interface EditorPropsTypes {
-  project: ProjectDataTypes
+  project: ProjectDataTypes;
 }
 
 interface EditorStateTypes {
-  tick: Boolean,
-  isInitted: Boolean,
-  project: ProjectDataTypes,
-  activeSceneIndex: number,
-  antdSize: SizeType
+  tick: Boolean;
+  isInitted: Boolean;
+  project: ProjectDataTypes;
+  activeSceneIndex: number;
+  antdSize: SizeType;
 }
 
 interface EditorContextTypes {
   fabricCanvas: fabric.Canvas | null;
-  state: EditorStateTypes,
-  handleAddRect: Function,
-  setOnFabricObject: Function,
-  setOnGlobalObject: Function
-  setActiveSceneIndex: Function
+  state: EditorStateTypes;
+  handleAddRect: Function;
+  setOnFabricObject: Function;
+  setOnGlobalObject: Function;
+  setActiveSceneIndex: Function;
 }
 
-const editorContext = React.createContext<EditorContextTypes>({} as EditorContextTypes);
+const editorContext = React.createContext<EditorContextTypes>(
+  {} as EditorContextTypes
+);
 
 class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
   fabricCanvas: fabric.Canvas | null;
-  throttledSetNewCanvasPaneDimensions: Function
-  liveObjectsDict: { [key: string]: fabric.Object }
+  throttledSetNewCanvasPaneDimensions: Function;
+  liveObjectsDict: { [key: string]: fabric.Object };
 
   constructor(props: EditorPropsTypes) {
     super(props);
     this.fabricCanvas = null;
-    this.liveObjectsDict = {}
-    this.throttledSetNewCanvasPaneDimensions = throttle(this.setNewCanvasPanelDimensions, 300)
+    this.liveObjectsDict = {};
+    this.throttledSetNewCanvasPaneDimensions = throttle(
+      this.setNewCanvasPanelDimensions,
+      300
+    );
     this.state = {
       tick: true,
       isInitted: false,
       project: props.project,
       activeSceneIndex: 0,
-      antdSize: "small" as SizeType
-    }
+      antdSize: "small" as SizeType,
+    };
   }
 
   setActiveSceneIndex = (newSceneIndex: number) => {
     //not unselecting active object can create issues when a group is selected and scene changed
-    this.fabricCanvas?.discardActiveObject()
-    this.renderActiveScene(newSceneIndex)
-    this.fabricCanvas?.requestRenderAll()
-    return this.setState({ activeSceneIndex: newSceneIndex })
-  }
+    if(this.fabricCanvas?.getActiveObject()?.type === "activeSelection") this.fabricCanvas!.discardActiveObject();
+    this.renderActiveScene(newSceneIndex);
+    this.fabricCanvas?.requestRenderAll();
+    return this.setState({ activeSceneIndex: newSceneIndex });
+  };
 
   renderActiveScene = (renderScreenIndex: number) => {
     //Get current scene
-    const currentSceneObject = this.state.project.scenes[renderScreenIndex]
+    const currentSceneObject = this.state.project.scenes[renderScreenIndex];
 
     // For each object in active scene
-    for (const [uniqueGlobalId, sceneObjectOptions] of Object.entries(currentSceneObject.activeSceneObjects)) {
-      const activeObject = this.liveObjectsDict[uniqueGlobalId]
-      const globalObjectSettings: {} = this.state.project.globalObjects[uniqueGlobalId]
+    for (const [uniqueGlobalId, sceneObjectOptions] of Object.entries(
+      currentSceneObject.activeSceneObjects
+    )) {
+      const activeObject = this.liveObjectsDict[uniqueGlobalId];
+      const globalObjectSettings: {} =
+        this.state.project.globalObjects[uniqueGlobalId];
 
       activeObject
         .set(globalObjectSettings) //Reset to global settings
         .set(sceneObjectOptions) // Set specific scene options
-        .setCoords()
+        .setCoords();
     }
-  }
+  };
 
-  handleActiveSelectionDragCompleted(activeSelection: fabric.ActiveSelection) {
-    const activeSelectionObjects = activeSelection.getObjects()
-    this.fabricCanvas?.discardActiveObject() //Unselect on canvas
-    for (const obj of activeSelectionObjects) {
-      this.setOnGlobalObject(obj as CustomFabricObject, { top: obj.top, left: obj.left })
-    }
-
-    const reselection = new fabric.ActiveSelection(activeSelectionObjects, { canvas: this.fabricCanvas as fabric.Canvas })
-    this.fabricCanvas?.setActiveObject(reselection)
-    this.fabricCanvas?.requestRenderAll()
-  }
-
-  handleActiveSelectionScaleCompleted(activeSelection: fabric.ActiveSelection) {
-    const activeSelectionObjects = activeSelection.getObjects()
-    this.fabricCanvas?.discardActiveObject() //Unselect on canvas
-    for (const obj of activeSelectionObjects) {
-      switch (obj.type) {
-        case "rect":
-          this.setOnGlobalObject(obj as CustomFabricObject, { height: obj.height, width: obj.width })
-          break
-        case "circle":
-          // TODO: FIX THIS UGLY SHIT
-          // TODO: SCALING PERSISTS BUT NOT POSITIONING
-              // RESET THE TOP AND LEFT TO BEFORE RADIUS CHANGE
-          this.setOnGlobalObject(obj as CustomFabricCircle , { radius: (obj as CustomFabricCircle).radius } )
-          break
-        default:
-          break
-      }
-    }
-
-    const reselection = new fabric.ActiveSelection(activeSelectionObjects, { canvas: this.fabricCanvas as fabric.Canvas })
-    this.fabricCanvas?.setActiveObject(reselection)
-    this.fabricCanvas?.requestRenderAll()
-  }
-
-  initFabricCanvas = (domCanvas: HTMLCanvasElement, canvasPaneDimensions: { width: number, height: number }) => {
-    const projectDimensions = this.state.project.settings.dimensions
-    const c = this.fabricCanvas = new fabric.Canvas(domCanvas, {
-      backgroundColor: '#141414',
+  initFabricCanvas = (
+    domCanvas: HTMLCanvasElement,
+    canvasPaneDimensions: { width: number; height: number }
+  ) => {
+    const projectDimensions = this.state.project.settings.dimensions;
+    const c = (this.fabricCanvas = new fabric.Canvas(domCanvas, {
+      backgroundColor: "#141414",
       width: canvasPaneDimensions.width,
-      height: canvasPaneDimensions.height
-    });
+      height: canvasPaneDimensions.height,
+    }));
     // Center the project viewport withing the full-Pane-Sized fabricCanvas
-    const widthMove = (canvasPaneDimensions.width - projectDimensions.width) / 2
-    const heightMove = (canvasPaneDimensions.height - projectDimensions.height) / 2
-    const vpt = c?.viewportTransform || []
-    vpt[4] = widthMove
-    vpt[5] = heightMove
-    c.setViewportTransform(vpt)
+    const widthMove = (canvasPaneDimensions.width - projectDimensions.width) / 2;
+    const heightMove = (canvasPaneDimensions.height - projectDimensions.height) / 2;
+    const vpt = c?.viewportTransform || [];
+    vpt[4] = widthMove;
+    vpt[5] = heightMove;
+    c.setViewportTransform(vpt);
 
     // CANVAS EVENT HOOKS
     // React state tick on render
-    this.fabricCanvas.on("after:render", throttle(this.updateTick, 100))
+    this.fabricCanvas.on("after:render", throttle(this.updateTick, 100));
 
     // Mouse wheel zoom
-    this.fabricCanvas.on('mouse:wheel', function (opt) {
+    this.fabricCanvas.on("mouse:wheel", function (opt) {
       var delta = opt.e.deltaY;
-      var zoom = c?.getZoom() || 1
+      var zoom = c?.getZoom() || 1;
       zoom *= 0.999 ** delta;
       if (zoom > 20) zoom = 20;
       if (zoom < 0.01) zoom = 0.01;
@@ -170,200 +150,211 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       //     vpt[5] = c.getHeight() - 1000 * zoom;
       //   }
       // }
-    })
+    });
 
-
-    //Hook into Fabrics events 
+    //Hook into Fabrics events
     this.fabricCanvas.on("object:modified", (e: any) => {
-      console.log("object:modfied", e)
-      // Because of nesting switch functions all Actions should follow the same order, as well as types being in the same order
-      // Actions:
-      // Drag
-      // Scale
-      //
-      // Types:
-      // Rect
-      // Circle
+      console.log("object:modfied", e);
+      const isSelection = e.target.type === "activeSelection"
 
-      // First run all functions that scale width/height/radius and reset scale to 1 so that functions that register changes
-      // have consistent data
-      if (e.target.type === "activeSelection") {
-        switch (e.action) {
-          case "scale":
-            const newScaleX = e.target.scaleX
-            const newScaleY = e.target.scaleY
+      // ------------------------------------------------------------------------
+      // Scale width/height/radius according to scale and reset scale to
+      // Reset top and left according to rescaled position without active selection
+      // ------------------------------------------------------------------------
+      switch (e.action) {
+        case "scale":
+          const newScaleX = e.target.scaleX;
+          const newScaleY = e.target.scaleY;
 
-            //Scale width and height of group:
-            const width = Math.round(e.target.width * newScaleX) || 1
-            const height = Math.round(e.target.height * newScaleY) || 1
-            e.target.set({ width: width, height: height, scaleX: 1, scaleY: 1 })
+          if (isSelection) {
+            e.target.set({
+              width: Math.round(e.target.width * newScaleX) || 1,
+              height: Math.round(e.target.height * newScaleY) || 1,
+              scaleX: 1,
+              scaleY: 1,
+            });
+          }
 
-            // Iterate through all objects in group and rescale
-            // Calculate new left and top relative to new group scale
-            for (const obj of e.target.getObjects()) {
-              const left = Math.round(obj.left * newScaleX)
-              const top = Math.round(obj.top * newScaleY)
+          // get objects from activeSelection or take selected object in array so we can iterate
+          const objects = isSelection ? e.target.getObjects() : [e.target]
 
-              switch (obj.type) {
-                case "rect":
-                  const width = Math.round(obj.width * newScaleX) || 1
-                  const height = Math.round(obj.height * newScaleY) || 1
-                  obj.set({ width: width, height: height, scaleX: 1, scaleY: 1, top: top, left: left })
-                  break
-                case "circle":
-                  const radius = Math.round(obj.radius * newScaleX) || 1
-                  obj.set({ radius: radius, scaleX: 1, scaleY: 1, top: top, left: left })
-                  break
-                default:
-                  break
-              }
-            }
-            break
-          default:
-            break
-        }
-      } else {
-        switch (e.action) {
-          case "scale":
-            switch (e.target.type) {
+          // Iterate through objects in group and rescale and recalculate left and top relative to newScaleX/Y
+          for (const obj of objects) {
+            const left = Math.round(obj.left * newScaleX);
+            const top = Math.round(obj.top * newScaleY);
+            let newSettings = {} as fabric.IObjectOptions
+
+            switch (obj.type) {
               case "rect":
-                const width = Math.round(e.target.width * e.target.scaleX) || 1
-                const height = Math.round(e.target.height * e.target.scaleY) || 1
-                e.target.set({ width: width, height: height, scaleX: 1, scaleY: 1 })
-                break
+                newSettings = {
+                  width: Math.round(obj.width * newScaleX) || 1,
+                  height: Math.round(obj.height * newScaleY) || 1,
+                  scaleX: 1,
+                  scaleY: 1,
+                }
+                //only set top and left on activeSelection:
+                if (isSelection) newSettings = { ...newSettings, top: top, left: left }
+                obj.set(newSettings);
+                break;
               case "circle":
-                const radius = Math.round(e.target.radius * e.target.scaleX) || 1
-                e.target.set({ radius: radius, scaleX: 1, scaleY: 1 })
-                break
+                newSettings = {
+                  radius: Math.round(obj.radius * newScaleX) || 1,
+                  scaleX: 1,
+                  scaleY: 1
+                } as fabric.ICircleOptions
+                //only set top and left on activeSelection:
+                if (isSelection) newSettings = { ...newSettings, top: top, left: left }
+                obj.set(newSettings);
+                break;
               default:
-                break
+                break;
             }
-            break
-          default:
-            break
+          }
+          break
+        default:
+          break
+      }
+
+      // ------------------------------------------------------------------------
+      // Calculate modifications, push to scene objects and undo history
+      // ------------------------------------------------------------------------
+
+      //Unselect on canvas if ActiveSelection to get get Absolute position
+      if (isSelection) this.fabricCanvas!.discardActiveObject();
+
+      // Initial state is global state + current state in scene (activeSceneObjects)
+      const oldSceneState = {...this.state.project.scenes[this.state.activeSceneIndex].activeSceneObjects}
+      for (const uniqueGlobalId in oldSceneState) {
+        oldSceneState[uniqueGlobalId] = { // Combine:
+          ...this.state.project.globalObjects[uniqueGlobalId], // Global settings +
+          ...oldSceneState[uniqueGlobalId] // Scene settings
         }
       }
 
-      // Run functions that check what has been transformed in the target and save those to Scene/Global state
-      if (e.target.type === "activeSelection") {
-        switch (e.transform.action) {
-          case "drag":
-            this.handleActiveSelectionDragCompleted(e.target)
-            break
-          case "scale":
-            this.handleActiveSelectionScaleCompleted(e.target)
-            break
-          default:
-            break
-        }
-      } else {
-        switch (e.transform.action) {
-          case "scale":
-            switch (e.target.type) {
-              case "rect":
-                this.setOnGlobalObject(e.target, { height: e.target.height, width: e.target.width })
-                break
-              case "circle":
-                this.setOnGlobalObject(e.target, { radius: e.target.radius })
-                break
-              default:
-                break
-            }
-            break
-          case "drag":
-            this.setOnGlobalObject(e.target, { top: e.target.top, left: e.target.left })
-            break
-          default:
-            break
-        }
+      // Grab current objects and then run toObject on them while keeping custom attributes
+      const currentObjects = this.fabricCanvas!.getObjects() as Array<CustomFabricObject>;
+      const currentObjectsJson = currentObjects.map((obj) => {
+        obj.includeDefaultValues = false; // TODO: this will go somewhere as a global setting on all fabric objects but keeping it here for testing
+        return obj.toObject([
+          "uniqueGlobalId",
+          "userSetName",
+          "firstOccurrenceIndex",
+        ]);
+      });
+      // create newSceneState out of current objects array by putting it in key-value pairs of {uniqueGlobalId: {settings}}
+      let newSceneState = {} as { [key: string]: fabric.IObjectOptions };
+      for (const obj of currentObjectsJson) {
+        if (obj.uniqueGlobalId) newSceneState[obj.uniqueGlobalId] = obj;
       }
-    })
+
+      // Diffing oldSceneState with newSceneState
+      const deltaSettings = diff(oldSceneState, newSceneState)
+      console.log("diff", deltaSettings)
+
+      // reselect on canvas if activeSelection
+      if (isSelection) this.fabricCanvas!.setActiveObject(e.target);
+
+      // Set to Scene objects
+      // TODO: Rename setonglobalobject to setonobjectinactivescene?
+      for (const [uniqueGlobalId, settings] of Object.entries(deltaSettings)) {
+        this.setOnGlobalObject(this.state.project.globalObjects[uniqueGlobalId] as CustomFabricObject, settings as {})
+      }
+
+      //TODO: PUSH deltaSettings straight to undo history
+    });
 
     // Init complete editor state
-    const json: any = { objects: Object.values(this.state.project.globalObjects) }
-    this.fabricCanvas.loadFromJSON(json, () => {
-      this.initViewportRect()
-      this.renderActiveScene(this.state.activeSceneIndex)
-      this.fabricCanvas?.requestRenderAll()
-    }, (options: any, object: any, a: any) => {
-      this.liveObjectsDict[options.uniqueGlobalId] = object
-    })
+    const json: any = {
+      objects: Object.values(this.state.project.globalObjects),
+    };
+    this.fabricCanvas.loadFromJSON(
+      json,
+      () => {
+        this.initViewportRect();
+        this.renderActiveScene(this.state.activeSceneIndex);
+        this.fabricCanvas?.requestRenderAll();
+      },
+      (options: any, object: any, a: any) => {
+        this.liveObjectsDict[options.uniqueGlobalId] = object;
+      }
+    );
 
     return this.setState({ isInitted: true });
-  }
+  };
 
   initViewportRect = () => {
     const viewportRect = new fabric.Rect({
       width: this.state.project.settings.dimensions.width,
       height: this.state.project.settings.dimensions.height,
       fill: undefined,
-      stroke: 'blue',
+      stroke: "blue",
       strokeDashArray: [11, 8],
       selectable: false,
-      evented: false
-    })
+      evented: false,
+    });
 
     if (this.fabricCanvas) {
-      this.fabricCanvas
-        .add(viewportRect)
-        .sendToBack(viewportRect)
+      this.fabricCanvas.add(viewportRect).sendToBack(viewportRect);
     }
-  }
+  };
 
   updateCanvasPaneDimensions = (newDimensions: fabric.ICanvasDimensions) => {
-    return this.throttledSetNewCanvasPaneDimensions(newDimensions)
-  }
+    return this.throttledSetNewCanvasPaneDimensions(newDimensions);
+  };
 
   setNewCanvasPanelDimensions = (newDimensions: fabric.ICanvasDimensions) => {
-    this.fabricCanvas?.setDimensions(newDimensions)
-  }
+    this.fabricCanvas?.setDimensions(newDimensions);
+  };
 
-  updateTick = () => this.setState({ tick: !this.state.tick })
+  updateTick = () => this.setState({ tick: !this.state.tick });
 
   handleAddRect = () => {
     this.fabricCanvas?.add(
       new fabric.Rect({
         width: 150,
         height: 20,
-        fill: 'purple'
+        fill: "purple",
       })
-    )
-  }
+    );
+  };
   setOnGlobalObject = (obj: CustomFabricObject, settings: {}) => {
     if (obj) {
       // get active scene and options for object in active scene then add/modify corresponding setting to value
-      const activeScene = this.state.project.scenes[this.state.activeSceneIndex]
-      let currentOptions = activeScene.activeSceneObjects[obj.uniqueGlobalId]
-      let newSettings = { ...currentOptions, ...settings }
+      const activeScene = this.state.project.scenes[this.state.activeSceneIndex];
+      let currentOptions = activeScene.activeSceneObjects[obj.uniqueGlobalId];
+      let newSettings = { ...currentOptions, ...settings };
 
       const newSceneActiveObjectsObject = {
         ...activeScene.activeSceneObjects,
-        [obj.uniqueGlobalId]: newSettings
-      }
+        [obj.uniqueGlobalId]: newSettings,
+      };
 
       return this.setState({
         project: {
           ...this.state.project,
-          scenes: this.state.project.scenes.map((currSceneObject: SceneType, currScreenIndex: number) => {
-            if (currScreenIndex !== this.state.activeSceneIndex) return currSceneObject
-            return {
-              ...currSceneObject,
-              activeSceneObjects: newSceneActiveObjectsObject
+          scenes: this.state.project.scenes.map(
+            (currSceneObject: SceneType, currScreenIndex: number) => {
+              if (currScreenIndex !== this.state.activeSceneIndex)
+                return currSceneObject;
+              return {
+                ...currSceneObject,
+                activeSceneObjects: newSceneActiveObjectsObject,
+              };
             }
-          })
-        }
-      })
+          ),
+        },
+      });
     }
-  }
+  };
 
   setOnFabricObject = (obj: CustomFabricObject, settings: {}) => {
     if (obj) {
-      this.setOnGlobalObject(obj, settings)
-      obj.set(settings)
+      this.setOnGlobalObject(obj, settings);
+      obj.set(settings);
       obj.setCoords();
-      obj?.canvas?.renderAll()
+      obj?.canvas?.renderAll();
     }
-  }
+  };
 
   render() {
     const contextValue: any = {
@@ -402,13 +393,13 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
                     >
                       <CanvasPane
                         initFabricCanvas={this.initFabricCanvas}
-                        updateCanvasPaneDimensions={this.updateCanvasPaneDimensions}
+                        updateCanvasPaneDimensions={
+                          this.updateCanvasPaneDimensions
+                        }
                         dimensions={{ width: 100, height: 100 }}
                       />
                     </ReflexElement>
-                    <ReflexElement
-                      size={300}
-                    >
+                    <ReflexElement size={300}>
                       <InspectorContainer />
                     </ReflexElement>
                   </ReflexContainer>

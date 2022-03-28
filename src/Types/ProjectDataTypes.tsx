@@ -15,8 +15,8 @@ interface SceneType {
   activeSceneObjects: { [key: string]: fabric.IObjectOptions },
   sceneSettings: {},
   animationSettings?: {}
-  undoHistory: fabric.IObjectOptions[],
-  redoHistory: fabric.IObjectOptions[]
+  undoHistory: Array<{ [key: string]: fabric.IObjectOptions }>,
+  redoHistory: Array<{ [key: string]: fabric.IObjectOptions }>
 }
 
 export type {
