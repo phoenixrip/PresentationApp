@@ -59,10 +59,10 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       activeSceneIndex: 0,
       antdSize: "small" as SizeType,
       gridCoords: {
-        width: 10,
-        height: 10,
-        top: -20,
-        left: -20
+        width: 16,
+        height: 9,
+        left: -16,
+        top: -9
       }
     };
   }
