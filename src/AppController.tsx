@@ -20,7 +20,6 @@ const dummyProjectData: ProjectDataTypes = {
 			height: 90,
 			fill: "red",
 			firstOccurrenceIndex: 1,
-			version: "5.2.1",
 			userSetName: 'Rectangle 1'
 		},
 		"rectangle2": {
@@ -32,7 +31,6 @@ const dummyProjectData: ProjectDataTypes = {
 			height: 90,
 			fill: 'green',
 			firstOccurrenceIndex: 1,
-			version: "5.2.1",
 			userSetName: 'Rectangle 2'
 		},
 		"rectangle3": {
@@ -44,7 +42,6 @@ const dummyProjectData: ProjectDataTypes = {
 			height: 90,
 			fill: 'purple',
 			firstOccurrenceIndex: 1,
-			version: "5.2.1",
 			userSetName: 'Rectangle 3'
 		},
 	},
@@ -52,9 +49,39 @@ const dummyProjectData: ProjectDataTypes = {
 		{
 			sceneSettings: {},
 			activeSceneObjects: {
-				"rectangle1": {} as fabric.IObjectOptions,
-				"rectangle2": {} as fabric.IObjectOptions,
-				"rectangle3": {} as fabric.IObjectOptions
+				"rectangle1": {
+					uniqueGlobalId: "rectangle1",
+					type: "rect",
+					top: 0,
+					left: 0,
+					width: 160,
+					height: 90,
+					fill: "red",
+					firstOccurrenceIndex: 1,
+					userSetName: 'Rectangle 1'
+				},
+				"rectangle2": {
+					uniqueGlobalId: "rectangle2",
+					type: "rect",
+					top: 0,
+					left: 160,
+					width: 160,
+					height: 90,
+					fill: 'green',
+					firstOccurrenceIndex: 1,
+					userSetName: 'Rectangle 2'
+				},
+				"rectangle3": {
+					uniqueGlobalId: "rectangle3",
+					type: "rect",
+					top: 0,
+					left: 320,
+					width: 160,
+					height: 90,
+					fill: 'purple',
+					firstOccurrenceIndex: 1,
+					userSetName: 'Rectangle 3'
+				},
 			},
 			undoHistory: [],
 			redoHistory: [],

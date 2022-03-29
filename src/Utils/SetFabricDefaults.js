@@ -8,7 +8,8 @@ function setFabricDefaults() {
     lockScalingFlip: true,
     paintFirst: "stroke",
     setUserName: "",
-    includeDefaultValues: false
+    includeDefaultValues: false,
+    strokeWidth: 0
   })
 }
 

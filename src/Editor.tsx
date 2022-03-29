@@ -16,7 +16,7 @@ import { ToolbarContainer } from "./Toolbar/ToolbarContainer";
 import { SizeType } from "antd/lib/config-provider/SizeContext";
 // import { SceneType } from "./Types/sceneType";
 import { setFabricDefaults } from "./Utils/SetFabricDefaults";
-import { ProjectDataTypes, SceneType } from "./Types/ProjectDataTypes";
+import { ProjectDataTypes, SceneType, UndoHistoryEntry } from "./Types/ProjectDataTypes";
 import {
   CustomFabricCircle,
   CustomFabricGroup,
@@ -151,6 +151,7 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       height: this.state.project.settings.dimensions.height,
       fill: undefined,
       stroke: "blue",
+      strokeWidth: 1,
       strokeDashArray: [11, 8],
       selectable: false,
       evented: false,
@@ -242,13 +243,28 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
 
   normalizeNewSceneState = (reasonForUpdate?: string) => {
     const { activeSceneIndex } = this.state
-    console.log(`normalizeNewSceneState: reasonForUpdate: ${reasonForUpdate || 'No reason given'}`)
+    const activeObject = this.fabricCanvas?.getActiveObject() as CustomFabricObject | fabric.ActiveSelection | undefined
+    let selectedGUIDs = []
+
+    if (activeObject && !(activeObject instanceof fabric.ActiveSelection)) {
+      selectedGUIDs.push(activeObject?.uniqueGlobalId)
+    } else {
+      const allSelectedObjects = activeObject?.getObjects() as Array<CustomFabricObject>
+      allSelectedObjects?.forEach(obj => selectedGUIDs.push(obj.uniqueGlobalId))
+    }
+    // console.log(`normalizeNewSceneState: reasonForUpdate: ${reasonForUpdate || 'No reason given'}`)
+    console.log(`SETTING SELECTED GUIDs: `, selectedGUIDs)
     const newFabricState = this.fabricCanvas?.toObject(['uniqueGlobalId', 'userSetName', 'firstOccurrenceIndex', 'objectIndex'])
     const newFlatMappedFabricState = flatMapFabricSceneState(newFabricState)
     console.log({ newFlatMappedFabricState })
+    const newUndoEntryObject: UndoHistoryEntry = {
+      selectedGUIDs,
+      objectStates: newFlatMappedFabricState
+    }
+
     const newSceneObj = {
       ...this.activeSceneObject,
-      undoHistory: this.activeSceneObject.undoHistory.concat(newFlatMappedFabricState)
+      undoHistory: this.activeSceneObject.undoHistory.concat(newUndoEntryObject)
     }
     const newScenesArray = this.state.project.scenes.map(
       (sceneObj, sceneIndex) => sceneIndex !== activeSceneIndex
@@ -264,10 +280,139 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     })
   }
 
+  /**
+   * THE CONVENTION OF OUR DATA STATE
+   * Currenttly a flat mapped copy of the CURRENT scene state is always the LAST entry in the undoHistory array
+   * on the scene object.
+   * This allows us to implemenet undo by looking for a state 2 from the end, and pushing the last undo state (our current before the undo action)
+   * to the redo array, ready be re-set as current by any redo request
+   */
   handleUndo = () => {
-    const stateToAddToRedo = this.activeSceneObject.undoHistory[this.activeSceneObject.undoHistory.length - 1]
-    const stateToUndoTo = this.activeSceneObject.undoHistory[this.activeSceneObject.undoHistory.length - 2]
-    console.log('handleUndo: ', { stateToUndoTo, stateToAddToRedo })
+    this.fabricCanvas?.discardActiveObject()
+    this.fabricCanvas?.renderAll()
+    const { activeSceneIndex } = this.state
+    const stateToAddToRedo: UndoHistoryEntry = this.activeSceneObject.undoHistory[this.activeSceneObject.undoHistory.length - 1]
+    const stateToUndoTo: UndoHistoryEntry = this.activeSceneObject.undoHistory[this.activeSceneObject.undoHistory.length - 2]
+    if (!stateToAddToRedo) return Modal.warn({ content: `You've got nothing to undo!` })
+
+    let newUndoHistoryArray = [...this.activeSceneObject.undoHistory]
+    let newRedoHistoryArray = [...this.activeSceneObject.redoHistory]
+    let useStateToSaturate: UndoHistoryEntry['objectStates']
+    if (stateToUndoTo === undefined) {
+      // Also pop current state to redo
+      newRedoHistoryArray.push(stateToAddToRedo)
+      newUndoHistoryArray.pop()
+      useStateToSaturate = this.activeSceneObject.activeSceneObjects as UndoHistoryEntry['objectStates']
+    } else {
+      // Here we will push the new states to redo as well as pop of the undo state to current
+      newRedoHistoryArray.push(stateToAddToRedo)
+      newUndoHistoryArray.pop()
+      useStateToSaturate = stateToUndoTo.objectStates
+    }
+
+    // console.log('handleUndo: ', { useStateToSaturate, newRedoHistoryArray, newUndoHistoryArray })
+
+    // Saturate fabric in memory state and commit changes to acrtivescene object to react state
+    // console.log(`🥶 SATURATION`)
+    const selectedGUIDsArray = stateToAddToRedo?.selectedGUIDs || []
+    const fabricObjects = this.fabricCanvas?.getObjects() as Array<CustomFabricObject>
+    let selectedObjects: Array<CustomFabricObject> = []
+    fabricObjects.forEach(obj => {
+      if (obj?.uniqueGlobalId === "viewBoxRect") return
+      const settingsToSetTo = useStateToSaturate[obj.uniqueGlobalId]
+      console.log({ settingsToSetTo })
+      obj.set(settingsToSetTo).setCoords()
+      if (selectedGUIDsArray.includes(obj.uniqueGlobalId)) {
+        selectedObjects.push(obj)
+      }
+    })
+
+
+    if (selectedObjects?.length) {
+      if (selectedGUIDsArray.length === 1) {
+        this.fabricCanvas?.setActiveObject(selectedObjects[0])
+      } else {
+        let newSelection = new fabric.ActiveSelection(selectedObjects, { canvas: this.fabricCanvas as fabric.Canvas })
+        this.fabricCanvas?.setActiveObject(newSelection)
+      }
+    }
+    this.fabricCanvas?.requestRenderAll()
+
+    // Update the react state
+    const newSceneObject = {
+      ...this.activeSceneObject,
+      undoHistory: newUndoHistoryArray,
+      redoHistory: newRedoHistoryArray
+    }
+    return this.setState({
+      project: {
+        ...this.state.project,
+        scenes: this.state.project.scenes.map((sceneObj, currSceneIndex) => (
+          currSceneIndex !== activeSceneIndex ? sceneObj : newSceneObject
+        ))
+      }
+    })
+  }
+
+  handleRedo = () => {
+    this.fabricCanvas?.discardActiveObject()
+    this.fabricCanvas?.renderAll()
+    const { activeSceneIndex } = this.state
+    if (!this.activeSceneObject.redoHistory.length) return Modal.warn({ content: 'You have nothing to redo' })
+    const stateToAddToUndo: UndoHistoryEntry = this.activeSceneObject.redoHistory[this.activeSceneObject.redoHistory.length - 1]
+    let newUndoHistoryArray = [...this.activeSceneObject.undoHistory]
+    let newRedoHistoryArray = [...this.activeSceneObject.redoHistory]
+    const stateToRedoTo = newRedoHistoryArray.pop()
+
+    let useStateToSaturate: UndoHistoryEntry['objectStates']
+    if (stateToRedoTo === undefined) {
+      // Also pop current state to redo
+      newUndoHistoryArray.push(stateToAddToUndo)
+      useStateToSaturate = this.activeSceneObject.activeSceneObjects as UndoHistoryEntry['objectStates']
+    } else {
+      // Here we will push the new states to redo as well as pop of the undo state to current
+      newUndoHistoryArray.push(stateToAddToUndo)
+      useStateToSaturate = stateToRedoTo.objectStates
+    }
+
+    // Saturate fabric in memory state and commit changes to acrtivescene object to react state
+    // console.log(`🥶 SATURATION`)
+    const selectedGUIDsArray = stateToAddToUndo?.selectedGUIDs || []
+    const fabricObjects = this.fabricCanvas?.getObjects() as Array<CustomFabricObject>
+    let selectedObjects: Array<CustomFabricObject> = []
+    fabricObjects.forEach(obj => {
+      if (obj?.uniqueGlobalId === "viewBoxRect") return
+      const settingsToSetTo = useStateToSaturate[obj.uniqueGlobalId]
+      obj.set(settingsToSetTo).setCoords()
+      if (selectedGUIDsArray.includes(obj.uniqueGlobalId)) {
+        selectedObjects.push(obj)
+      }
+    })
+
+    if (selectedObjects?.length) {
+      if (selectedGUIDsArray.length === 1) {
+        this.fabricCanvas?.setActiveObject(selectedObjects[0])
+      } else {
+        let newSelection = new fabric.ActiveSelection(selectedObjects, { canvas: this.fabricCanvas as fabric.Canvas })
+        this.fabricCanvas?.setActiveObject(newSelection)
+      }
+    }
+    this.fabricCanvas?.requestRenderAll()
+
+    // Update the react state
+    const newSceneObject = {
+      ...this.activeSceneObject,
+      undoHistory: newUndoHistoryArray,
+      redoHistory: newRedoHistoryArray
+    }
+    return this.setState({
+      project: {
+        ...this.state.project,
+        scenes: this.state.project.scenes.map((sceneObj, currSceneIndex) => (
+          currSceneIndex !== activeSceneIndex ? sceneObj : newSceneObject
+        ))
+      }
+    })
   }
 
   get activeSceneObject() {
@@ -283,7 +428,8 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       setOnGlobalObject: this.setOnGlobalObject,
       setActiveSceneIndex: this.setActiveSceneIndex,
       handleGroupObjects: this.handleGroupObjects,
-      handleUndo: this.handleUndo
+      handleUndo: this.handleUndo,
+      handleRedo: this.handleRedo
     };
     return (
       <div>

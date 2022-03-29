@@ -1,9 +1,9 @@
 interface CustomFabricObject extends fabric.Object {
   uniqueGlobalId: string,
   userSetName: string,
-  firstOccurrenceIndex: number,
-  parentID: string,
-  members: Array<string>,
+  firstOccurrenceIndex?: number,
+  parentID?: string,
+  members?: Array<string>,
   objects?: Array<CustomFabricObject>,
   radius?: number,
   objectIndex?: number

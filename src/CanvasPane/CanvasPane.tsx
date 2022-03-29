@@ -68,6 +68,8 @@ class CanvasPane extends Component<CanvasPanePropsTypes> {
       //   }
       // }
     });
+
+    // SNAP TO GRID
     const gridWidth = this.context.state.gridCoords.width
     const gridHeight = this.context.state.gridCoords.height
     fabricCanvas.on('object:moving', function (options: any) {
@@ -75,6 +77,79 @@ class CanvasPane extends Component<CanvasPanePropsTypes> {
         left: Math.round(options.target.left / gridWidth) * gridWidth,
         top: Math.round(options.target.top / gridHeight) * gridHeight
       });
+    })
+
+    fabricCanvas.on('object:scaling', (event: any) => {
+      const { transform } = event
+      const { target } = transform
+
+      const targetWidth = target.width * target.scaleX;
+      const targetHeight = target.height * target.scaleY;
+
+      const snap = {
+        // closest width to snap to
+        width: Math.round(targetWidth / gridWidth) * gridWidth,
+        height: Math.round(targetHeight / gridHeight) * gridHeight,
+      };
+      // function Snap(value: number) {
+      //   return Math.round(value / snapSize) * snapSize;
+      // }
+
+      // const threshold = gridSize;
+
+      const dist = {
+        // distance from current width to snappable width
+        width: Math.abs(targetWidth - snap.width),
+        height: Math.abs(targetHeight - snap.height),
+      };
+
+      const centerPoint = target.getCenterPoint();
+
+      const anchorY = transform.originY;
+      const anchorX = transform.originX;
+
+      const anchorPoint = target.translateToOriginPoint(
+        centerPoint,
+        anchorX,
+        anchorY,
+      );
+
+      const attrs = {
+        scaleX: target.scaleX,
+        scaleY: target.scaleY,
+      };
+
+      // eslint-disable-next-line default-case
+      switch (transform.corner) {
+        case 'tl':
+        case 'br':
+        case 'tr':
+        case 'bl':
+          if (dist.width < gridWidth) {
+            attrs.scaleX = snap.width / target.width;
+          }
+          if (dist.height < gridWidth) {
+            attrs.scaleY = snap.height / target.height;
+          }
+          break;
+        case 'mt':
+        case 'mb':
+          if (dist.height < gridHeight) {
+            attrs.scaleY = snap.height / target.height;
+          }
+          break;
+        case 'ml':
+        case 'mr':
+          if (dist.width < gridHeight) {
+            attrs.scaleX = snap.width / target.width;
+          }
+          break;
+      }
+
+      if (attrs.scaleX !== target.scaleX || attrs.scaleY !== target.scaleY) {
+        target.set(attrs);
+        target.setPositionByOrigin(anchorPoint, anchorX, anchorY);
+      }
     })
 
     // Alt key canvas pan
@@ -154,5 +229,8 @@ class CanvasPane extends Component<CanvasPanePropsTypes> {
     );
   }
 }
+
+var snapSize = 20;
+var gridSize = 20;
 
 export default CanvasPane;

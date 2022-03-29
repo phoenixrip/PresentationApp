@@ -24,7 +24,8 @@ interface EditorContextTypes {
   setOnGlobalObject: Function;
   setActiveSceneIndex: Function;
   handleGroupObjects: Function;
-  handleUndo: Function
+  handleUndo: Function,
+  handleRedo: Function
 }
 
 const editorContext = React.createContext<EditorContextTypes>(

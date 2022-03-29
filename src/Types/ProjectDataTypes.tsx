@@ -14,15 +14,21 @@ interface ProjectSettingsTypes {
 }
 
 interface SceneType {
-  activeSceneObjects: { [key: string]: fabric.IObjectOptions },
+  activeSceneObjects: { [key: string]: Object },
   sceneSettings: {},
   animationSettings?: {}
   // undoHistory: Array<{ [key: string]: fabric.IObjectOptions }>,
-  undoHistory: Array<{ [key: string]: CustomFabricObject }>,
-  redoHistory: Array<{ [key: string]: fabric.IObjectOptions }>
+  undoHistory: Array<UndoHistoryEntry>,
+  redoHistory: Array<UndoHistoryEntry>
+}
+
+interface UndoHistoryEntry {
+  selectedGUIDs: Array<string>,
+  objectStates: { [key: string]: CustomFabricObject },
 }
 
 export type {
   SceneType,
   ProjectDataTypes,
+  UndoHistoryEntry
 }
