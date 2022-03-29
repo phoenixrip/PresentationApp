@@ -29,6 +29,7 @@ import { ActiveSelection, IEvent } from "fabric/fabric-impl";
 import { Modal } from "antd";
 import { v4 as uuidv4 } from 'uuid';
 import { flatMapFabricSceneState, normalizeAllObjectCoords } from "./Utils/flatMapFabricState";
+import { editorContext, EditorContextTypes, EditorStateTypes } from "./EditorContext";
 
 setFabricDefaults();
 
@@ -36,34 +37,7 @@ interface EditorPropsTypes {
   project: ProjectDataTypes;
 }
 
-interface EditorStateTypes {
-  tick: Boolean;
-  isInitted: Boolean;
-  project: ProjectDataTypes;
-  activeSceneIndex: number;
-  antdSize: SizeType;
-  gridCoords: {
-    width: number,
-    height: number,
-    top: number,
-    left: number
-  }
-}
 
-interface EditorContextTypes {
-  fabricCanvas: fabric.Canvas | null;
-  state: EditorStateTypes;
-  handleAddRect: Function;
-  setOnFabricObject: Function;
-  setOnGlobalObject: Function;
-  setActiveSceneIndex: Function;
-  handleGroupObjects: Function;
-  handleUndo: Function
-}
-
-const editorContext = React.createContext<EditorContextTypes>(
-  {} as EditorContextTypes
-);
 
 class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
   fabricCanvas: fabric.Canvas | null;
@@ -78,6 +52,7 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       this.setNewCanvasPanelDimensions,
       300
     );
+    console.log('EDITOR LOADED')
     this.state = {
       tick: true,
       isInitted: false,
@@ -301,16 +276,17 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
   }
 
   render() {
-    const contextValue: any = {
+    const contextValue: EditorContextTypes = {
       fabricCanvas: this.fabricCanvas,
       state: this.state,
       handleAddRect: this.handleAddRect,
       setOnFabricObject: this.setOnFabricObject,
+      setOnGlobalObject: this.setOnGlobalObject,
       setActiveSceneIndex: this.setActiveSceneIndex,
       handleGroupObjects: this.handleGroupObjects,
       handleUndo: this.handleUndo
     };
-
+    console.log({ contextValue })
     return (
       <div>
         <editorContext.Provider value={contextValue}>

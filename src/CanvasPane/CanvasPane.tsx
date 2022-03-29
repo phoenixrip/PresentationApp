@@ -1,6 +1,8 @@
 // import { fabric } from "fabric";
+import { faC } from "@fortawesome/free-solid-svg-icons";
 import React, { Component } from "react";
-import { editorContext, EditorContextTypes } from "../Editor";
+import { editorContext, EditorContextTypes } from "../EditorContext";
+// import { editorContext, EditorContextTypes } from "../Editor";
 import c from './CanvasPane.module.css'
 
 type CanvasPanePropsTypes = {
@@ -14,8 +16,6 @@ type CanvasPanePropsTypes = {
 
 class CanvasPane extends Component<CanvasPanePropsTypes> {
   static contextType = editorContext
-  // context!: React.ContextType<typeof EditorContextTypes>
-  // declare context: React.ContextType<typeof EditorContextTypes>
 
   domCanvas: HTMLCanvasElement | null;
   div: HTMLDivElement | null;
@@ -45,8 +45,8 @@ class CanvasPane extends Component<CanvasPanePropsTypes> {
       var delta = opt.e.deltaY;
       var zoom = fabricCanvas.getZoom() || 1;
       zoom *= 0.999 ** delta;
-      if (zoom > 20) zoom = 20;
-      if (zoom < 0.1) zoom = 0.1;
+      if (zoom > 20) zoom = 20; // MAX ZOOM
+      if (zoom < 0.1) zoom = 0.1; // MIN ZOOM
       fabricCanvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
       opt.e.preventDefault();
       opt.e.stopPropagation();
@@ -68,6 +68,14 @@ class CanvasPane extends Component<CanvasPanePropsTypes> {
       //   }
       // }
     });
+    const gridWidth = this.context.state.gridCoords.width
+    const gridHeight = this.context.state.gridCoords.height
+    fabricCanvas.on('object:moving', function (options: any) {
+      options.target.set({
+        left: Math.round(options.target.left / gridWidth) * gridWidth,
+        top: Math.round(options.target.top / gridHeight) * gridHeight
+      });
+    })
 
     // Alt key canvas pan
     fabricCanvas.on('mouse:down', function (this: any, opt) {
@@ -112,31 +120,30 @@ class CanvasPane extends Component<CanvasPanePropsTypes> {
               {
                 linesArray
                   .map((_, i) => {
+                    const y = (this.context.state.gridCoords.height * (i - (totalLines / 2)))/*  + (this.context.state.project.settings.dimensions.height * .5) */
                     return (
                       <line
                         key={`h${i}`}
                         className={c.line}
                         x1='-99999'
                         x2='99999'
-                        y1={this.context.state.gridCoords.height * (i - (totalLines / 2))}
-                        y2={this.context.state.gridCoords.height * (i - (totalLines / 2))}
-                        stroke='orange'
-
+                        y1={y}
+                        y2={y}
                       />)
                   })
               }
               {
                 linesArray
                   .map((_, i) => {
+                    const x = (this.context.state.gridCoords.width * (i - (totalLines / 2)))/*  + (this.context.state.project.settings.dimensions.width * .5) */
                     return (
                       <line
                         key={`v${i}`}
                         className={c.line}
                         y1='-99999'
                         y2='99999'
-                        x1={this.context.state.gridCoords.width * (i - (totalLines / 2))}
-                        x2={this.context.state.gridCoords.width * (i - (totalLines / 2))}
-                        stroke='orange'
+                        x1={x}
+                        x2={x}
                       />)
                   })
               }
