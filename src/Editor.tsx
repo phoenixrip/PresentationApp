@@ -2,7 +2,7 @@ import { fabric } from "fabric";
 import React, { Component } from "react";
 import { ReflexContainer, ReflexSplitter, ReflexElement } from "react-reflex";
 import { ScenesPane } from "./ScenesPane/ScenesPane";
-import CanvasPane from "./FabricCanvasContainer";
+import CanvasPane from "./CanvasPane/CanvasPane";
 import { InspectorContainer } from "./InspectorPane/InspectorContainer";
 
 import "./styles.css";
@@ -19,12 +19,16 @@ import { setFabricDefaults } from "./Utils/SetFabricDefaults";
 import { ProjectDataTypes, SceneType } from "./Types/ProjectDataTypes";
 import {
   CustomFabricCircle,
+  CustomFabricGroup,
   CustomFabricObject,
 } from "./Types/CustomFabricTypes";
 // import { ProjectDataStateTypes } from "./AppController";
 
 import { diff } from "./Utils/diff";
-import { ActiveSelection } from "fabric/fabric-impl";
+import { ActiveSelection, IEvent } from "fabric/fabric-impl";
+import { Modal } from "antd";
+import { v4 as uuidv4 } from 'uuid';
+import { flatMapFabricSceneState, normalizeAllObjectCoords } from "./Utils/flatMapFabricState";
 
 setFabricDefaults();
 
@@ -38,6 +42,12 @@ interface EditorStateTypes {
   project: ProjectDataTypes;
   activeSceneIndex: number;
   antdSize: SizeType;
+  gridCoords: {
+    width: number,
+    height: number,
+    top: number,
+    left: number
+  }
 }
 
 interface EditorContextTypes {
@@ -47,6 +57,8 @@ interface EditorContextTypes {
   setOnFabricObject: Function;
   setOnGlobalObject: Function;
   setActiveSceneIndex: Function;
+  handleGroupObjects: Function;
+  handleUndo: Function
 }
 
 const editorContext = React.createContext<EditorContextTypes>(
@@ -72,6 +84,12 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       project: props.project,
       activeSceneIndex: 0,
       antdSize: "small" as SizeType,
+      gridCoords: {
+        width: 10,
+        height: 10,
+        top: -20,
+        left: -20
+      }
     };
   }
 
@@ -86,16 +104,15 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
   renderActiveScene = (renderScreenIndex: number) => {
     //Get current scene
     const currentSceneObject = this.state.project.scenes[renderScreenIndex];
-
     // For each object in active scene
     for (const [uniqueGlobalId, sceneObjectOptions] of Object.entries(
       currentSceneObject.activeSceneObjects
     )) {
-      const activeObject = this.liveObjectsDict[uniqueGlobalId];
+      const currentObject = this.liveObjectsDict[uniqueGlobalId];
       const globalObjectSettings: {} =
         this.state.project.globalObjects[uniqueGlobalId];
 
-      activeObject
+      currentObject
         .set(globalObjectSettings) //Reset to global settings
         .set(sceneObjectOptions) // Set specific scene options
         .setCoords();
@@ -104,11 +121,12 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
 
   initFabricCanvas = (
     domCanvas: HTMLCanvasElement,
-    canvasPaneDimensions: { width: number; height: number }
+    canvasPaneDimensions: { width: number; height: number },
+    attatchLocalEvents: Function
   ) => {
     const projectDimensions = this.state.project.settings.dimensions;
     const c = (this.fabricCanvas = new fabric.Canvas(domCanvas, {
-      backgroundColor: "#141414",
+      // backgroundColor: "#141414",
       width: canvasPaneDimensions.width,
       height: canvasPaneDimensions.height,
     }));
@@ -120,155 +138,18 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     vpt[5] = heightMove;
     c.setViewportTransform(vpt);
 
-    // CANVAS EVENT HOOKS
-    // React state tick on render
     this.fabricCanvas.on("after:render", throttle(this.updateTick, 100));
 
-    // Mouse wheel zoom
-    this.fabricCanvas.on("mouse:wheel", function (opt) {
-      var delta = opt.e.deltaY;
-      var zoom = c?.getZoom() || 1;
-      zoom *= 0.999 ** delta;
-      if (zoom > 20) zoom = 20;
-      if (zoom < 0.01) zoom = 0.01;
-      c.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
-      opt.e.preventDefault();
-      opt.e.stopPropagation();
-      var vpt = c?.viewportTransform || [];
-      // if (zoom < 400 / 1000) {
-      //   vpt[4] = 200 - 1000 * zoom / 2;
-      //   vpt[5] = 200 - 1000 * zoom / 2;
-      // } else {
-      //   if (vpt[4] >= 0) {
-      //     vpt[4] = 0;
-      //   } else if (vpt[4] < c.getWidth() - 1000 * zoom) {
-      //     vpt[4] = c.getWidth() - 1000 * zoom;
-      //   }
-      //   if (vpt[5] >= 0) {
-      //     vpt[5] = 0;
-      //   } else if (vpt[5] < c.getHeight() - 1000 * zoom) {
-      //     vpt[5] = c.getHeight() - 1000 * zoom;
-      //   }
-      // }
-    });
+    // Attach events local to the canvas pane like zoom and drag
+    // so that dom updates on those nodes can be very surgical
+    attatchLocalEvents(this.fabricCanvas)
+    // CANVAS EVENT HOOKS
+    // React state tick on render
 
     this.fabricCanvas.on("object:modified", (e: any) => {
       console.log("object:modfied", e);
-      const isSelection = e.target.type === "activeSelection"
-
-      // ------------------------------------------------------------------------
-      // Scale width/height/radius according to scale and reset scale to
-      // Reset top and left according to rescaled position without active selection
-      // ------------------------------------------------------------------------
-      switch (e.action) {
-        case "scaleX":
-        case "scaleY":
-        case "scale":
-          const newScaleX = e.target.scaleX;
-          const newScaleY = e.target.scaleY;
-
-          if (isSelection) {
-            e.target.set({
-              width: Math.round(e.target.width * newScaleX) || 1,
-              height: Math.round(e.target.height * newScaleY) || 1,
-              scaleX: 1,
-              scaleY: 1,
-            });
-          }
-
-          // Get objects from activeSelection or take selected object in array so we can iterate
-          const objects = isSelection ? e.target.getObjects() : [e.target]
-
-          // Iterate through objects in group and rescale and recalculate left and top relative to newScaleX/Y
-          for (const obj of objects) {
-            const left = Math.round(obj.left * newScaleX)
-            const top = Math.round(obj.top * newScaleY)
-            let newSettings = {} as fabric.IObjectOptions
-
-            switch (obj.type) {
-              case "rect":
-                newSettings = {
-                  width: Math.round(obj.width * newScaleX) || 1,
-                  height: Math.round(obj.height * newScaleY) || 1,
-                  scaleX: 1,
-                  scaleY: 1,
-                }
-                if (isSelection) newSettings = { ...newSettings, top: top, left: left } //only set top and left on activeSelection:
-                obj.set(newSettings);
-                break;
-              case "circle":
-                newSettings = {
-                  radius: Math.round(obj.radius * newScaleX) || 1,
-                  scaleX: 1,
-                  scaleY: 1
-                } as fabric.ICircleOptions
-                if (isSelection) newSettings = { ...newSettings, top: top, left: left } //only set top and left on activeSelection:
-                obj.set(newSettings);
-                break;
-              default:
-                break;
-            }
-          }
-          break
-        default:
-          break
-      }
-
-      // ------------------------------------------------------------------------
-      // Calculate modifications, push to scene objects and undo history
-      // ------------------------------------------------------------------------
-
-      //Unselect on canvas if ActiveSelection to get get Absolute position
-      if (isSelection) this.fabricCanvas!.discardActiveObject()
-
-      // Old Scene State is global state of objects in scene + current state in scene (activeSceneObjects)
-      const oldSceneState = { ...this.state.project.scenes[this.state.activeSceneIndex].activeSceneObjects }
-      for (const uniqueGlobalId in oldSceneState) {
-        oldSceneState[uniqueGlobalId] = { // Combine:
-          ...this.state.project.globalObjects[uniqueGlobalId], // Global settings +
-          ...oldSceneState[uniqueGlobalId] // Scene settings
-        }
-      }
-
-      // Grab current objects and then run toObject on them while keeping custom attributes
-      const currentObjects = this.fabricCanvas!.getObjects() as Array<CustomFabricObject>;
-      const currentObjectsJson = currentObjects.map((obj) => {
-        obj.includeDefaultValues = false; // TODO: this will go somewhere as a global setting on all fabric objects but keeping it here for testing
-        return obj.toObject([
-          "uniqueGlobalId",
-          "userSetName",
-          "firstOccurrenceIndex",
-        ]);
-      });
-      // create newSceneState out of current objects array by putting it in key-value pairs of {uniqueGlobalId: {settings}}
-      let newSceneState = {} as { [key: string]: fabric.IObjectOptions };
-      for (const obj of currentObjectsJson) {
-        if (obj.uniqueGlobalId) newSceneState[obj.uniqueGlobalId] = obj;
-      }
-
-      // Diffing oldSceneState with newSceneState
-      const deltaSettings = diff(oldSceneState, newSceneState)
-      console.log("diff", deltaSettings)
-
-      // reselect on canvas if activeSelection
-      if (isSelection) {
-        const reselection = new fabric.ActiveSelection(e.target.getObjects(), {
-          canvas: this.fabricCanvas as fabric.Canvas,
-        });
-        this.fabricCanvas?.setActiveObject(reselection);
-        this.fabricCanvas?.requestRenderAll();
-      }
-
-      // Set to Scene objects
-      // TODO: Rename setonglobalobject to setonobjectinactivescene?
-      for (const [uniqueGlobalId, settings] of Object.entries(deltaSettings)) {
-        this.setOnGlobalObject(
-          this.state.project.globalObjects[uniqueGlobalId] as CustomFabricObject,
-          settings as {}
-        )
-      }
-
-      //TODO: PUSH deltaSettings straight to undo history with e.action as name/type of action
+      normalizeAllObjectCoords(e.target, e.action)
+      return this.normalizeNewSceneState(`object:modified: action: ${e.action}, name: ${e.target?.userSetName || e.target.type}`)
     });
 
     // Init complete editor state
@@ -299,7 +180,9 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       strokeDashArray: [11, 8],
       selectable: false,
       evented: false,
-    });
+      objectCaching: false
+    }) as CustomFabricObject
+    viewportRect.set({ uniqueGlobalId: 'viewBoxRect' })
 
     if (this.fabricCanvas) {
       this.fabricCanvas.add(viewportRect).sendToBack(viewportRect);
@@ -364,6 +247,59 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     }
   };
 
+  handleGroupObjects = () => {
+    const selection: fabric.Object | undefined = this.fabricCanvas?.getActiveObject()
+    if (selection?.type !== 'activeSelection') return Modal.warn({ content: 'GIVE ME A GROUPABLE' })
+    if (selection?.type === 'activeSelection') {
+      const useGroupable = selection as fabric.ActiveSelection
+      const newGroupUUID = uuidv4()
+      let newGroupObject = useGroupable.toGroup() as CustomFabricGroup
+      newGroupObject.set({
+        uniqueGlobalId: newGroupUUID,
+        userSetName: '',
+        firstOccurrenceIndex: this.state.activeSceneIndex
+      })
+      // Grab the names of the grouped object to display in the undo/redo UI
+      const groupedObjects = newGroupObject.getObjects() as Array<CustomFabricObject>
+      const groupedObjectNames = groupedObjects.map(obj => obj?.userSetName ? obj.userSetName : obj.type)
+      return this.normalizeNewSceneState(`Grouped objects ${groupedObjectNames}`)
+    }
+  }
+
+  normalizeNewSceneState = (reasonForUpdate?: string) => {
+    const { activeSceneIndex } = this.state
+    console.log(`normalizeNewSceneState: reasonForUpdate: ${reasonForUpdate || 'No reason given'}`)
+    const newFabricState = this.fabricCanvas?.toObject(['uniqueGlobalId', 'userSetName', 'firstOccurrenceIndex', 'objectIndex'])
+    const newFlatMappedFabricState = flatMapFabricSceneState(newFabricState)
+    console.log({ newFlatMappedFabricState })
+    const newSceneObj = {
+      ...this.activeSceneObject,
+      undoHistory: this.activeSceneObject.undoHistory.concat(newFlatMappedFabricState)
+    }
+    const newScenesArray = this.state.project.scenes.map(
+      (sceneObj, sceneIndex) => sceneIndex !== activeSceneIndex
+        ? sceneObj
+        : newSceneObj
+    )
+
+    return this.setState({
+      project: {
+        ...this.state.project,
+        scenes: newScenesArray
+      }
+    })
+  }
+
+  handleUndo = () => {
+    const stateToAddToRedo = this.activeSceneObject.undoHistory[this.activeSceneObject.undoHistory.length - 1]
+    const stateToUndoTo = this.activeSceneObject.undoHistory[this.activeSceneObject.undoHistory.length - 2]
+    console.log('handleUndo: ', { stateToUndoTo, stateToAddToRedo })
+  }
+
+  get activeSceneObject() {
+    return this.state.project.scenes[this.state.activeSceneIndex]
+  }
+
   render() {
     const contextValue: any = {
       fabricCanvas: this.fabricCanvas,
@@ -371,6 +307,8 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       handleAddRect: this.handleAddRect,
       setOnFabricObject: this.setOnFabricObject,
       setActiveSceneIndex: this.setActiveSceneIndex,
+      handleGroupObjects: this.handleGroupObjects,
+      handleUndo: this.handleUndo
     };
 
     return (
@@ -423,3 +361,60 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
 
 export { Editor, editorContext };
 export type { EditorContextTypes };
+
+/*
+// ------------------------------------------------------------------------
+      // Calculate modifications, push to scene objects and undo history
+      // ------------------------------------------------------------------------
+
+      //Unselect on canvas if ActiveSelection to get get Absolute position
+      if (isSelection) this.fabricCanvas!.discardActiveObject()
+
+      // Old Scene State is global state of objects in scene + current state in scene (activeSceneObjects)
+      let oldSceneState = { ...this.state.project.scenes[this.state.activeSceneIndex].activeSceneObjects }
+      for (const uniqueGlobalId in oldSceneState) {
+        oldSceneState[uniqueGlobalId] = { // Combine:
+          ...this.state.project.globalObjects[uniqueGlobalId], // Global settings +
+          ...oldSceneState[uniqueGlobalId] // Scene settings
+        }
+      }
+
+      // Grab current objects and then run toObject on them while keeping custom attributes
+      const currentObjects = this.fabricCanvas!.getObjects() as Array<CustomFabricObject>;
+      const currentObjectsJson = currentObjects.map((obj) => {
+        obj.includeDefaultValues = false; // TODO: this will go somewhere as a global setting on all fabric objects but keeping it here for testing
+        return obj.toObject([
+          "uniqueGlobalId",
+          "userSetName",
+          "firstOccurrenceIndex",
+        ]);
+      });
+      // create newSceneState out of current objects array by putting it in key-value pairs of {uniqueGlobalId: {settings}}
+      let newSceneState = {} as { [key: string]: fabric.IObjectOptions };
+      for (const obj of currentObjectsJson) {
+        if (obj.uniqueGlobalId) newSceneState[obj.uniqueGlobalId] = obj;
+      }
+
+      // Diffing oldSceneState with newSceneState
+      const deltaSettings = diff(oldSceneState, newSceneState)
+      console.log("diff", deltaSettings)
+
+      // reselect on canvas if activeSelection
+      if (isSelection) {
+        const reselection = new fabric.ActiveSelection(e.target.getObjects(), {
+          canvas: this.fabricCanvas as fabric.Canvas,
+        });
+        this.fabricCanvas?.setActiveObject(reselection);
+        this.fabricCanvas?.requestRenderAll();
+      }
+
+      // Set to Scene objects
+      // TODO: Rename setonglobalobject to setonobjectinactivescene?
+      for (const [uniqueGlobalId, settings] of Object.entries(deltaSettings)) {
+        this.setOnGlobalObject(
+          this.state.project.globalObjects[uniqueGlobalId] as CustomFabricObject,
+          settings as {}
+        )
+      }
+
+      //TODO: PUSH deltaSettings straight to undo history with e.action as name/type of action */

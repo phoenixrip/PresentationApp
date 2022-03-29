@@ -16,11 +16,15 @@ const InspectorContainer = (props: Object) => {
   const selection: any | undefined = context.fabricCanvas?.getActiveObject()
   const setOnFabricObject: Function = context.setOnFabricObject
 
-  if (selection) console.log("strokedash", !selection?.strokeDashArray)
+  // if (selection) console.log("strokedash", !selection?.strokeDashArray)
   return (
     <>
       {!selection &&
         <p>no element selected</p>
+      }
+      {
+        selection?.type === 'activeSelection' &&
+        <Button onClick={(e) => context.handleGroupObjects()}>GROUP OBJECTS</Button>
       }
       {selection &&
         <>

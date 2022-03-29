@@ -7,7 +7,8 @@ function setFabricDefaults() {
     borderColor: '#70ABFF',
     lockScalingFlip: true,
     paintFirst: "stroke",
-    name: ""
+    setUserName: "",
+    includeDefaultValues: false
   })
 }
 
