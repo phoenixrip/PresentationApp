@@ -133,7 +133,7 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     this.fabricCanvas.loadFromJSON(
       json,
       () => {
-        this.initViewportRect();
+        // this.initViewportRect();
         this.renderActiveScene(this.state.activeSceneIndex);
         this.fabricCanvas?.requestRenderAll();
       },
@@ -145,24 +145,24 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     return this.setState({ isInitted: true });
   };
 
-  initViewportRect = () => {
-    const viewportRect = new fabric.Rect({
-      width: this.state.project.settings.dimensions.width,
-      height: this.state.project.settings.dimensions.height,
-      fill: undefined,
-      stroke: "blue",
-      strokeWidth: 1,
-      strokeDashArray: [11, 8],
-      selectable: false,
-      evented: false,
-      objectCaching: false
-    }) as CustomFabricObject
-    viewportRect.set({ uniqueGlobalId: 'viewBoxRect' })
+  // initViewportRect = () => {
+  //   const viewportRect = new fabric.Rect({
+  //     width: this.state.project.settings.dimensions.width,
+  //     height: this.state.project.settings.dimensions.height,
+  //     fill: undefined,
+  //     stroke: "blue",
+  //     strokeWidth: 1,
+  //     strokeDashArray: [11, 8],
+  //     selectable: false,
+  //     evented: false,
+  //     objectCaching: false
+  //   }) as CustomFabricObject
+  //   viewportRect.set({ uniqueGlobalId: 'viewBoxRect' })
 
-    if (this.fabricCanvas) {
-      this.fabricCanvas.add(viewportRect).sendToBack(viewportRect);
-    }
-  };
+  //   if (this.fabricCanvas) {
+  //     this.fabricCanvas.add(viewportRect).sendToBack(viewportRect);
+  //   }
+  // };
 
   updateCanvasPaneDimensions = (newDimensions: fabric.ICanvasDimensions) => {
     return this.throttledSetNewCanvasPaneDimensions(newDimensions);
@@ -318,7 +318,6 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     const fabricObjects = this.fabricCanvas?.getObjects() as Array<CustomFabricObject>
     let selectedObjects: Array<CustomFabricObject> = []
     fabricObjects.forEach(obj => {
-      if (obj?.uniqueGlobalId === "viewBoxRect") return
       const settingsToSetTo = useStateToSaturate[obj.uniqueGlobalId]
       console.log({ settingsToSetTo })
       obj.set(settingsToSetTo).setCoords()
@@ -381,7 +380,6 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     const fabricObjects = this.fabricCanvas?.getObjects() as Array<CustomFabricObject>
     let selectedObjects: Array<CustomFabricObject> = []
     fabricObjects.forEach(obj => {
-      if (obj?.uniqueGlobalId === "viewBoxRect") return
       const settingsToSetTo = useStateToSaturate[obj.uniqueGlobalId]
       obj.set(settingsToSetTo).setCoords()
       if (selectedGUIDsArray.includes(obj.uniqueGlobalId)) {

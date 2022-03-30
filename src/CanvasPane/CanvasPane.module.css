@@ -1,15 +1,23 @@
 .paneContainer {
   position: relative;
+  background-color: #969696;
 }
 
-.svgOverlayContainer {
+.svgOverlayContainer,
+.svgUnderlayContainer {
   position: absolute;
   width: 100%;
   height: 100%;
   top: 0;
   left: 0;
   pointer-events: none;
+}
+
+.svgOverlayContainer {
   z-index: 999;
+}
+.svgUnderlayContainer {
+  z-index: 0;
 }
 
 .line {

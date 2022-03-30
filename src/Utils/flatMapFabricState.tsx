@@ -5,7 +5,6 @@ import { ProjectDataTypes } from '../Types/ProjectDataTypes'
 
 function flatMapFabricSceneState(newFabricState: any) {
   const fabricObjectsArray = (newFabricState.objects as Array<CustomFabricObject>)
-    .filter(obj => obj?.uniqueGlobalId !== 'viewBoxRect')
 
   let newFlatMap: { [key: string]: CustomFabricObject } = {}
   recurseForFlatMap(fabricObjectsArray, false)
