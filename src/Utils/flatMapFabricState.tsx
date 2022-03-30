@@ -10,16 +10,16 @@ function flatMapFabricSceneState(newFabricState: any) {
   recurseForFlatMap(fabricObjectsArray, false)
   return newFlatMap
 
-  function recurseForFlatMap(objectsArray: Array<CustomFabricObject>, parentID: string | false) {
+  function recurseForFlatMap(objectsArray: Array<CustomFabricObject>, parentGUIDs: string | false) {
     objectsArray.forEach((obj, i) => {
       obj.objectIndex = i
-      if (parentID) obj.parentID = parentID
+      //if (parentGUIDs) obj.parentGUIDs = parentGUIDs
       if (obj?.type !== 'group') return newFlatMap[obj.uniqueGlobalId] = obj
-      const groupMembers = obj?.objects?.map(obj => obj.uniqueGlobalId) || []
-      obj.members = groupMembers
-      recurseForFlatMap(obj?.objects || [], obj.uniqueGlobalId)
-      obj.objects = []
-      newFlatMap[obj.uniqueGlobalId] = obj
+      //const groupMembers = obj?.objects?.map(obj => obj.uniqueGlobalId) || []
+      //obj.members = groupMembers
+      //recurseForFlatMap(obj?.objects || [], obj.uniqueGlobalId)
+      // obj.objects = []
+      // newFlatMap[obj.uniqueGlobalId] = obj
     })
   }
 }

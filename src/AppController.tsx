@@ -44,6 +44,28 @@ const dummyProjectData: ProjectDataTypes = {
 			firstOccurrenceIndex: 1,
 			userSetName: 'My purple rect'
 		},
+    "rectangle4": {
+      uniqueGlobalId: "rectangle4",
+      type: "rect",
+      top: 0,
+      left: 480,
+      width: 160,
+      height: 90,
+      fill: 'black',
+      firstOccurrenceIndex: 1,
+      userSetName: 'My black rect'
+    },
+    "rectangle5": {
+      uniqueGlobalId: "rectangle5",
+      type: "rect",
+      top: 0,
+      left: 640,
+      width: 160,
+      height: 90,
+      fill: 'blue',
+      firstOccurrenceIndex: 1,
+      userSetName: 'My blue rect'
+    },
 	},
 	scenes: [
 		{
@@ -81,6 +103,28 @@ const dummyProjectData: ProjectDataTypes = {
 					fill: 'purple',
 					firstOccurrenceIndex: 1,
 					userSetName: 'My purple rect'
+				},
+        "rectangle4": {
+					uniqueGlobalId: "rectangle4",
+					type: "rect",
+					top: 0,
+					left: 480,
+					width: 160,
+					height: 90,
+					fill: 'black',
+					firstOccurrenceIndex: 1,
+					userSetName: 'My black rect'
+				},
+        "rectangle5": {
+					uniqueGlobalId: "rectangle5",
+					type: "rect",
+					top: 0,
+					left: 640,
+					width: 160,
+					height: 90,
+					fill: 'blue',
+					firstOccurrenceIndex: 1,
+					userSetName: 'My blue rect'
 				},
 			},
 			undoHistory: [],

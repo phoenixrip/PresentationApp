@@ -30,6 +30,8 @@ import { Modal } from "antd";
 import { v4 as uuidv4 } from 'uuid';
 import { flatMapFabricSceneState, normalizeAllObjectCoords } from "./Utils/flatMapFabricState";
 import { editorContext, EditorContextTypes, EditorStateTypes } from "./EditorContext";
+import { rgbaFromColor } from "./Utils/rgbaFromColor";
+import { tsIntrinsicKeyword } from "@babel/types";
 
 setFabricDefaults();
 
@@ -127,6 +129,78 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       return this.normalizeNewSceneState(`object:modified: action: ${e.action}, name: ${e.target?.userSetName || e.target.type}`)
     });
 
+    this.fabricCanvas.on("selection:cleared", (e) => {
+      console.log("selection:cleared", e)
+    })
+
+    this.fabricCanvas.on("selection:updated", (e) => {
+      console.log("selection:updated", e)
+    })
+    this.fabricCanvas.on("selection:created", (e: any) => {
+      console.log("selection:created", e)
+
+      //TODO: FIX CODE DUPLICATION
+
+      const currentActiveSelection = this.fabricCanvas?.getActiveObject()! as fabric.ActiveSelection | CustomFabricObject
+
+      // If it's an active selection
+      if (currentActiveSelection instanceof fabric.ActiveSelection) {
+        const currentActiveSelectionObjects = currentActiveSelection.getObjects() as Array<CustomFabricObject>
+        // Finds the top parent and recursively goes down and adds all its children and children's children
+        // TODO: This can be optimised by setting a flag once the top parent has been found and children added
+        // This is because the top parent has all children underneath it so if you find it once you find all children
+        // If the object has no parents it needs to be added to the group since it's part of the selection
+        let allChildrenAndSelection = new Set<CustomFabricObject>()
+        for (const selectedObject of currentActiveSelectionObjects) {
+          if (selectedObject?.parentGUID) {
+            const tallestParent = this.recursivelyFindTallestParent(selectedObject)
+            const recursivelyFindAllChildren = (parentObject: CustomFabricObject) => {
+              allChildrenAndSelection.add(parentObject)
+              if (!parentObject?.members) return
+              for (const childObjectGUID of parentObject.members) {
+                const childObject = this.liveObjectsDict[childObjectGUID] as CustomFabricObject
+                recursivelyFindAllChildren(childObject)
+              }
+            }
+            recursivelyFindAllChildren(tallestParent)
+          } else {
+            allChildrenAndSelection.add(selectedObject)
+          }
+        }
+
+        const allChildrenAndSelectionArray = Array.from(allChildrenAndSelection)
+        const objectGUIDsInActiveSelection = currentActiveSelectionObjects.map(e => e.uniqueGlobalId)
+        for (const obj of allChildrenAndSelectionArray) {
+          if(!objectGUIDsInActiveSelection.includes(obj.uniqueGlobalId)) {
+            currentActiveSelection.addWithUpdate(obj)
+          }
+        }
+      //If it's a selection of a single object
+      } else {
+        const selectedObject = currentActiveSelection
+        let allChildrenAndSelection = new Set<CustomFabricObject>()
+        if (selectedObject?.parentGUID) {
+          const tallestParent = this.recursivelyFindTallestParent(selectedObject)
+          const recursivelyFindAllChildren = (parentObject: CustomFabricObject) => {
+            allChildrenAndSelection.add(parentObject)
+            if (!parentObject?.members) return
+            for (const childObjectGUID of parentObject.members) {
+              const childObject = this.liveObjectsDict[childObjectGUID] as CustomFabricObject
+              recursivelyFindAllChildren(childObject)
+            }
+          }
+          recursivelyFindAllChildren(tallestParent)
+        } else {
+          allChildrenAndSelection.add(selectedObject)
+        }
+        const allChildrenAndSelectionArray = Array.from(allChildrenAndSelection)
+        const newActiveSelection = new fabric.ActiveSelection(allChildrenAndSelectionArray, { canvas: this.fabricCanvas as fabric.Canvas })
+        this.fabricCanvas?.setActiveObject(newActiveSelection)
+      }
+      this.fabricCanvas?.renderAll()
+    })
+
+
     // Init complete editor state
     const json: any = {
       objects: Object.values(this.state.project.globalObjects),
@@ -223,22 +297,69 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     }
   };
 
+  //Recursively move up to each parent until there are no more parents and return that GUID
+  recursivelyFindTallestParent = (obj: CustomFabricObject): CustomFabricObject => {
+    if (obj?.parentGUID) {
+      const parentObject = this.liveObjectsDict[obj.parentGUID] as CustomFabricObject
+      return this.recursivelyFindTallestParent(parentObject)
+    } else {
+      return obj
+    }
+  }
+
   handleGroupObjects = () => {
-    const selection: fabric.Object | undefined = this.fabricCanvas?.getActiveObject()
+    const selection: fabric.Object | fabric.ActiveSelection | undefined = this.fabricCanvas?.getActiveObject()
     if (selection?.type !== 'activeSelection') return Modal.warn({ content: 'GIVE ME A GROUPABLE' })
-    if (selection?.type === 'activeSelection') {
-      const useGroupable = selection as fabric.ActiveSelection
-      const newGroupUUID = uuidv4()
-      let newGroupObject = useGroupable.toGroup() as CustomFabricGroup
-      newGroupObject.set({
-        uniqueGlobalId: newGroupUUID,
-        userSetName: '',
-        firstOccurrenceIndex: this.state.activeSceneIndex
+
+    if (selection instanceof fabric.ActiveSelection) {
+      const newGroupGUID = uuidv4() //GUID of new group
+      const selectionObjects = selection.getObjects() as Array<CustomFabricObject> // Currently selected objects
+      let objectGUIDsToAssignParent = new Set<string>() // All the GUIDs which will have this new group as parent
+
+      for (let obj of selectionObjects) {
+
+        // Add tallest parent to collection of GUIDs to assign new group as parent to
+        const tallestParent = this.recursivelyFindTallestParent(obj)
+        const tallestparentGUID = tallestParent.uniqueGlobalId as string
+        objectGUIDsToAssignParent.add(tallestparentGUID)
+      }
+
+      //Convert to array for iteration
+      const objectGUIDsToAssignParentArray = Array.from(objectGUIDsToAssignParent)
+
+      // Assign new group as parent to each top-level child
+      for (const objectGUID of objectGUIDsToAssignParentArray) {
+        const obj = this.liveObjectsDict[objectGUID] as CustomFabricObject
+        obj.parentGUID = newGroupGUID
+      }
+
+      // Create new rect to signify group
+      const groupRect = new fabric.Rect({
+        width: selection.width,
+        height: selection.height,
+        top: selection.top,
+        left: selection.left,
+        selectable: false,
+        evented: false,
+        fill: "rgba(255, 0, 0, 0.5)"
       })
-      // Grab the names of the grouped object to display in the undo/redo UI
-      const groupedObjects = newGroupObject.getObjects() as Array<CustomFabricObject>
-      const groupedObjectNames = groupedObjects.map(obj => obj?.userSetName ? obj.userSetName : obj.type)
-      return this.normalizeNewSceneState(`Grouped objects ${groupedObjectNames}`)
+      const activeGroupRect = groupRect as CustomFabricObject
+      activeGroupRect.set({
+        uniqueGlobalId: newGroupGUID,
+        members: objectGUIDsToAssignParentArray //List of objects to assignt this as parent to is same as list of children
+      })
+
+      this.liveObjectsDict[newGroupGUID] = activeGroupRect
+
+      this.fabricCanvas
+        ?.add(groupRect)
+        .renderAll()
+        .fire("object:modified", {
+          action: "group",
+          target: {
+            type: "group"
+          }
+        })
     }
   }
 
@@ -247,6 +368,7 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     const activeObject = this.fabricCanvas?.getActiveObject() as CustomFabricObject | fabric.ActiveSelection | undefined
     let selectedGUIDs = []
 
+    //Tracking selection state of canvas along with canvas state
     if (activeObject && !(activeObject instanceof fabric.ActiveSelection)) {
       selectedGUIDs.push(activeObject?.uniqueGlobalId)
     } else {
@@ -255,7 +377,7 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     }
     // console.log(`normalizeNewSceneState: reasonForUpdate: ${reasonForUpdate || 'No reason given'}`)
     console.log(`SETTING SELECTED GUIDs: `, selectedGUIDs)
-    const newFabricState = this.fabricCanvas?.toObject(['uniqueGlobalId', 'userSetName', 'firstOccurrenceIndex', 'objectIndex'])
+    const newFabricState = this.fabricCanvas?.toObject(['uniqueGlobalId', 'userSetName', 'firstOccurrenceIndex', 'objectIndex', 'members', 'parentGUID'])
     const newFlatMappedFabricState = flatMapFabricSceneState(newFabricState)
     console.log({ newFlatMappedFabricState })
     const newUndoEntryObject: UndoHistoryEntry = {
