@@ -2,6 +2,8 @@
 import { faC } from "@fortawesome/free-solid-svg-icons";
 import React, { Component } from "react";
 import { editorContext, EditorContextTypes } from "../EditorContext";
+
+
 // import { editorContext, EditorContextTypes } from "../Editor";
 import c from './CanvasPane.module.css'
 

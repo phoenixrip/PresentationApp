@@ -103,6 +103,7 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       // backgroundColor: "#141414",
       width: canvasPaneDimensions.width,
       height: canvasPaneDimensions.height,
+      preserveObjectStacking: true
     }));
     // Center the project viewport withing the full-Pane-Sized fabricCanvas
     const widthMove = (canvasPaneDimensions.width - projectDimensions.width) / 2;
