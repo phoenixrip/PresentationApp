@@ -22,8 +22,17 @@ export function getProjection(
   const previousItem = newItems[overItemIndex - 1];
   const nextItem = newItems[overItemIndex + 1];
   const dragDepth = getDragDepth(dragOffset, indentationWidth);
-  const projectedDepth = activeItem.depth + dragDepth;
+  // Make sure we only project a deeper depth if the parent (activeItem) is a groupObject
+  const projectedDepth = previousItem.objType === 'FakeGroup'
+    ? previousItem.depth + dragDepth
+    : previousItem.depth
+
+  // console.log(`dragDepth: ${dragDepth}, projectedDepth: ${projectedDepth},  `)
+  // const projectedDepth = ;
   console.log({
+    'activeItem.depth': activeItem.depth,
+    'activeItem.id': activeItem.id,
+    'previousItem.id': previousItem.id,
     dragOffset,
     dragDepth,
     projectedDepth

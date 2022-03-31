@@ -98,6 +98,7 @@ export function SortableTree({
   useEffect(() => {
     if (defaultItems) setItems(defaultItems)
   }, [defaultItems])
+
   const [currentPosition, setCurrentPosition] = useState<{
     parentId: string | null;
     overId: string;

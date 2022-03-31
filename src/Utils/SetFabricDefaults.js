@@ -26,7 +26,7 @@ function setFabricDefaults() {
 class FakeGroup extends fabric.Rect {
   type = 'FakeGroup'
   initialize(options) {
-    this.callSuper(options)
+    this.callSuper('initialize', options)
     this.set({
       selectable: false,
       evented: false,
