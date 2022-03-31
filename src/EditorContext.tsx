@@ -1,5 +1,6 @@
 import { SizeType } from 'antd/lib/config-provider/SizeContext'
 import React from 'react'
+import { CustomFabricObject } from './Types/CustomFabricTypes'
 import { ProjectDataTypes } from './Types/ProjectDataTypes'
 
 interface EditorStateTypes {
@@ -19,13 +20,16 @@ interface EditorStateTypes {
 interface EditorContextTypes {
   fabricCanvas: fabric.Canvas | null;
   state: EditorStateTypes;
-  handleAddRect: Function;
   setOnFabricObject: Function;
   setOnGlobalObject: Function;
   setActiveSceneIndex: Function;
   handleGroupObjects: Function;
   handleUndo: Function,
-  handleRedo: Function
+  handleRedo: Function,
+  handleSelectElementByGUID: Function,
+  liveObjectsDict: {
+    [key: string]: CustomFabricObject
+  }
 }
 
 const editorContext = React.createContext<EditorContextTypes>(
