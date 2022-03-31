@@ -173,118 +173,11 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       }
     })
 
-    // if (e?.target) {
-    //   const selectedObject = e.target
-    //   let allChildrenAndSelection = new Set<CustomFabricObject>()
-    //   if (selectedObject?.parentGUID) {
-    //     const tallestParent = this.recursivelyFindTallestParent(selectedObject)
-    //     const recursivelyFindAllChildren = (parentObject: CustomFabricObject) => {
-    //       allChildrenAndSelection.add(parentObject)
-    //       if (!parentObject?.members) return
-    //       for (const childObjectGUID of parentObject.members) {
-    //         const childObject = this.liveObjectsDict[childObjectGUID] as CustomFabricObject
-    //         recursivelyFindAllChildren(childObject)
-    //       }
-    //     }
-    //     recursivelyFindAllChildren(tallestParent)
-    //   }
-
-    //   const allChildrenAndSelectionArray = Array.from(allChildrenAndSelection)
-    //   if (allChildrenAndSelectionArray.length > 1) {
-    //     this.fabricCanvas
-    //       ?.setActiveObject(e.target)
-    //       .renderAll()
-    //   } else {
-    //     console.log({ allChildrenAndSelectionArray })
-    //     const newActiveSelection = new fabric.ActiveSelection(allChildrenAndSelectionArray, { canvas: this.fabricCanvas as fabric.Canvas })
-
-    //     this.activeSelectionStore = newActiveSelection
-    //     // this.fabricCanvas
-    //     //   ?.setActiveObject(newActiveSelection)
-    //     //   .renderAll()
-    //   }
-
-
-    //   //this.fabricCanvas?.setActiveObject(e.target)
-
-    //   // this.fabricCanvas
-    //   //   ?.setActiveObject(e.target)
-    //   //   .requestRenderAll()
-    //   //   // .fire("selection:created", {e:e, selected: [e.target]})
-    // }
-
-
     this.fabricCanvas.on("selection:updated", (e: any) => {
       console.log("selection:updated", e)
     })
 
     this.fabricCanvas.on("selection:created", (e: any) => {
-<<<<<<< HEAD
-      console.log("selection:created", e)
-      // // //TODO: FIX CODE DUPLICATION
-      // const currentActiveSelection = this.fabricCanvas?.getActiveObject()! as fabric.ActiveSelection | CustomFabricObject
-
-      // // If it's an active selection
-      // if (currentActiveSelection instanceof fabric.ActiveSelection) {
-      //   const currentActiveSelectionObjects = currentActiveSelection.getObjects() as Array<CustomFabricObject>
-      //   // Finds the top parent and recursively goes down and adds all its children and children's children
-      //   // TODO: This can be optimised by setting a flag once the top parent has been found and children added
-      //   // This is because the top parent has all children underneath it so if you find it once you find all children
-      //   // If the object has no parents it needs to be added to the group since it's part of the selection
-      //   let allChildrenAndSelection = new Set<CustomFabricObject>()
-      //   for (const selectedObject of currentActiveSelectionObjects) {
-      //     if (selectedObject?.parentGUID) {
-      //       const tallestParent = this.recursivelyFindTallestParent(selectedObject)
-      //       const recursivelyFindAllChildren = (parentObject: CustomFabricObject) => {
-      //         allChildrenAndSelection.add(parentObject)
-      //         if (!parentObject?.members) return
-      //         for (const childObjectGUID of parentObject.members) {
-      //           const childObject = this.liveObjectsDict[childObjectGUID] as CustomFabricObject
-      //           recursivelyFindAllChildren(childObject)
-      //         }
-      //       }
-      //       recursivelyFindAllChildren(tallestParent)
-      //     } else {
-      //       allChildrenAndSelection.add(selectedObject)
-      //     }
-      //   }
-
-      //   const allChildrenAndSelectionArray = Array.from(allChildrenAndSelection)
-      //   const objectGUIDsInActiveSelection = currentActiveSelectionObjects.map(e => e.uniqueGlobalId)
-
-      //   for (const obj of allChildrenAndSelectionArray) {
-      //     //make sure we're not adding elements that are already in the selection
-      //     if (!objectGUIDsInActiveSelection.includes(obj.uniqueGlobalId)) {
-      //       currentActiveSelection.addWithUpdate(obj)
-      //     }
-      //   }
-      //   //If it's a selection of a single object
-      // } else {
-      //   const selectedObject = currentActiveSelection
-      //   let allChildrenAndSelection = new Set<CustomFabricObject>()
-      //   if (selectedObject?.parentGUID) {
-      //     const tallestParent = this.recursivelyFindTallestParent(selectedObject)
-      //     const recursivelyFindAllChildren = (parentObject: CustomFabricObject) => {
-      //       allChildrenAndSelection.add(parentObject)
-      //       if (!parentObject?.members) return
-      //       for (const childObjectGUID of parentObject.members) {
-      //         const childObject = this.liveObjectsDict[childObjectGUID] as CustomFabricObject
-      //         recursivelyFindAllChildren(childObject)
-      //       }
-      //     }
-      //     recursivelyFindAllChildren(tallestParent)
-      //   } else {
-      //     allChildrenAndSelection.add(selectedObject)
-      //   }
-
-      //   //only change selection if the total selection is more than 1 (otherwise we stay with the same obj selected)
-      //   const allChildrenAndSelectionArray = Array.from(allChildrenAndSelection)
-      //   if (allChildrenAndSelectionArray.length > 1) {
-      //     const newActiveSelection = new fabric.ActiveSelection(allChildrenAndSelectionArray, { canvas: this.fabricCanvas as fabric.Canvas })
-      //     this.fabricCanvas?.setActiveObject(newActiveSelection)
-      //   }
-
-=======
       // console.log("selection:created", e)
 
       // //TODO: FIX CODE DUPLICATION
@@ -344,7 +237,6 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       //   const allChildrenAndSelectionArray = Array.from(allChildrenAndSelection)
       //   const newActiveSelection = new fabric.ActiveSelection(allChildrenAndSelectionArray, { canvas: this.fabricCanvas as fabric.Canvas })
       //   this.fabricCanvas?.setActiveObject(newActiveSelection)
->>>>>>> 3302e7fe0742653d8090618bd885ddc2cf064b4d
       // }
       // this.fabricCanvas?.renderAll()
     })
