@@ -21,33 +21,36 @@ class CustomFabricCanvas extends fabric.Canvas {
       const allObjectsInFamily = this.objectsInFamilyOfGUID(target.uniqueGlobalId)
       const newSelection = new fabric.ActiveSelection(allObjectsInFamily, { canvas: this })
       this.setActiveObject(newSelection)
-      this.renderAll()
       this.existingSelectionIsCustomCreated = true
+      this.renderAll()
+      
     }
     super._onMouseDown(e)
   }
 
   _onMouseUp(e) {
-    this.existingSelectionIsCustomCreated = false // reset to default 
     super._onMouseUp(e)
     if (!this.existingSelectionIsCustomCreated) {
       const selection = this.getActiveObject()
       if (selection) { // if there's no selection this is null so don't run code below
         
-        let GUIDsToCheck = []
         if (selection.type === "activeSelection") {
+          let GUIDsToCheck = []
           for (const object of selection.getObjects()) {
             GUIDsToCheck.push(object.uniqueGlobalId)
           }
+          const objectsInFamily = this.objectsInFamilyOfGUID(GUIDsToCheck)
+          console.log({objectsInFamily})
+          this.discardActiveObject()
+          const newActiveSelection = new fabric.ActiveSelection(objectsInFamily, { canvas: this })
+          this.setActiveObject(newActiveSelection)
+          this.renderAll()
         }
-        const objectsInFamily = this.objectsInFamilyOfGUID(GUIDsToCheck)
-        this.discardActiveObject()
-        const newActiveSelection = new fabric.ActiveSelection(objectsInFamily, { canvas: this })
-        this.setActiveObject(newActiveSelection)
-        this.renderAll()
       }
     }
+    this.existingSelectionIsCustomCreated = false // reset to default 
   }
+  
 
 
   objectsInFamilyOfGUID(GUIDOrGUIDs) {
