@@ -32,6 +32,7 @@ import { flatMapFabricSceneState, normalizeAllObjectCoords } from "./Utils/flatM
 import { editorContext, EditorContextTypes, EditorStateTypes } from "./EditorContext";
 import { rgbaFromColor } from "./Utils/rgbaFromColor";
 import { tsIntrinsicKeyword } from "@babel/types";
+import { CustomFabricCanvas } from "./Utils/CustomFabricCanvas";
 
 setFabricDefaults();
 
@@ -39,10 +40,8 @@ interface EditorPropsTypes {
   project: ProjectDataTypes;
 }
 
-
-
 class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
-  fabricCanvas: fabric.Canvas | null;
+  fabricCanvas: CustomFabricCanvas | null;
   throttledSetNewCanvasPaneDimensions: Function;
   liveObjectsDict: { [key: string]: CustomFabricObject };
 
@@ -128,28 +127,28 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     attatchLocalEvents: Function
   ) => {
     const projectDimensions = this.state.project.settings.dimensions;
-    const c = (this.fabricCanvas = new fabric.Canvas(domCanvas, {
-      // backgroundColor: "#141414",
-      width: canvasPaneDimensions.width,
-      height: canvasPaneDimensions.height,
+    this.fabricCanvas = new CustomFabricCanvas(domCanvas, {
+      ...canvasPaneDimensions,
       preserveObjectStacking: true
-    }));
+    })
+    // Give the fabricCanvas a reference to our inMemoryObjectDict
+    this.fabricCanvas.liveObjectsDict = this.liveObjectsDict
+
     // Center the project viewport withing the full-Pane-Sized fabricCanvas
     const widthMove = (canvasPaneDimensions.width - projectDimensions.width) / 2;
     const heightMove = (canvasPaneDimensions.height - projectDimensions.height) / 2;
-    const vpt = c?.viewportTransform || [];
+    const vpt = this.fabricCanvas?.viewportTransform || [];
     vpt[4] = widthMove;
     vpt[5] = heightMove;
-    c.setViewportTransform(vpt);
+    this.fabricCanvas.setViewportTransform(vpt);
 
+    // Tick the react state throttled on every render
     this.fabricCanvas.on("after:render", throttle(this.updateTick, 100));
-
     // Attach events local to the canvas pane like zoom and drag
     // so that dom updates on those nodes can be very surgical
     attatchLocalEvents(this.fabricCanvas)
-    // CANVAS EVENT HOOKS
-    // React state tick on render
 
+    // CANVAS EVENT HOOKS
     this.fabricCanvas.on("object:modified", (e: any) => {
       console.log("object:modfied", e);
       normalizeAllObjectCoords(e.target, e.action)
@@ -161,16 +160,9 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     })
 
     this.fabricCanvas.on("mouse:down:before", (e: any) => {
+      //@ts-ignore
+
       console.log("mouse:down:before", e)
-      if (e?.target?.parentGUID) {
-        e.target.selectable = false
-        const selectedObject = e.target
-        const selectedObjectFamily = this.objectsToSelectFromGUIDs(selectedObject.uniqueGlobalId) as Array<CustomFabricObject>
-        const newActiveSelection = new fabric.ActiveSelection(selectedObjectFamily, { canvas: this.fabricCanvas as fabric.Canvas })
-        this.fabricCanvas
-          ?.setActiveObject(newActiveSelection)
-          .renderAll()
-      }
     })
 
     this.fabricCanvas.on("selection:updated", (e: any) => {
@@ -178,69 +170,8 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     })
 
     this.fabricCanvas.on("selection:created", (e: any) => {
-      // console.log("selection:created", e)
 
-      // //TODO: FIX CODE DUPLICATION
-
-      // const currentActiveSelection = this.fabricCanvas?.getActiveObject()! as fabric.ActiveSelection | CustomFabricObject
-
-      // // If it's an active selection
-      // if (currentActiveSelection instanceof fabric.ActiveSelection) {
-      //   const currentActiveSelectionObjects = currentActiveSelection.getObjects() as Array<CustomFabricObject>
-      //   // Finds the top parent and recursively goes down and adds all its children and children's children
-      //   // TODO: This can be optimised by setting a flag once the top parent has been found and children added
-      //   // This is because the top parent has all children underneath it so if you find it once you find all children
-      //   // If the object has no parents it needs to be added to the group since it's part of the selection
-      //   let allChildrenAndSelection = new Set<CustomFabricObject>()
-      //   for (const selectedObject of currentActiveSelectionObjects) {
-      //     if (selectedObject?.parentGUID) {
-      //       const tallestParent = this.recursivelyFindTallestParent(selectedObject)
-      //       const recursivelyFindAllChildren = (parentObject: CustomFabricObject) => {
-      //         allChildrenAndSelection.add(parentObject)
-      //         if (!parentObject?.members) return
-      //         for (const childObjectGUID of parentObject.members) {
-      //           const childObject = this.liveObjectsDict[childObjectGUID] as CustomFabricObject
-      //           recursivelyFindAllChildren(childObject)
-      //         }
-      //       }
-      //       recursivelyFindAllChildren(tallestParent)
-      //     } else {
-      //       allChildrenAndSelection.add(selectedObject)
-      //     }
-      //   }
-
-      //   const allChildrenAndSelectionArray = Array.from(allChildrenAndSelection)
-      //   const objectGUIDsInActiveSelection = currentActiveSelectionObjects.map(e => e.uniqueGlobalId)
-      //   for (const obj of allChildrenAndSelectionArray) {
-      //     if (!objectGUIDsInActiveSelection.includes(obj.uniqueGlobalId)) {
-      //       currentActiveSelection.addWithUpdate(obj)
-      //     }
-      //   }
-      //   //If it's a selection of a single object
-      // } else {
-      //   const selectedObject = currentActiveSelection
-      //   let allChildrenAndSelection = new Set<CustomFabricObject>()
-      //   if (selectedObject?.parentGUID) {
-      //     const tallestParent = this.recursivelyFindTallestParent(selectedObject)
-      //     const recursivelyFindAllChildren = (parentObject: CustomFabricObject) => {
-      //       allChildrenAndSelection.add(parentObject)
-      //       if (!parentObject?.members) return
-      //       for (const childObjectGUID of parentObject.members) {
-      //         const childObject = this.liveObjectsDict[childObjectGUID] as CustomFabricObject
-      //         recursivelyFindAllChildren(childObject)
-      //       }
-      //     }
-      //     recursivelyFindAllChildren(tallestParent)
-      //   } else {
-      //     allChildrenAndSelection.add(selectedObject)
-      //   }
-      //   const allChildrenAndSelectionArray = Array.from(allChildrenAndSelection)
-      //   const newActiveSelection = new fabric.ActiveSelection(allChildrenAndSelectionArray, { canvas: this.fabricCanvas as fabric.Canvas })
-      //   this.fabricCanvas?.setActiveObject(newActiveSelection)
-      // }
-      // this.fabricCanvas?.renderAll()
     })
-
 
     // Init complete editor state
     const json: any = {
@@ -249,15 +180,10 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     this.fabricCanvas.loadFromJSON(
       json,
       () => {
-        // this.initViewportRect();
         this.renderActiveScene(this.state.activeSceneIndex);
         this.fabricCanvas?.requestRenderAll();
       },
       (options: any, object: any, a: any) => {
-        // object.onSelect = function (opts: any) {
-        //   console.log('obj.onSelect can return false to cancel?: ', opts)
-        //   console.log(this)
-        // }
         this.liveObjectsDict[options.uniqueGlobalId] = object;
       }
     );
@@ -688,3 +614,65 @@ function buildTreeState(objectsArray: Array<CustomFabricObject>) {
 export function findItem(items: TreeItem[], itemId: string) {
   return items.find(({ uniqueGlobalId }) => uniqueGlobalId === itemId);
 }
+
+ // console.log("selection:created", e)
+
+      // //TODO: FIX CODE DUPLICATION
+
+      // const currentActiveSelection = this.fabricCanvas?.getActiveObject()! as fabric.ActiveSelection | CustomFabricObject
+
+      // // If it's an active selection
+      // if (currentActiveSelection instanceof fabric.ActiveSelection) {
+      //   const currentActiveSelectionObjects = currentActiveSelection.getObjects() as Array<CustomFabricObject>
+      //   // Finds the top parent and recursively goes down and adds all its children and children's children
+      //   // TODO: This can be optimised by setting a flag once the top parent has been found and children added
+      //   // This is because the top parent has all children underneath it so if you find it once you find all children
+      //   // If the object has no parents it needs to be added to the group since it's part of the selection
+      //   let allChildrenAndSelection = new Set<CustomFabricObject>()
+      //   for (const selectedObject of currentActiveSelectionObjects) {
+      //     if (selectedObject?.parentGUID) {
+      //       const tallestParent = this.recursivelyFindTallestParent(selectedObject)
+      //       const recursivelyFindAllChildren = (parentObject: CustomFabricObject) => {
+      //         allChildrenAndSelection.add(parentObject)
+      //         if (!parentObject?.members) return
+      //         for (const childObjectGUID of parentObject.members) {
+      //           const childObject = this.liveObjectsDict[childObjectGUID] as CustomFabricObject
+      //           recursivelyFindAllChildren(childObject)
+      //         }
+      //       }
+      //       recursivelyFindAllChildren(tallestParent)
+      //     } else {
+      //       allChildrenAndSelection.add(selectedObject)
+      //     }
+      //   }
+
+      //   const allChildrenAndSelectionArray = Array.from(allChildrenAndSelection)
+      //   const objectGUIDsInActiveSelection = currentActiveSelectionObjects.map(e => e.uniqueGlobalId)
+      //   for (const obj of allChildrenAndSelectionArray) {
+      //     if (!objectGUIDsInActiveSelection.includes(obj.uniqueGlobalId)) {
+      //       currentActiveSelection.addWithUpdate(obj)
+      //     }
+      //   }
+      //   //If it's a selection of a single object
+      // } else {
+      //   const selectedObject = currentActiveSelection
+      //   let allChildrenAndSelection = new Set<CustomFabricObject>()
+      //   if (selectedObject?.parentGUID) {
+      //     const tallestParent = this.recursivelyFindTallestParent(selectedObject)
+      //     const recursivelyFindAllChildren = (parentObject: CustomFabricObject) => {
+      //       allChildrenAndSelection.add(parentObject)
+      //       if (!parentObject?.members) return
+      //       for (const childObjectGUID of parentObject.members) {
+      //         const childObject = this.liveObjectsDict[childObjectGUID] as CustomFabricObject
+      //         recursivelyFindAllChildren(childObject)
+      //       }
+      //     }
+      //     recursivelyFindAllChildren(tallestParent)
+      //   } else {
+      //     allChildrenAndSelection.add(selectedObject)
+      //   }
+      //   const allChildrenAndSelectionArray = Array.from(allChildrenAndSelection)
+      //   const newActiveSelection = new fabric.ActiveSelection(allChildrenAndSelectionArray, { canvas: this.fabricCanvas as fabric.Canvas })
+      //   this.fabricCanvas?.setActiveObject(newActiveSelection)
+      // }
+      // this.fabricCanvas?.renderAll()
