@@ -16,6 +16,7 @@ class CustomFabricCanvas extends fabric.Canvas {
   _onMouseDown(e) {
     console.log("onmousedown custom", e)
     const target = this.findTarget(e, false)
+
     if (target?.parentGUID) {
       const allObjectsInFamily = this.objectsInFamilyOfGUID(target.uniqueGlobalId)
       const newSelection = new fabric.ActiveSelection(allObjectsInFamily, { canvas: this })
@@ -26,43 +27,22 @@ class CustomFabricCanvas extends fabric.Canvas {
     super._onMouseDown(e)
   }
 
-
-
   _onMouseUp(e) {
     this.existingSelectionIsCustomCreated = false // reset to default 
     super._onMouseUp(e)
     if (!this.existingSelectionIsCustomCreated) {
       const selection = this.getActiveObject()
       if (selection) { // if there's no selection this is null so don't run code below
+        
         let GUIDsToCheck = []
-        let objectsToSelect = []
-
         if (selection.type === "activeSelection") {
-          const objectsInActiveSelection = selection.getObjects()
-          for (const object of objectsInActiveSelection) {
-            if (!object.parentGUID) {
-              //If it's not in a family/group add it directly to objectsToSelect
-              objectsToSelect.push(object)
-            }
-            else {
-              //If it is in a family add it to array of GUIDs to give to function to find all family members
-              GUIDsToCheck.push(object.uniqueGlobalId)
-            }
-          }
-        } else {
-          if (!selection.parentGUID) {
-            //If it's not in a family/group add it directly to objectsToSelect
-            objectsToSelect.push(object)
-          }
-          else {
-            //If it is in a family add it to array of GUIDs to give to function to find all family members
+          for (const object of selection.getObjects()) {
             GUIDsToCheck.push(object.uniqueGlobalId)
           }
         }
         const objectsInFamily = this.objectsInFamilyOfGUID(GUIDsToCheck)
-        objectsToSelect = [...objectsToSelect, ...objectsInFamily]
         this.discardActiveObject()
-        const newActiveSelection = new fabric.ActiveSelection(objectsToSelect, { canvas: this })
+        const newActiveSelection = new fabric.ActiveSelection(objectsInFamily, { canvas: this })
         this.setActiveObject(newActiveSelection)
         this.renderAll()
       }
@@ -91,6 +71,8 @@ class CustomFabricCanvas extends fabric.Canvas {
           }
         }
         recursivelyFindAllChildren(tallestParent)
+      } else {
+        allChildrenAndSelection.add(selectedObject)
       }
     }
     const allChildrenAndSelectionArray = Array.from(allChildrenAndSelection)
