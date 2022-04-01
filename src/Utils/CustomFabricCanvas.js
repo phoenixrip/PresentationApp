@@ -11,6 +11,8 @@ class CustomFabricCanvas extends fabric.Canvas {
   mapObjectsArrayToNestedStructure = () => {
     console.log(this._objects)
   }
+
+  existingSelectionIsCustomCreated = false
   _onMouseDown(e) {
     console.log("onmousedown custom", e)
     const target = this.findTarget(e, false)
@@ -19,9 +21,55 @@ class CustomFabricCanvas extends fabric.Canvas {
       const newSelection = new fabric.ActiveSelection(allObjectsInFamily, { canvas: this })
       this.setActiveObject(newSelection)
       this.renderAll()
+      this.existingSelectionIsCustomCreated = true
     }
     super._onMouseDown(e)
   }
+
+
+
+  _onMouseUp(e) {
+    this.existingSelectionIsCustomCreated = false // reset to default 
+    super._onMouseUp(e)
+    if (!this.existingSelectionIsCustomCreated) {
+      const selection = this.getActiveObject()
+      if (selection) { // if there's no selection this is null so don't run code below
+        let GUIDsToCheck = []
+        let objectsToSelect = []
+
+        if (selection.type === "activeSelection") {
+          const objectsInActiveSelection = selection.getObjects()
+          for (const object of objectsInActiveSelection) {
+            if (!object.parentGUID) {
+              //If it's not in a family/group add it directly to objectsToSelect
+              objectsToSelect.push(object)
+            }
+            else {
+              //If it is in a family add it to array of GUIDs to give to function to find all family members
+              GUIDsToCheck.push(object.uniqueGlobalId)
+            }
+          }
+        } else {
+          if (!selection.parentGUID) {
+            //If it's not in a family/group add it directly to objectsToSelect
+            objectsToSelect.push(object)
+          }
+          else {
+            //If it is in a family add it to array of GUIDs to give to function to find all family members
+            GUIDsToCheck.push(object.uniqueGlobalId)
+          }
+        }
+        const objectsInFamily = this.objectsInFamilyOfGUID(GUIDsToCheck)
+        objectsToSelect = [...objectsToSelect, ...objectsInFamily]
+        this.discardActiveObject()
+        const newActiveSelection = new fabric.ActiveSelection(objectsToSelect, { canvas: this })
+        this.setActiveObject(newActiveSelection)
+        this.renderAll()
+      }
+    }
+  }
+
+
   objectsInFamilyOfGUID(GUIDOrGUIDs) {
     //If it's a single string normalise to an array of GUIDs, otherwise use user-supplied array of string
     let GUIDs
