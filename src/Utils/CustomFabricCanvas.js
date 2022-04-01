@@ -17,13 +17,19 @@ class CustomFabricCanvas extends fabric.Canvas {
     console.log("onmousedown custom", e)
     const target = this.findTarget(e, false)
 
-    if (target?.parentGUID) {
-      const allObjectsInFamily = this.objectsInFamilyOfGUID(target.uniqueGlobalId)
-      const newSelection = new fabric.ActiveSelection(allObjectsInFamily, { canvas: this })
-      this.setActiveObject(newSelection)
-      this.existingSelectionIsCustomCreated = true
-      this.renderAll()
-      
+    if (target) {
+      if (e?.shiftKey) {
+
+      } else {
+
+        if (target?.parentGUID) {
+          const allObjectsInFamily = this.objectsInFamilyOfGUID(target.uniqueGlobalId)
+          const newSelection = new fabric.ActiveSelection(allObjectsInFamily, { canvas: this })
+          this.setActiveObject(newSelection)
+          this.existingSelectionIsCustomCreated = true
+          this.renderAll()
+        }
+      }
     }
     super._onMouseDown(e)
   }
@@ -33,14 +39,14 @@ class CustomFabricCanvas extends fabric.Canvas {
     if (!this.existingSelectionIsCustomCreated) {
       const selection = this.getActiveObject()
       if (selection) { // if there's no selection this is null so don't run code below
-        
+
         if (selection.type === "activeSelection") {
           let GUIDsToCheck = []
           for (const object of selection.getObjects()) {
             GUIDsToCheck.push(object.uniqueGlobalId)
           }
           const objectsInFamily = this.objectsInFamilyOfGUID(GUIDsToCheck)
-          console.log({objectsInFamily})
+          console.log({ objectsInFamily })
           this.discardActiveObject()
           const newActiveSelection = new fabric.ActiveSelection(objectsInFamily, { canvas: this })
           this.setActiveObject(newActiveSelection)
@@ -50,7 +56,7 @@ class CustomFabricCanvas extends fabric.Canvas {
     }
     this.existingSelectionIsCustomCreated = false // reset to default 
   }
-  
+
 
 
   objectsInFamilyOfGUID(GUIDOrGUIDs) {
