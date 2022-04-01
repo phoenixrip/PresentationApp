@@ -12,18 +12,26 @@ class CustomFabricCanvas extends fabric.Canvas {
     console.log(this._objects)
   }
   _onMouseDown(e) {
+    console.log("onmousedown custom", e)
     const target = this.findTarget(e, false)
     if (target?.parentGUID) {
+      const allObjectsInFamily = this.objectsInFamilyOfGUID(target.uniqueGlobalId)
+      const newSelection = new fabric.ActiveSelection(allObjectsInFamily, { canvas: this })
+      this.setActiveObject(newSelection)
       this.renderAll()
     }
     super._onMouseDown(e)
   }
-  objectsToSelectFromGUIDs(GUIDs) {
-    if (typeof (GUIDs) === "string") {
-      const GUID = GUIDs
+  objectsInFamilyOfGUID(GUIDOrGUIDs) {
+    //If it's a single string normalise to an array of GUIDs, otherwise use user-supplied array of string
+    let GUIDs
+    if (typeof GUIDOrGUIDs === "string") GUIDs = [GUIDOrGUIDs]
+    else GUIDs = GUIDOrGUIDs
+
+    let allChildrenAndSelection = new Set()
+    for (const GUID of GUIDs) {
       const selectedObject = this.liveObjectsDict[GUID]
 
-      let allChildrenAndSelection = new Set()
       if (selectedObject?.parentGUID) {
         const tallestParent = this.recursivelyFindTallestParent(selectedObject)
         const recursivelyFindAllChildren = (parentObject) => {
@@ -36,12 +44,9 @@ class CustomFabricCanvas extends fabric.Canvas {
         }
         recursivelyFindAllChildren(tallestParent)
       }
-
-      const allChildrenAndSelectionArray = Array.from(allChildrenAndSelection)
-      return allChildrenAndSelectionArray
-    } else {
-
     }
+    const allChildrenAndSelectionArray = Array.from(allChildrenAndSelection)
+    return allChildrenAndSelectionArray
   }
   recursivelyFindTallestParent(obj) {
     if (obj?.parentGUID) {
