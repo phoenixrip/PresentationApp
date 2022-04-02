@@ -122,6 +122,23 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
 
   }
 
+  sanitizeEquations = (obj: CustomFabricObject, action: string) => {
+    switch (action) {
+      case "scale":
+        obj.widthEquation = undefined
+        obj.heightEquation = undefined
+        break
+      case "scaleX":
+        obj.widthEquation = undefined
+        break
+      case "scaleY":
+        obj.heightEquation = undefined
+        break
+      default:
+        break
+    }
+  }
+
   initFabricCanvas = (
     domCanvas: HTMLCanvasElement,
     canvasPaneDimensions: { width: number; height: number },
@@ -153,6 +170,7 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     this.fabricCanvas.on("object:modified", (e: any) => {
       console.log("object:modfied", e);
       normalizeAllObjectCoords(e.target, e.action)
+      if(!e?.customFire) this.sanitizeEquations(e.target, e.action)
       return this.normalizeNewSceneState(`object:modified: action: ${e.action}, name: ${e.target?.userSetName || e.target.type}`)
     });
 
@@ -203,42 +221,43 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
   updateTick = () => this.setState({ tick: !this.state.tick });
 
   setOnGlobalObject = (obj: CustomFabricObject, settings: {}) => {
-    if (obj) {
-      // get active scene and options for object in active scene then add/modify corresponding setting to value
-      const activeScene = this.state.project.scenes[this.state.activeSceneIndex];
-      let currentOptions = activeScene.activeSceneObjects[obj.uniqueGlobalId];
-      let newSettings = { ...currentOptions, ...settings };
+    // get active scene and options for object in active scene then add/modify corresponding setting to value
+    const activeScene = this.state.project.scenes[this.state.activeSceneIndex];
+    let currentOptions = activeScene.activeSceneObjects[obj.uniqueGlobalId];
+    let newSettings = { ...currentOptions, ...settings };
 
-      const newSceneActiveObjectsObject = {
-        ...activeScene.activeSceneObjects,
-        [obj.uniqueGlobalId]: newSettings,
-      };
+    const newSceneActiveObjectsObject = {
+      ...activeScene.activeSceneObjects,
+      [obj.uniqueGlobalId]: newSettings,
+    };
 
-      return this.setState({
-        project: {
-          ...this.state.project,
-          scenes: this.state.project.scenes.map(
-            (currSceneObject: SceneType, currScreenIndex: number) => {
-              if (currScreenIndex !== this.state.activeSceneIndex)
-                return currSceneObject;
-              return {
-                ...currSceneObject,
-                activeSceneObjects: newSceneActiveObjectsObject,
-              };
-            }
-          ),
-        },
-      });
-    }
+    return this.setState({
+      project: {
+        ...this.state.project,
+        scenes: this.state.project.scenes.map(
+          (currSceneObject: SceneType, currScreenIndex: number) => {
+            if (currScreenIndex !== this.state.activeSceneIndex)
+              return currSceneObject;
+            return {
+              ...currSceneObject,
+              activeSceneObjects: newSceneActiveObjectsObject,
+            };
+          }
+        ),
+      },
+    });
   };
 
-  setOnFabricObject = (obj: CustomFabricObject, settings: {}) => {
-    if (obj) {
-      this.setOnGlobalObject(obj, settings);
-      obj.set(settings);
-      obj.setCoords();
-      obj?.canvas?.renderAll();
-    }
+  setOnFabricObject = (obj: CustomFabricObject, settings: {}, action: string) => {
+    this.setOnGlobalObject(obj, settings);
+    obj.set(settings);
+    obj.setCoords();
+    this.fabricCanvas?.requestRenderAll();
+    this.fabricCanvas?.fire("object:modified", {
+      action: action,
+      target: obj,
+      customFire: true
+    })
   };
 
   //Recursively move up to each parent until there are no more parents and return that GUID

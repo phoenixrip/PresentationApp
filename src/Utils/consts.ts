@@ -4,7 +4,10 @@ const customAttributesToIncludeInFabricCanvasToObject: Array<string> = [
     'firstOccurrenceIndex',
     'objectIndex',
     'members',
-    'parentGUID']
+    'parentGUID',
+    'widthEquation',
+    'heightEquation'
+]
 
 
 

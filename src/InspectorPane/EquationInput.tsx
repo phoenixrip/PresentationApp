@@ -27,19 +27,15 @@ const EquationInput = ({ value, equation, onChange, min, max, precision, ...rest
     h: context.state.project.settings.dimensions.height
   }
 
-  //TODO: doesn't only internalDisplayValue and valueIsValid? need to be in state?
+  //TODO: doesn't only internalDisplayValue and valueIsValid need to be in state?
   const [internalValue, setInternalValue] = useState(value)
   const [internalEquation, setInternalEquation] = useState(equation ? equation : value)
   const [internalDisplayValue, setInternalDisplayValue] = useState(value)
   const [valueIsValid, setValueIsValid] = useState(true)
 
-
   // Toggle displaying value or equation on blur and focus
   const handleBlur = () => { setInternalDisplayValue(internalValue) }
-  const handleFocus = () => { setInternalDisplayValue(internalEquation) }
-
-
-
+  const handleFocus = () => { setInternalDisplayValue(internalEquation ? internalEquation : internalValue) }
 
   const handleChange = (e: any) => {
     let valueString = e.target.value as string
@@ -110,10 +106,12 @@ const EquationInput = ({ value, equation, onChange, min, max, precision, ...rest
     setInternalDisplayValue(equation ? equation : newValue) // Always display equation over value while editing
 
     // If supplied, run supplied onChange function
-    if (onChange) onChange({
-      value: newValue,
-      equation: equation
-    })
+    if (onChange) {
+      onChange({
+        value: newValue,
+        equation: equation
+      })
+    }
   }
 
   // Holding Ctrl previews result of equation
@@ -150,6 +148,14 @@ const EquationInput = ({ value, equation, onChange, min, max, precision, ...rest
           setInternalDisplayValue(calculatedValue)
           setInternalEquation(calculatedValue) //delete this to keep the last equation even when folded
           setInternalValue(calculatedValue)
+
+          // If supplied, run supplied onChange function since equation is changed to just value
+          if (onChange) {
+            onChange({
+              value: calculatedValue,
+              equation: calculatedValue
+            })
+          }
         }
       }
     }
@@ -187,10 +193,19 @@ const EquationInput = ({ value, equation, onChange, min, max, precision, ...rest
   //   }
   // }
 
-  //Update state on prop change by calling the regular change handler
+  //Update state on prop change
   useEffect(() => {
-    if (value !== internalValue) handleChange({ target: { value: new Number(value).toString() } })
+    if (value !== internalValue) {
+      setInternalDisplayValue(value)
+      setInternalValue(value)
+      setInternalEquation(value)
+    }
   }, [value])
+
+  //Update state on prop change
+  useEffect(() => {
+    if (equation !== internalEquation) setInternalEquation(equation)
+  }, [equation])
 
   return (
     <Input

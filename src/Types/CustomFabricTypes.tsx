@@ -7,6 +7,8 @@ interface CustomFabricObject extends fabric.Object {
   objects?: Array<CustomFabricObject>,
   radius?: number,
   objectIndex?: number,
+  widthEquation?: string,
+  heightEquation?: string
 }
 
 interface CustomFabricCircle extends CustomFabricObject, fabric.Circle { }

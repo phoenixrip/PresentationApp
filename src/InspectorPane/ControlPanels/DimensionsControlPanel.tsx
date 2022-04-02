@@ -28,12 +28,12 @@ function DimensionsControlPanel() {
 					checked={!selection.lockMovementX}
 					onChange={e => setOnFabricObject(selection, { lockMovementX: !e })}
 				/>}
-				// //parser={e => { return calculateFromString(e) }}
 				min={0}
 				max={1000}
 				precision={0}
 				value={selection.width}
-				onChange={(e: any) => { setOnFabricObject(selection, { width: e.value }) }} 
+				equation={selection?.widthEquation}
+				onChange={(e: any) => { setOnFabricObject(selection, { width: e.value, widthEquation: e.equation }, "scale") }} 
 				/>
 			<EquationInput
 				size={context.state.antdSize}
@@ -48,7 +48,8 @@ function DimensionsControlPanel() {
 				max={1000}
 				precision={0}
 				value={selection.height}
-				onChange={(e:any) => { setOnFabricObject(selection, { height: e.value }) }} />
+				equation={selection?.heightEquation}
+				onChange={(e:any) => { setOnFabricObject(selection, { height: e.value, heightEquation: e.equation }, "scale") }} />
 
 			<EquationInput
 				size={context.state.antdSize}
