@@ -11,6 +11,7 @@ import "./dark.css";
 import { LayersPaneContainer } from "./LayersPane/LayersPaneContainer";
 // import { debounce } from "./Utils/debounce";
 import { throttle } from "./Utils/throttle";
+import { customAttributesToIncludeInFabricCanvasToObject } from './Utils/consts'
 import { ToolbarContainer } from "./Toolbar/ToolbarContainer";
 
 import { SizeType } from "antd/lib/config-provider/SizeContext";
@@ -320,7 +321,7 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       const allSelectedObjects = activeObject?.getObjects() as Array<CustomFabricObject>
       allSelectedObjects?.forEach(obj => selectedGUIDs.push(obj.uniqueGlobalId))
     }
-    const newFabricState = this.fabricCanvas?.toObject(['uniqueGlobalId', 'userSetName', 'firstOccurrenceIndex', 'objectIndex', 'members', 'parentGUID'])
+    const newFabricState = this.fabricCanvas?.toObject(customAttributesToIncludeInFabricCanvasToObject)
     const newFlatMappedFabricState = flatMapFabricSceneState(newFabricState)
     console.log({ newFlatMappedFabricState })
     const newUndoEntryObject: UndoHistoryEntry = {

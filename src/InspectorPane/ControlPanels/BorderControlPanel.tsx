@@ -2,6 +2,7 @@ import { useContext } from "react";
 import { editorContext, EditorContextTypes } from "../../Editor";
 import { CirclePicker } from 'react-color';
 import { Button, InputNumber, Collapse, Switch, Radio } from 'antd';
+import { EquationInput } from "../EquationInput";
 
 function BorderControlPanel() {
   const context: EditorContextTypes = useContext(editorContext);
@@ -19,14 +20,14 @@ function BorderControlPanel() {
         onChange={e => {
           setOnFabricObject(selection, {stroke: `rgba(${e.rgb.r},${e.rgb.g},${e.rgb.b},${e.rgb.a})`})
         }} />
-      <InputNumber
+      <EquationInput
         addonBefore="Thickness"
         addonAfter="px"
         min={0}
         max={1000}
         value={selection.strokeWidth || 0}
-        onChange={e => {
-          setOnFabricObject(selection, {strokeWidth: e})
+        onChange={(e: any) => {
+          setOnFabricObject(selection, {strokeWidth: e.value})
         }} />
 
       <Radio.Group value={getStrokeDashState()} size="small" style={{ marginTop: 16 }}>
