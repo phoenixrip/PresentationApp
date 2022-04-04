@@ -12,7 +12,7 @@ const dummyProjectData: ProjectDataTypes = {
 	},
 	globalObjects: {
 		"rectangle1": {
-			uniqueGlobalId: "rectangle1",
+			guid: "rectangle1",
 			type: "rect",
 			top: 0,
 			left: 0,
@@ -23,7 +23,7 @@ const dummyProjectData: ProjectDataTypes = {
 			userSetName: 'My red rect'
 		},
 		"rectangle2": {
-			uniqueGlobalId: "rectangle2",
+			guid: "rectangle2",
 			type: "rect",
 			top: 0,
 			left: 160,
@@ -34,7 +34,7 @@ const dummyProjectData: ProjectDataTypes = {
 			userSetName: 'My green rect'
 		},
 		"rectangle3": {
-			uniqueGlobalId: "rectangle3",
+			guid: "rectangle3",
 			type: "rect",
 			top: 0,
 			left: 320,
@@ -44,35 +44,35 @@ const dummyProjectData: ProjectDataTypes = {
 			firstOccurrenceIndex: 1,
 			userSetName: 'My purple rect'
 		},
-    "rectangle4": {
-      uniqueGlobalId: "rectangle4",
-      type: "rect",
-      top: 0,
-      left: 480,
-      width: 160,
-      height: 90,
-      fill: 'black',
-      firstOccurrenceIndex: 1,
-      userSetName: 'My black rect'
-    },
-    "rectangle5": {
-      uniqueGlobalId: "rectangle5",
-      type: "rect",
-      top: 0,
-      left: 640,
-      width: 160,
-      height: 90,
-      fill: 'blue',
-      firstOccurrenceIndex: 1,
-      userSetName: 'My blue rect'
-    },
+		"rectangle4": {
+			guid: "rectangle4",
+			type: "rect",
+			top: 0,
+			left: 480,
+			width: 160,
+			height: 90,
+			fill: 'black',
+			firstOccurrenceIndex: 1,
+			userSetName: 'My black rect'
+		},
+		"rectangle5": {
+			guid: "rectangle5",
+			type: "rect",
+			top: 0,
+			left: 640,
+			width: 160,
+			height: 90,
+			fill: 'blue',
+			firstOccurrenceIndex: 1,
+			userSetName: 'My blue rect'
+		},
 	},
 	scenes: [
 		{
 			sceneSettings: {},
 			activeSceneObjects: {
 				"rectangle1": {
-					uniqueGlobalId: "rectangle1",
+					guid: "rectangle1",
 					type: "rect",
 					top: 0,
 					left: 0,
@@ -83,7 +83,7 @@ const dummyProjectData: ProjectDataTypes = {
 					userSetName: 'My red rect'
 				},
 				"rectangle2": {
-					uniqueGlobalId: "rectangle2",
+					guid: "rectangle2",
 					type: "rect",
 					top: 0,
 					left: 160,
@@ -94,7 +94,7 @@ const dummyProjectData: ProjectDataTypes = {
 					userSetName: 'My green rect'
 				},
 				"rectangle3": {
-					uniqueGlobalId: "rectangle3",
+					guid: "rectangle3",
 					type: "rect",
 					top: 0,
 					left: 320,
@@ -104,8 +104,8 @@ const dummyProjectData: ProjectDataTypes = {
 					firstOccurrenceIndex: 1,
 					userSetName: 'My purple rect'
 				},
-        "rectangle4": {
-					uniqueGlobalId: "rectangle4",
+				"rectangle4": {
+					guid: "rectangle4",
 					type: "rect",
 					top: 0,
 					left: 480,
@@ -115,8 +115,8 @@ const dummyProjectData: ProjectDataTypes = {
 					firstOccurrenceIndex: 1,
 					userSetName: 'My black rect'
 				},
-        "rectangle5": {
-					uniqueGlobalId: "rectangle5",
+				"rectangle5": {
+					guid: "rectangle5",
 					type: "rect",
 					top: 0,
 					left: 640,
@@ -173,7 +173,7 @@ export { AppController };
 	},
 	globalObjects: {
 		"2131-eww2w-2312-dadaa": {
-			uniqueGlobalId: "2131-eww2w-2312-dadaa",
+			guid: "2131-eww2w-2312-dadaa",
 			fill: "#29477F",
 			height: 150,
 			left: 300,
@@ -192,7 +192,7 @@ export { AppController };
 			version: "5.2.1"
 		},
 		"wda1-ew21-dhftft-2313": {
-			uniqueGlobalId: "wda1-ew21-dhftft-2313",
+			guid: "wda1-ew21-dhftft-2313",
 			fill: "rgb(166,111,213)",
 			startAngle: 0,
 			endAngle: 360,

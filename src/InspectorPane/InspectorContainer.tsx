@@ -28,7 +28,8 @@ const InspectorContainer = (props: Object) => {
       }
       {selection &&
         <>
-          <Collapse defaultActiveKey={["1", "2", "3", "4", "5"]}>
+          {/* <Collapse defaultActiveKey={["1", "2", "3", "4", "5"]}> */}
+          <Collapse defaultActiveKey={[]}>
             <Panel header="Dimensions" key="1">
               <DimensionsControlPanel />
             </Panel>
@@ -46,7 +47,7 @@ const InspectorContainer = (props: Object) => {
             </Panel>
           </Collapse>
 
-          <pre>{selection && JSON.stringify(selection, null, 4)}</pre>
+          {/* <pre>{selection && JSON.stringify(selection, null, 4)}</pre> */}
         </>
       }
     </>

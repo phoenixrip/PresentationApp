@@ -1,6 +1,6 @@
 import { useContext } from "react";
 import { editorContext, EditorContextTypes } from "../../Editor";
-import { CirclePicker } from 'react-color';
+import { CirclePicker, ChromePicker } from 'react-color';
 
 function FillControlPanel() {
   const context: EditorContextTypes = useContext(editorContext);
@@ -9,16 +9,16 @@ function FillControlPanel() {
 
   return (
     <>
-      <CirclePicker
+      {/* <CirclePicker
         color={selection.fill}
         onChange={e => {
           setOnFabricObject(selection, {fill: `rgba(${e.rgb.r},${e.rgb.g},${e.rgb.b},${e.rgb.a})`})
+        }} /> */}
+      <ChromePicker
+        color={selection.fill}
+        onChange={e => {
+          setOnFabricObject(selection, { fill: `rgba(${e.rgb.r},${e.rgb.g},${e.rgb.b},${e.rgb.a})` })
         }} />
-      {/* <ChromePicker
-                color={selection.fill}
-                onChange={e => {
-                  setOnFabricObject(selection, {fill: `rgba(${e.rgb.r},${e.rgb.g},${e.rgb.b},${e.rgb.a})`})
-                }} /> */}
     </>
   )
 

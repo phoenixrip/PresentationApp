@@ -10,22 +10,22 @@ function flatMapFabricSceneState(newFabricState: any) {
   recurseForFlatMap(fabricObjectsArray, false)
   return newFlatMap
 
-  function recurseForFlatMap(objectsArray: Array<CustomFabricObject>, parentGUIDs: string | false) {
+  function recurseForFlatMap(objectsArray: Array<CustomFabricObject>, parentIDs: string | false) {
     objectsArray.forEach((obj, i) => {
       obj.objectIndex = i
-      //if (parentGUIDs) obj.parentGUIDs = parentGUIDs
-      if (obj?.type !== 'group') return newFlatMap[obj.uniqueGlobalId] = obj
-      //const groupMembers = obj?.objects?.map(obj => obj.uniqueGlobalId) || []
+      //if (parentIDs) obj.parentIDs = parentIDs
+      if (obj?.type !== 'group') return newFlatMap[obj.guid] = obj
+      //const groupMembers = obj?.objects?.map(obj => obj.guid) || []
       //obj.members = groupMembers
-      //recurseForFlatMap(obj?.objects || [], obj.uniqueGlobalId)
+      //recurseForFlatMap(obj?.objects || [], obj.guid)
       // obj.objects = []
-      // newFlatMap[obj.uniqueGlobalId] = obj
+      // newFlatMap[obj.guid] = obj
     })
   }
 }
 
 function normalizeAllObjectCoords(target: fabric.ActiveSelection | fabric.Object, action: string) {
-  const isSelection = target.type === "activeSelection"
+  const isSelection = target?.type === "activeSelection"
 
   // ------------------------------------------------------------------------
   // Scale width/height/radius according to scale and reset scale to 1

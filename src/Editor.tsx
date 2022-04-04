@@ -16,7 +16,7 @@ import { ToolbarContainer } from "./Toolbar/ToolbarContainer";
 
 import { SizeType } from "antd/lib/config-provider/SizeContext";
 // import { SceneType } from "./Types/sceneType";
-import { FakeGroup, setFabricDefaults } from "./Utils/SetFabricDefaults";
+import { setFabricDefaults } from "./Utils/SetFabricDefaults";
 import { ProjectDataTypes, SceneType, UndoHistoryEntry } from "./Types/ProjectDataTypes";
 import {
   CustomFabricCircle,
@@ -45,7 +45,7 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
   fabricCanvas: CustomFabricCanvas | null;
   throttledSetNewCanvasPaneDimensions: Function;
   liveObjectsDict: { [key: string]: CustomFabricObject };
-
+  orderedSelectionGUIDs: Set<string>
   constructor(props: EditorPropsTypes) {
     super(props);
     this.fabricCanvas = null;
@@ -54,6 +54,7 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       this.setNewCanvasPanelDimensions,
       300
     );
+    this.orderedSelectionGUIDs = new Set()
     this.state = {
       tick: true,
       isInitted: false,
@@ -65,7 +66,8 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
         height: 9,
         left: -16,
         top: -9
-      }
+      },
+      selectedGUIDsDict: {}
     };
   }
 
@@ -81,12 +83,12 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     //Get current scene
     const currentSceneObject = this.state.project.scenes[renderScreenIndex];
     // For each object in active scene
-    for (const [uniqueGlobalId, sceneObjectOptions] of Object.entries(
+    for (const [guid, sceneObjectOptions] of Object.entries(
       currentSceneObject.activeSceneObjects
     )) {
-      const currentObject = this.liveObjectsDict[uniqueGlobalId];
+      const currentObject = this.liveObjectsDict[guid];
       const globalObjectSettings: {} =
-        this.state.project.globalObjects[uniqueGlobalId];
+        this.state.project.globalObjects[guid];
 
       currentObject
         .set(globalObjectSettings) //Reset to global settings
@@ -101,7 +103,7 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       const selectedObject = this.liveObjectsDict[GUID] as CustomFabricObject
 
       let allChildrenAndSelection = new Set<CustomFabricObject>()
-      if (selectedObject?.parentGUID) {
+      if (selectedObject?.parentID) {
         const tallestParent = this.recursivelyFindTallestParent(selectedObject)
         const recursivelyFindAllChildren = (parentObject: CustomFabricObject) => {
           allChildrenAndSelection.add(parentObject)
@@ -123,6 +125,7 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
   }
 
   sanitizeEquations = (obj: CustomFabricObject, action: string) => {
+
     switch (action) {
       case "scale":
         obj.widthEquation = undefined
@@ -170,27 +173,13 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     this.fabricCanvas.on("object:modified", (e: any) => {
       console.log("object:modfied", e);
       normalizeAllObjectCoords(e.target, e.action)
-      if(!e?.customFire) this.sanitizeEquations(e.target, e.action)
+      if (!e?.customFire) this.sanitizeEquations(e.target, e.action)
       return this.normalizeNewSceneState(`object:modified: action: ${e.action}, name: ${e.target?.userSetName || e.target.type}`)
     });
 
-    this.fabricCanvas.on("selection:cleared", (e) => {
-      console.log("selection:cleared", e)
-    })
-
-    this.fabricCanvas.on("mouse:down:before", (e: any) => {
-      //@ts-ignore
-
-      console.log("mouse:down:before", e)
-    })
-
-    this.fabricCanvas.on("selection:updated", (e: any) => {
-      console.log("selection:updated", e)
-    })
-
-    this.fabricCanvas.on("selection:created", (e: any) => {
-
-    })
+    this.fabricCanvas.on("selection:created", this.selectionCreated)
+    this.fabricCanvas.on("selection:updated", this.selectionUpdated)
+    this.fabricCanvas.on("selection:cleared", this.selectionCleared)
 
     // Init complete editor state
     const json: any = {
@@ -199,15 +188,18 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     this.fabricCanvas.loadFromJSON(
       json,
       () => {
+        this.fabricCanvas?.updatePaths()
+        this.fabricCanvas?.logFlatVisual()
         this.renderActiveScene(this.state.activeSceneIndex);
         this.fabricCanvas?.requestRenderAll();
+        return this.setState({ isInitted: true })
       },
       (options: any, object: any, a: any) => {
-        this.liveObjectsDict[options.uniqueGlobalId] = object;
+        this.liveObjectsDict[options.guid] = object;
       }
     );
 
-    return this.setState({ isInitted: true });
+    // return this.setState({ isInitted: false });
   }
 
   updateCanvasPaneDimensions = (newDimensions: fabric.ICanvasDimensions) => {
@@ -220,32 +212,63 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
 
   updateTick = () => this.setState({ tick: !this.state.tick });
 
+  // SELECTION ORDER TRACKING
+  selectionCreated = (e: any) => {
+    let newSelectedGUIDsDict: { [key: string]: boolean } = {}
+    const selected: Array<CustomFabricObject> = e.selected
+    selected.forEach(obj => {
+      this.orderedSelectionGUIDs.add(obj.guid)
+      newSelectedGUIDsDict[obj.guid] = true
+    })
+    return this.setState(prev => ({ selectedGUIDsDict: newSelectedGUIDsDict }))
+  }
+  selectionUpdated = (e: any) => {
+    let newSelectedGUIDsDict = { ...this.state.selectedGUIDsDict }
+    const selected: Array<CustomFabricObject> = e.selected
+    selected.forEach(obj => {
+      this.orderedSelectionGUIDs.add(obj.guid)
+      newSelectedGUIDsDict[obj.guid] = true
+    })
+    const deselected: Array<CustomFabricObject> = e.deselected
+    deselected.forEach(obj => {
+      this.orderedSelectionGUIDs.delete(obj.guid)
+      newSelectedGUIDsDict[obj.guid] = false
+    })
+    return this.setState(prev => ({ selectedGUIDsDict: newSelectedGUIDsDict }))
+  }
+  selectionCleared = (e: any) => {
+    this.orderedSelectionGUIDs.clear()
+    return this.setState(prev => ({ selectedGUIDsDict: {} }))
+  }
+
   setOnGlobalObject = (obj: CustomFabricObject, settings: {}) => {
-    // get active scene and options for object in active scene then add/modify corresponding setting to value
-    const activeScene = this.state.project.scenes[this.state.activeSceneIndex];
-    let currentOptions = activeScene.activeSceneObjects[obj.uniqueGlobalId];
-    let newSettings = { ...currentOptions, ...settings };
+    if (obj) {
+      // get active scene and options for object in active scene then add/modify corresponding setting to value
+      const activeScene = this.state.project.scenes[this.state.activeSceneIndex];
+      let currentOptions = activeScene.activeSceneObjects[obj.guid];
+      let newSettings = { ...currentOptions, ...settings };
 
-    const newSceneActiveObjectsObject = {
-      ...activeScene.activeSceneObjects,
-      [obj.uniqueGlobalId]: newSettings,
-    };
+      const newSceneActiveObjectsObject = {
+        ...activeScene.activeSceneObjects,
+        [obj.guid]: newSettings,
+      };
 
-    return this.setState({
-      project: {
-        ...this.state.project,
-        scenes: this.state.project.scenes.map(
-          (currSceneObject: SceneType, currScreenIndex: number) => {
-            if (currScreenIndex !== this.state.activeSceneIndex)
-              return currSceneObject;
-            return {
-              ...currSceneObject,
-              activeSceneObjects: newSceneActiveObjectsObject,
-            };
-          }
-        ),
-      },
-    });
+      return this.setState({
+        project: {
+          ...this.state.project,
+          scenes: this.state.project.scenes.map(
+            (currSceneObject: SceneType, currScreenIndex: number) => {
+              if (currScreenIndex !== this.state.activeSceneIndex)
+                return currSceneObject;
+              return {
+                ...currSceneObject,
+                activeSceneObjects: newSceneActiveObjectsObject,
+              };
+            }
+          ),
+        },
+      });
+    }
   };
 
   setOnFabricObject = (obj: CustomFabricObject, settings: {}, action: string) => {
@@ -262,69 +285,11 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
 
   //Recursively move up to each parent until there are no more parents and return that GUID
   recursivelyFindTallestParent = (obj: CustomFabricObject): CustomFabricObject => {
-    if (obj?.parentGUID) {
-      const parentObject = this.liveObjectsDict[obj.parentGUID] as CustomFabricObject
+    if (obj?.parentID) {
+      const parentObject = this.liveObjectsDict[obj.parentID] as CustomFabricObject
       return this.recursivelyFindTallestParent(parentObject)
     } else {
       return obj
-    }
-  }
-
-  handleGroupObjects = () => {
-    // TODO: Must update the zIndex (in memory array order)
-    // So that the group is created at the highest child zIndex
-    // and all the children are moved ABOVE that new group groupIndex in order
-    if (!this?.fabricCanvas) return
-    const selection: fabric.Object | fabric.ActiveSelection | undefined = this.fabricCanvas?.getActiveObject()
-    if (selection?.type !== 'activeSelection') return Modal.warn({ content: 'GIVE ME A GROUPABLE' })
-
-    if (selection instanceof fabric.ActiveSelection) {
-      const newGroupGUID = uuidv4() //GUID of new group
-      const selectionObjects = selection.getObjects() as Array<CustomFabricObject> // Currently selected objects
-      let objectGUIDsToAssignParent = new Set<string>() // All the GUIDs which will have this new group as parent
-
-      for (let obj of selectionObjects) {
-
-        // Add tallest parent to collection of GUIDs to assign new group as parent to
-        const tallestParent = this.recursivelyFindTallestParent(obj)
-        const tallestparentGUID = tallestParent.uniqueGlobalId as string
-        objectGUIDsToAssignParent.add(tallestparentGUID)
-      }
-
-      //Convert to array for iteration
-      const objectGUIDsToAssignParentArray = Array.from(objectGUIDsToAssignParent)
-
-      // Assign new group as parent to each top-level child
-      for (const objectGUID of objectGUIDsToAssignParentArray) {
-        const obj = this.liveObjectsDict[objectGUID] as CustomFabricObject
-        obj.parentGUID = newGroupGUID
-      }
-
-      // Create new rect to signify group
-      const groupRect = new FakeGroup({
-        width: selection.width,
-        height: selection.height,
-        top: selection.top,
-        left: selection.left,
-      }) as fabric.Object
-      const activeGroupRect = groupRect as CustomFabricObject
-      activeGroupRect.set({
-        userSetName: 'Group',
-        uniqueGlobalId: newGroupGUID,
-        members: objectGUIDsToAssignParentArray //List of objects to assignt this as parent to is same as list of children
-      })
-
-      this.liveObjectsDict[newGroupGUID] = activeGroupRect
-
-      this.fabricCanvas
-        .add(groupRect)
-        .renderAll()
-        .fire("object:modified", {
-          action: "group",
-          target: {
-            type: "group"
-          }
-        })
     }
   }
 
@@ -335,10 +300,10 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     //Tracking selection state of canvas along with canvas state
     let selectedGUIDs = []
     if (activeObject && !(activeObject instanceof fabric.ActiveSelection)) {
-      selectedGUIDs.push(activeObject?.uniqueGlobalId)
+      selectedGUIDs.push(activeObject?.guid)
     } else {
       const allSelectedObjects = activeObject?.getObjects() as Array<CustomFabricObject>
-      allSelectedObjects?.forEach(obj => selectedGUIDs.push(obj.uniqueGlobalId))
+      allSelectedObjects?.forEach(obj => selectedGUIDs.push(obj.guid))
     }
     const newFabricState = this.fabricCanvas?.toObject(customAttributesToIncludeInFabricCanvasToObject)
     const newFlatMappedFabricState = flatMapFabricSceneState(newFabricState)
@@ -404,10 +369,10 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     const fabricObjects = this.fabricCanvas?.getObjects() as Array<CustomFabricObject>
     let selectedObjects: Array<CustomFabricObject> = []
     fabricObjects.forEach(obj => {
-      const settingsToSetTo = useStateToSaturate[obj.uniqueGlobalId]
+      const settingsToSetTo = useStateToSaturate[obj.guid]
       console.log({ settingsToSetTo })
       obj.set(settingsToSetTo).setCoords()
-      if (selectedGUIDsArray.includes(obj.uniqueGlobalId)) {
+      if (selectedGUIDsArray.includes(obj.guid)) {
         selectedObjects.push(obj)
       }
     })
@@ -466,9 +431,9 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     const fabricObjects = this.fabricCanvas?.getObjects() as Array<CustomFabricObject>
     let selectedObjects: Array<CustomFabricObject> = []
     fabricObjects.forEach(obj => {
-      const settingsToSetTo = useStateToSaturate[obj.uniqueGlobalId]
+      const settingsToSetTo = useStateToSaturate[obj.guid]
       obj.set(settingsToSetTo).setCoords()
-      if (selectedGUIDsArray.includes(obj.uniqueGlobalId)) {
+      if (selectedGUIDsArray.includes(obj.guid)) {
         selectedObjects.push(obj)
       }
     })
@@ -510,12 +475,13 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     // Handle select single object
     this.fabricCanvas!
       .discardActiveObject()
-      .renderAll()
-    const sel = new fabric.ActiveSelection([liveObject], { canvas: this.fabricCanvas! })
-    sel.setCoords()
-    this.fabricCanvas!
-      .setActiveObject(sel)
+      .setActiveObject(liveObject)
       .requestRenderAll()
+    // const sel = new fabric.ActiveSelection([liveObject], { canvas: this.fabricCanvas! })
+    // sel.setCoords()
+    // this.fabricCanvas!
+    //   .setActiveObject(sel)
+    //   .requestRenderAll()
   }
 
   handleSelectGroup = (liveGroupObject: CustomFabricObject) => {
@@ -524,11 +490,11 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       .renderAll()
     const { treeDataArray, nodes } = buildTreeState((this?.fabricCanvas?.getObjects() as Array<CustomFabricObject>))
     console.log({ treeDataArray, nodes })
-    const selectedGroupInfo = nodes[liveGroupObject.uniqueGlobalId]
+    const selectedGroupInfo = nodes[liveGroupObject.guid]
     let newSelectedObjects: Array<CustomFabricObject> = []
     const recursiveAdd = (array: TreeItems) => {
       array.forEach(childObjDetails => {
-        const obj = this.liveObjectsDict[childObjDetails.uniqueGlobalId]
+        const obj = this.liveObjectsDict[childObjDetails.guid]
         newSelectedObjects.push(obj)
         if (childObjDetails.children) recursiveAdd(childObjDetails.children)
       })
@@ -542,6 +508,138 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       .requestRenderAll()
   }
 
+
+  handleGroupObjects = () => {
+    if (!this.fabricCanvas) return
+    const orderedSelectedGUIDs = Array.from(this.orderedSelectionGUIDs)
+    const orderedSelectedIndexs = orderedSelectedGUIDs.map(guid => this.liveObjectsDict[guid].treeIndex)
+    this.fabricCanvas
+      .groupSelectedByObjectIndexes(orderedSelectedIndexs)
+      .requestRenderAll()
+    console.log({ orderedSelectedGUIDs, orderedSelectedIndexs })
+    // TODO: Must update the zIndex (in memory array order)
+    // So that the group is created at the highest child zIndex
+    // and all the children are moved ABOVE that new group groupIndex in order
+    // if (!this?.fabricCanvas) return
+    // const selection: fabric.Object | fabric.ActiveSelection | undefined = this.fabricCanvas?.getActiveObject()
+    // if (selection?.type !== 'activeSelection') return Modal.warn({ content: 'GIVE ME A GROUPABLE' })
+
+    // if (selection instanceof fabric.ActiveSelection) {
+    //   const newGroupGUID = uuidv4() //GUID of new group
+    //   const selectionObjects = selection.getObjects() as Array<CustomFabricObject> // Currently selected objects
+    //   let objectGUIDsToAssignParent = new Set<string>() // All the GUIDs which will have this new group as parent
+
+    //   for (let obj of selectionObjects) {
+
+    //     // Add tallest parent to collection of GUIDs to assign new group as parent to
+    //     const tallestParent = this.recursivelyFindTallestParent(obj)
+    //     const tallestparentID = tallestParent.guid as string
+    //     objectGUIDsToAssignParent.add(tallestparentID)
+    //   }
+
+    //   //Convert to array for iteration
+    //   const objectGUIDsToAssignParentArray = Array.from(objectGUIDsToAssignParent)
+
+    //   // Assign new group as parent to each top-level child
+    //   for (const objectGUID of objectGUIDsToAssignParentArray) {
+    //     const obj = this.liveObjectsDict[objectGUID] as CustomFabricObject
+    //     obj.parentID = newGroupGUID
+    //   }
+
+    //   // Create new rect to signify group
+    //   const groupRect = new FakeGroup({
+    //     width: selection.width,
+    //     height: selection.height,
+    //     top: selection.top,
+    //     left: selection.left,
+    //   }) as fabric.Object
+    //   const activeGroupRect = groupRect as CustomFabricObject
+    //   activeGroupRect.set({
+    //     userSetName: 'Group',
+    //     guid: newGroupGUID,
+    //     members: objectGUIDsToAssignParentArray //List of objects to assignt this as parent to is same as list of children
+    //   })
+
+    //   this.liveObjectsDict[newGroupGUID] = activeGroupRect
+
+    //   this.fabricCanvas
+    //     .add(groupRect)
+    //     .renderAll()
+    //     .fire("object:modified", {
+    //       action: "group",
+    //       target: {
+    //         type: "group"
+    //       }
+    //     })
+    // }
+  }
+
+  addText = () => {
+    if (!this.fabricCanvas) return
+
+    const newGUID = uuidv4()
+    // const newTextBox = new fabric.Textbox('New text', {
+    // @ts-ignore
+    const newTextBox = new fabric.CTextBox('New text', {
+      fontFamily: 'Arial',
+      textAlign: 'center',
+      fontSize: 21,
+      fill: 'white',
+      width: this.state.project.settings.dimensions.width * 0.96,
+      top: 0,
+      left: this.state.project.settings.dimensions.width * 0.02
+    })
+    // @ts-ignore
+    newTextBox.guid = newGUID
+    // @ts-ignore
+    newTextBox.userSetName = 'New text'
+    // @ts-ignore
+    newTextBox.parentID = null
+    // @ts-ignore
+    this.liveObjectsDict[newGUID] = newTextBox
+    this.fabricCanvas.add(newTextBox)
+    this.fabricCanvas.updatePaths()
+    this.fabricCanvas?.setActiveObject(newTextBox)
+      .requestRenderAll()
+  }
+
+  addSVG = () => {
+    const svgString = prompt('Enter svg string')
+    if (!svgString) return Modal.warn({ content: 'No svg string provided' })
+    try {
+      fabric.loadSVGFromString(svgString, (results, options) => {
+        let groupedObjects: Array<CustomFabricObject> = []
+        const groupObject = this.fabricCanvas!.createNewGroupAtIndex()
+        groupObject.userSetName = 'SVG Group'
+        this.fabricCanvas!.add(groupObject)
+        results.forEach((obj) => {
+          const guid = uuidv4()
+          // @ts-ignore
+          obj.guid = guid
+          // @ts-ignore
+          obj.parentID = groupObject.guid
+          // @ts-ignore
+          obj.userSetName = obj.type
+          // @ts-ignore
+          this.liveObjectsDict[guid] = obj
+          this.fabricCanvas?.add(obj)
+          // @ts-ignore
+          // groupedObjects.push(obj)
+        })
+        // const group = new fabric.Group(groupedObjects, {
+        //   top: 0,
+        //   left: 0,
+        //   // @ts-ignore
+        //   guid: groupObject.guid
+        // })
+        // this.fabricCanvas?.add(group)
+      })
+    } catch (e: any) {
+      return Modal.warn({ content: `Error loading svg: ${e.message}` })
+    }
+
+  }
+
   render() {
     const contextValue: EditorContextTypes = {
       fabricCanvas: this.fabricCanvas,
@@ -553,7 +651,9 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       handleUndo: this.handleUndo,
       handleRedo: this.handleRedo,
       liveObjectsDict: this.liveObjectsDict,
-      handleSelectElementByGUID: this.handleSelectElementByGUID
+      handleSelectElementByGUID: this.handleSelectElementByGUID,
+      addText: this.addText,
+      addSVG: this.addSVG,
     };
     return (
       <div>
@@ -607,32 +707,32 @@ export { Editor, editorContext };
 export type { EditorContextTypes };
 
 export interface TreeItem {
-  uniqueGlobalId: string;
-  parentGUID?: string;
+  guid: string;
+  parentID?: string;
   children: TreeItem[];
-  path: Array<string>;
+  structurePath: Array<string>;
   collapsed?: boolean;
   zIndex: Number
 }
 export type TreeItems = TreeItem[];
 
 function buildTreeState(objectsArray: Array<CustomFabricObject>) {
-  const root: TreeItem = { uniqueGlobalId: 'root', children: [], path: [], zIndex: 0, parentGUID: '' };
-  const nodes: Record<string, TreeItem> = { [root.uniqueGlobalId]: root };
-  const items = objectsArray.map((item, zIndex) => ({ ...item, children: [], path: [item.uniqueGlobalId], zIndex }));
+  const root: TreeItem = { guid: 'root', children: [], structurePath: [], zIndex: 0, parentID: '' };
+  const nodes: Record<string, TreeItem> = { [root.guid]: root };
+  const items = objectsArray.map((item, zIndex) => ({ ...item, children: [], structurePath: [item.guid], zIndex }));
   items.forEach((item, zIndex) => {
-    const { uniqueGlobalId, children } = item;
-    const parentGUID = item?.parentGUID ?? root.uniqueGlobalId;
-    const parent = nodes[parentGUID] ?? findItem(items, parentGUID);
-    const path = [...parent.path, uniqueGlobalId]
-    nodes[uniqueGlobalId] = { uniqueGlobalId, children, path, zIndex, parentGUID };
-    parent.children.push({ uniqueGlobalId, children, path, zIndex, parentGUID });
+    const { guid, children } = item;
+    const parentID = item?.parentID ?? root.guid;
+    const parent = nodes[parentID] ?? findItem(items, parentID);
+    const structurePath = [...parent.structurePath, guid]
+    nodes[guid] = { guid, children, structurePath, zIndex, parentID };
+    parent.children.push({ guid, children, structurePath, zIndex, parentID });
   })
   return { treeDataArray: root.children, nodes };
 }
 
 export function findItem(items: TreeItem[], itemId: string) {
-  return items.find(({ uniqueGlobalId }) => uniqueGlobalId === itemId);
+  return items.find(({ guid }) => guid === itemId);
 }
 
  // console.log("selection:created", e)
@@ -650,7 +750,7 @@ export function findItem(items: TreeItem[], itemId: string) {
       //   // If the object has no parents it needs to be added to the group since it's part of the selection
       //   let allChildrenAndSelection = new Set<CustomFabricObject>()
       //   for (const selectedObject of currentActiveSelectionObjects) {
-      //     if (selectedObject?.parentGUID) {
+      //     if (selectedObject?.parentID) {
       //       const tallestParent = this.recursivelyFindTallestParent(selectedObject)
       //       const recursivelyFindAllChildren = (parentObject: CustomFabricObject) => {
       //         allChildrenAndSelection.add(parentObject)
@@ -667,9 +767,9 @@ export function findItem(items: TreeItem[], itemId: string) {
       //   }
 
       //   const allChildrenAndSelectionArray = Array.from(allChildrenAndSelection)
-      //   const objectGUIDsInActiveSelection = currentActiveSelectionObjects.map(e => e.uniqueGlobalId)
+      //   const objectGUIDsInActiveSelection = currentActiveSelectionObjects.map(e => e.guid)
       //   for (const obj of allChildrenAndSelectionArray) {
-      //     if (!objectGUIDsInActiveSelection.includes(obj.uniqueGlobalId)) {
+      //     if (!objectGUIDsInActiveSelection.includes(obj.guid)) {
       //       currentActiveSelection.addWithUpdate(obj)
       //     }
       //   }
@@ -677,7 +777,7 @@ export function findItem(items: TreeItem[], itemId: string) {
       // } else {
       //   const selectedObject = currentActiveSelection
       //   let allChildrenAndSelection = new Set<CustomFabricObject>()
-      //   if (selectedObject?.parentGUID) {
+      //   if (selectedObject?.parentID) {
       //     const tallestParent = this.recursivelyFindTallestParent(selectedObject)
       //     const recursivelyFindAllChildren = (parentObject: CustomFabricObject) => {
       //       allChildrenAndSelection.add(parentObject)

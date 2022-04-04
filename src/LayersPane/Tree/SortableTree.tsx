@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
@@ -32,37 +34,11 @@ import {
   removeItem,
   removeChildrenOf,
   setProperty,
+  NewTreeItem,
 } from './utilities';
 import type { FlattenedItem, SensorContext, TreeItems } from './types';
 import { sortableTreeKeyboardCoordinates } from './keyboardCoordinates';
 import { SortableTreeItem } from './components';
-
-const initialItems: TreeItems = [
-  {
-    id: 'Home',
-    children: [],
-  },
-  {
-    id: 'Collections',
-    children: [
-      { id: 'Spring', children: [] },
-      { id: 'Summer', children: [] },
-      { id: 'Fall', children: [] },
-      { id: 'Winter', children: [] },
-    ],
-  },
-  {
-    id: 'About Us',
-    children: [],
-  },
-  {
-    id: 'My Account',
-    children: [
-      { id: 'Addresses', children: [] },
-      { id: 'Order History', children: [] },
-    ],
-  },
-];
 
 const measuring = {
   droppable: {
@@ -77,18 +53,20 @@ const dropAnimation: DropAnimation = {
 
 interface Props {
   collapsible?: boolean;
-  defaultItems?: TreeItems;
+  defaultItems?: Array<NewTreeItem>;
   indentationWidth?: number;
   indicator?: boolean;
   removable?: boolean;
+  handleOnDragEnd?: Function
 }
 
 export function SortableTree({
   collapsible,
-  defaultItems = initialItems,
+  defaultItems,
   indicator,
   indentationWidth = 50,
   removable,
+  handleOnDragEnd
 }: Props) {
   const [items, setItems] = useState(() => defaultItems);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -100,7 +78,7 @@ export function SortableTree({
   }, [defaultItems])
 
   const [currentPosition, setCurrentPosition] = useState<{
-    parentId: string | null;
+    parentID: string | null;
     overId: string;
   } | null>(null);
 
@@ -140,7 +118,13 @@ export function SortableTree({
   )
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        // delay: 250,
+        distance: 2,
+        // tolerance: 0
+      }
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter,
     })
@@ -236,10 +220,9 @@ export function SortableTree({
     setOverId(activeId);
 
     const activeItem = flattenedItems.find(({ id }) => id === activeId);
-
     if (activeItem) {
       setCurrentPosition({
-        parentId: activeItem.parentId,
+        parentID: activeItem.parentID,
         overId: activeId,
       });
     }
@@ -259,7 +242,8 @@ export function SortableTree({
     resetState();
 
     if (projected && over) {
-      const { depth, parentId } = projected;
+      const { depth, parentID } = projected;
+      console.log({ depth, parentID })
       const clonedItems: FlattenedItem[] = JSON.parse(
         JSON.stringify(flattenTree(items))
       );
@@ -267,12 +251,13 @@ export function SortableTree({
       const activeIndex = clonedItems.findIndex(({ id }) => id === active.id);
       const activeTreeItem = clonedItems[activeIndex];
 
-      clonedItems[activeIndex] = { ...activeTreeItem, depth, parentId };
+      clonedItems[activeIndex] = { ...activeTreeItem, depth, parentID };
 
-      const sortedItems = arrayMove(clonedItems, activeIndex, overIndex);
-      const newItems = buildTree(sortedItems);
-
-      setItems(newItems);
+      const newSorted = arrayMove(clonedItems, activeIndex, overIndex);
+      const newNested = buildTree(newSorted);
+      const newFlatTree = flattenTree(newNested)
+      handleOnDragEnd({ newSorted, newNested, newFlatTree })
+      setItems(newNested);
     }
   }
 
@@ -310,13 +295,13 @@ export function SortableTree({
       if (eventName !== 'onDragEnd') {
         if (
           currentPosition &&
-          projected.parentId === currentPosition.parentId &&
+          projected.parentID === currentPosition.parentID &&
           overId === currentPosition.overId
         ) {
           return;
         } else {
           setCurrentPosition({
-            parentId: projected.parentId,
+            parentID: projected.parentID,
             overId,
           });
         }
@@ -344,8 +329,8 @@ export function SortableTree({
         } else {
           let previousSibling: FlattenedItem | undefined = previousItem;
           while (previousSibling && projected.depth < previousSibling.depth) {
-            const parentId: string | null = previousSibling.parentId;
-            previousSibling = sortedItems.find(({ id }) => id === parentId);
+            const parentID: string | null = previousSibling.parentID;
+            previousSibling = sortedItems.find(({ id }) => id === parentID);
           }
 
           if (previousSibling) {
