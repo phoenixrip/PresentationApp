@@ -11,6 +11,7 @@ interface ObjIconTypes {
   [key: string]: any
 }
 const objIcons: ObjIconTypes = {
+  'CRect': faVectorSquare,
   'rect': faVectorSquare,
   'FakeGroup': faFolder,
   'group': faLayerGroup,

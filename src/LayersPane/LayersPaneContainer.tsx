@@ -81,7 +81,7 @@ const LayersPaneContainer: React.FC = () => {
       depth: obj.depth,
       treeIndex: obj.treeIndex,
       topLevelIndex: obj.topLevelIndex,
-      collapsed: obj?.collapsed || true
+      collapsed: obj?.collapsed || false
     }))
   const tree = buildTree(treeData)
   return (

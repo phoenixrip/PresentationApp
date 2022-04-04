@@ -506,6 +506,7 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     this.fabricCanvas!
       .setActiveObject(sel)
       .requestRenderAll()
+
   }
 
 
@@ -516,6 +517,7 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     this.fabricCanvas
       .groupSelectedByObjectIndexes(orderedSelectedIndexs)
       .requestRenderAll()
+    this.fabricCanvas.logFlatVisual()
     console.log({ orderedSelectedGUIDs, orderedSelectedIndexs })
     // TODO: Must update the zIndex (in memory array order)
     // So that the group is created at the highest child zIndex

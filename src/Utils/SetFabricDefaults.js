@@ -47,16 +47,34 @@ function setFabricDefaults() {
     }
   })
 
-  // fabric.CTextBox = CTextBox
+  fabric.CRect = fabric.util.createClass(fabric.Rect, {
+    type: 'CRect',
+    // initialize(options) {
+    //   console.log('!!!cRect')
+    //   this.callSuper('initialize', options)
+    // },
+    drawObject(ctx, forClipping = false) {
+      console.log(this.fill)
+      if (Array.isArray(this.fill)) {
+        this.fill.forEach(fill => {
+          this.fill = fill
+          this._setFillStyles(ctx, this)
+          this._render(ctx)
+        })
+      } else {
+        this.callSuper('drawObject', ctx, forClipping)
+      }
+    },
+    // _render(ctx) {
+    //   console.log('render')
+    //   this.callSuper('_render', ctx)
+    // }
+  })
+  fabric.CRect.fromObject = function (object, callback) {
+    return fabric.Object._fromObject('CRect', object, callback);
+    // return fabric.Rect.fromObject(object, callback)
+  }
 }
-
-// class CTextBox extends fabric.Textbox {
-//   type = 'CTextBox'
-//   _render(ctx) {
-
-//     this.callSuper('_render', ctx)
-//   }
-// }
 
 export {
   setFabricDefaults,
