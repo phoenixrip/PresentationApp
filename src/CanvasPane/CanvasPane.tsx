@@ -99,7 +99,9 @@ class CanvasPane extends Component<CanvasPanePropsTypes, CanvasPaneStateTypes> {
     const gridWidth = this.context.state.gridCoords.width
     const gridHeight = this.context.state.gridCoords.height
     fabricCanvas.on('object:moving', function (options: any) {
-      options.target.set({
+      const { target } = options
+      if (target?.type === 'group') return
+      target.set({
         left: Math.round(options.target.left / gridWidth) * gridWidth,
         top: Math.round(options.target.top / gridHeight) * gridHeight
       });
@@ -108,7 +110,7 @@ class CanvasPane extends Component<CanvasPanePropsTypes, CanvasPaneStateTypes> {
     fabricCanvas.on('object:scaling', (event: any) => {
       const { transform } = event
       const { target } = transform
-
+      if (target?.type === 'group') return
       const targetWidth = target.width * target.scaleX;
       const targetHeight = target.height * target.scaleY;
 

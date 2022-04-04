@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Collapse } from 'antd'
 import { fabric } from 'fabric'
 import { useContext } from 'react'
@@ -22,9 +23,9 @@ const objIcons: ObjIconTypes = {
   let activeSelectionGUIDsArray: Array<String> = []
   if (currentSelection && currentSelection instanceof fabric.ActiveSelection) {
     const selectedObjects = currentSelection.getObjects() as Array<CustomFabricObject>
-    selectedObjects.forEach(obj => activeSelectionGUIDsArray.push(obj.uniqueGlobalId))
+    selectedObjects.forEach(obj => activeSelectionGUIDsArray.push(obj.guid))
   } else if (currentSelection) {
-    activeSelectionGUIDsArray.push(currentSelection.uniqueGlobalId)
+    activeSelectionGUIDsArray.push(currentSelection.guid)
   }
   // TODO: Figure out how to avoid this check
   const fabricHasObjects = context?.fabricCanvas?._objects?.length
@@ -35,7 +36,7 @@ const objIcons: ObjIconTypes = {
           fabricHasObjects &&
           (context.fabricCanvas?.getObjects() as Array<CustomFabricObject>)
             .map((obj, objectLayoutIndex) => (
-              <div key={objectLayoutIndex} className={`${c.objectPillContainer} ${(activeSelectionGUIDsArray.includes(obj.uniqueGlobalId)) ? c.active : c.idle}`}>
+              <div key={objectLayoutIndex} className={`${c.objectPillContainer} ${(activeSelectionGUIDsArray.includes(obj.guid)) ? c.active : c.idle}`}>
                 <div className={c.left}>
                   <div className={c.objectIcon}>
                     <UseFaIcon icon={objIcons[obj?.type || 'default']} />
@@ -64,22 +65,30 @@ const objIcons: ObjIconTypes = {
 
 const LayersPaneContainer: React.FC = () => {
   const context = useContext(editorContext)
+
+  function handleOnDragEnd({ newSorted, newNested, newFlatTree }) {
+    context.fabricCanvas.handleRecieveNewFlatOrder(newFlatTree)
+    console.log('handleOnDragEnd', { newSorted, newNested, newFlatTree })
+  }
   const flatTreeableData = (context.fabricCanvas?.getObjects() || []) as Array<CustomFabricObject>
-  const treeData: Array<FlattenedItem> = flatTreeableData
+  const treeData = flatTreeableData
     .map((obj, i) => ({
-      id: obj.uniqueGlobalId,
-      children: [],
-      collapsed: false,
-      parentId: obj?.parentGUID || null,
-      depth: i,
-      index: i,
-      objType: obj.type
+      id: obj.guid,
+      guid: obj.guid,
+      parentID: obj.parentID,
+      structurePath: obj.structurePath,
+      type: obj.type,
+      depth: obj.depth,
+      treeIndex: obj.treeIndex,
+      topLevelIndex: obj.topLevelIndex,
+      collapsed: obj?.collapsed || true
     }))
   const tree = buildTree(treeData)
   return (
     <div className={c.container}>
       <SortableTree
         collapsible
+        handleOnDragEnd={handleOnDragEnd}
         defaultItems={tree}
         // indicator
         removable

@@ -13,7 +13,7 @@ export interface FlattenedItem extends TreeItem {
   parentId: null | string;
   depth: number;
   index: number;
-  uniqueGlobalId?: string;
+  guid?: string;
 }
 
 export type SensorContext = MutableRefObject<{

@@ -1,7 +1,7 @@
 import React, { forwardRef, HTMLAttributes, useContext } from 'react';
 import classNames from 'classnames';
 // import { UseFaIcon } from '../Utils/UseFaIcon'
-import { faFolder, faVectorSquare } from '@fortawesome/free-solid-svg-icons'
+import { faBezierCurve, faCircle, faDrawPolygon, faFileText, faFolder, faFont, faLayerGroup, faSlash, faTextWidth, faVectorSquare } from '@fortawesome/free-solid-svg-icons'
 // import { faFolder, faVectorSquare } from '@fortawesome/free'
 import { Action, Handle, Remove } from './Item/';
 import styles from './TreeItem.module.css';
@@ -12,7 +12,15 @@ interface ObjIconTypes {
 }
 const objIcons: ObjIconTypes = {
   'rect': faVectorSquare,
-  'FakeGroup': faFolder
+  'FakeGroup': faFolder,
+  'group': faLayerGroup,
+  'textbox': faFont,
+  'CTextBox': faFont,
+  'path': faBezierCurve,
+  'ellipse': faCircle,
+  'circle': faCircle,
+  'line': faSlash,
+  'polyline': faDrawPolygon
 }
 
 export interface Props extends HTMLAttributes<HTMLLIElement> {
@@ -55,10 +63,17 @@ export const TreeItem = forwardRef<HTMLDivElement, Props>(
     ref
   ) => {
     const context = useContext(editorContext)
-    const id = value
-    const liveObject = context.liveObjectsDict[id]
+    const guid = value
+    const liveObject = context.liveObjectsDict[guid]
     const objectTypeKey = liveObject?.type || 'default'
-
+    const isSelected = context.state.selectedGUIDsDict[guid]
+    // console.log({ liveObject })
+    function handleMouseDown(e: any) {
+      if (e.shiftKey) {
+        console.log('shift click')
+      }
+      context.handleSelectElementByGUID(liveObject.guid)
+    }
     return (
       <li
         className={classNames(
@@ -77,9 +92,15 @@ export const TreeItem = forwardRef<HTMLDivElement, Props>(
         }
         {...props}
       >
-        <div className={styles.TreeItem} ref={ref} style={style}>
+        <div
+          className={classNames(
+            styles.TreeItem,
+            isSelected && styles.TreeItemSelected
+          )}
+          ref={ref}
+          style={style}>
           {/* <Handle {...handleProps} /> */}
-          <div className={styles.iconContainer} {...handleProps}>
+          <div className={styles.iconContainer} {...handleProps} onMouseDown={handleMouseDown}>
             <UseFaIcon icon={objIcons[objectTypeKey]} />
           </div>
           {onCollapse && (
@@ -94,8 +115,10 @@ export const TreeItem = forwardRef<HTMLDivElement, Props>(
             </Action>
           )}
           <span
-            onClick={(e) => context.handleSelectElementByGUID(liveObject.uniqueGlobalId)}
-            className={styles.Text}>{liveObject.userSetName}</span>
+            onMouseDown={handleMouseDown}
+            className={styles.Text}>{
+              liveObject?.text || liveObject.userSetName
+            }</span>
           {/* {!clone && onRemove && <Remove onClick={onRemove} />} */}
           {clone && childCount && childCount > 1 ? (
             <span className={styles.Count}>{childCount}</span>

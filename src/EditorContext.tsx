@@ -14,6 +14,9 @@ interface EditorStateTypes {
     height: number,
     top: number,
     left: number
+  },
+  selectedGUIDsDict: {
+    [key: string]: boolean
   }
 }
 
@@ -27,6 +30,8 @@ interface EditorContextTypes {
   handleUndo: Function,
   handleRedo: Function,
   handleSelectElementByGUID: Function,
+  addText: Function,
+  addSVG: Function,
   liveObjectsDict: {
     [key: string]: CustomFabricObject
   }

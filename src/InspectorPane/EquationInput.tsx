@@ -27,9 +27,6 @@ const EquationInput = ({ value, equation, onChange, min, max, precision, ...rest
     h: context.state.project.settings.dimensions.height
   }
 
-  console.log(context.state.project.settings)
-
-
   const [internalValue, setInternalValue] = useState(value)
   const [internalEquation, setInternalEquation] = useState(equation ? equation : value)
   const [internalDisplayValue, setInternalDisplayValue] = useState(value)
@@ -136,10 +133,10 @@ const EquationInput = ({ value, equation, onChange, min, max, precision, ...rest
         return
       }
 
-      if(!Number.isNaN(calculatedValue)) {}
-        setInternalDisplayValue(calculatedValue)
-      }
+      if (!Number.isNaN(calculatedValue)) { }
+      setInternalDisplayValue(calculatedValue)
     }
+  }
 
   //Update state on prop change by calling the regular change handler
   useEffect(() => {

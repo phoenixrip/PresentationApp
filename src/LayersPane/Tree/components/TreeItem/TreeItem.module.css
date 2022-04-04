@@ -79,6 +79,10 @@
   box-sizing: border-box;
 }
 
+.TreeItem.TreeItemSelected {
+  background-color: #2858ca;
+}
+
 .iconContainer {
   padding: 4px;
   color: white;

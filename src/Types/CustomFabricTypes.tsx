@@ -1,12 +1,17 @@
 interface CustomFabricObject extends fabric.Object {
-  uniqueGlobalId: string,
+  guid: string,
   userSetName: string,
   firstOccurrenceIndex?: number,
-  parentGUID?: string,
+  parentID?: string,
   members?: Array<string>,
   objects?: Array<CustomFabricObject>,
   radius?: number,
   objectIndex?: number,
+  treeIndex?: number,
+  topLevelIndex?: number,
+  depth?: number,
+  structurePath?: Array<string>,
+  text?: string
 }
 
 interface CustomFabricCircle extends CustomFabricObject, fabric.Circle { }
