@@ -11,6 +11,7 @@ import "./dark.css";
 import { LayersPaneContainer } from "./LayersPane/LayersPaneContainer";
 // import { debounce } from "./Utils/debounce";
 import { throttle } from "./Utils/throttle";
+import { customAttributesToIncludeInFabricCanvasToObject } from './Utils/consts'
 import { ToolbarContainer } from "./Toolbar/ToolbarContainer";
 
 import { SizeType } from "antd/lib/config-provider/SizeContext";
@@ -123,6 +124,24 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
 
   }
 
+  sanitizeEquations = (obj: CustomFabricObject, action: string) => {
+
+    switch (action) {
+      case "scale":
+        obj.widthEquation = undefined
+        obj.heightEquation = undefined
+        break
+      case "scaleX":
+        obj.widthEquation = undefined
+        break
+      case "scaleY":
+        obj.heightEquation = undefined
+        break
+      default:
+        break
+    }
+  }
+
   initFabricCanvas = (
     domCanvas: HTMLCanvasElement,
     canvasPaneDimensions: { width: number; height: number },
@@ -153,7 +172,8 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     // CANVAS EVENT HOOKS
     this.fabricCanvas.on("object:modified", (e: any) => {
       console.log("object:modfied", e);
-      // normalizeAllObjectCoords(e.target, e.action)
+      normalizeAllObjectCoords(e.target, e.action)
+      if (!e?.customFire) this.sanitizeEquations(e.target, e.action)
       return this.normalizeNewSceneState(`object:modified: action: ${e.action}, name: ${e.target?.userSetName || e.target.type}`)
     });
 
@@ -251,13 +271,16 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     }
   };
 
-  setOnFabricObject = (obj: CustomFabricObject, settings: {}) => {
-    if (obj) {
-      this.setOnGlobalObject(obj, settings);
-      obj.set(settings);
-      obj.setCoords();
-      obj?.canvas?.renderAll();
-    }
+  setOnFabricObject = (obj: CustomFabricObject, settings: {}, action: string) => {
+    this.setOnGlobalObject(obj, settings);
+    obj.set(settings);
+    obj.setCoords();
+    this.fabricCanvas?.requestRenderAll();
+    this.fabricCanvas?.fire("object:modified", {
+      action: action,
+      target: obj,
+      customFire: true
+    })
   };
 
   //Recursively move up to each parent until there are no more parents and return that GUID
@@ -282,7 +305,7 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       const allSelectedObjects = activeObject?.getObjects() as Array<CustomFabricObject>
       allSelectedObjects?.forEach(obj => selectedGUIDs.push(obj.guid))
     }
-    const newFabricState = this.fabricCanvas?.toObject(['guid', 'userSetName', 'firstOccurrenceIndex', 'objectIndex', 'members', 'parentID'])
+    const newFabricState = this.fabricCanvas?.toObject(customAttributesToIncludeInFabricCanvasToObject)
     const newFlatMappedFabricState = flatMapFabricSceneState(newFabricState)
     console.log({ newFlatMappedFabricState })
     const newUndoEntryObject: UndoHistoryEntry = {

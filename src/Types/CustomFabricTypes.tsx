@@ -12,6 +12,8 @@ interface CustomFabricObject extends fabric.Object {
   depth?: number,
   structurePath?: Array<string>,
   text?: string
+  widthEquation?: string,
+  heightEquation?: string
 }
 
 interface CustomFabricCircle extends CustomFabricObject, fabric.Circle { }
