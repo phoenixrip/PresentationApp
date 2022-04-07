@@ -1,7 +1,9 @@
 import { SizeType } from 'antd/lib/config-provider/SizeContext'
 import React from 'react'
+import { ProjectController } from './ProjectController'
 import { CustomFabricObject } from './Types/CustomFabricTypes'
 import { ProjectDataTypes } from './Types/ProjectDataTypes'
+import { CustomFabricCanvas } from './Utils/CustomFabricCanvas'
 
 interface EditorStateTypes {
   tick: Boolean;
@@ -21,8 +23,10 @@ interface EditorStateTypes {
 }
 
 interface EditorContextTypes {
-  fabricCanvas: fabric.Canvas | null;
+  fabricCanvas: CustomFabricCanvas | null;
   state: EditorStateTypes;
+  project: ProjectDataTypes;
+  activeSceneIndexs: Array<number>;
   setOnFabricObject: Function;
   setOnGlobalObject: Function;
   setActiveSceneIndex: Function;
@@ -32,8 +36,13 @@ interface EditorContextTypes {
   handleSelectElementByGUID: Function,
   addText: Function,
   addSVG: Function,
+  addLabel: Function,
+  handleOpenProjectPreview: ProjectController['handleOpenProjectPreview'],
   liveObjectsDict: {
     [key: string]: CustomFabricObject
+  },
+  liveObjectScenesReferences: {
+    [key: CustomFabricObject['guid']]: Set<number>
   }
 }
 

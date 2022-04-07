@@ -1,8 +1,8 @@
-import { CustomFabricObject } from "./CustomFabricTypes";
+import { CustomFabricObject, CustomFabricOptions } from "./CustomFabricTypes";
 
 interface ProjectDataTypes {
   settings: ProjectSettingsTypes,
-  globalObjects: { [key: string]: Object },
+  globalObjects: { [key: CustomFabricObject['guid']]: Partial<CustomFabricOptions> },
   scenes: Array<SceneType>
 }
 
@@ -14,7 +14,7 @@ interface ProjectSettingsTypes {
 }
 
 interface SceneType {
-  activeSceneObjects: { [key: string]: Object },
+  activeSceneObjects: { [key: CustomFabricObject['guid']]: CustomFabricOptions },
   sceneSettings: {},
   animationSettings?: {}
   // undoHistory: Array<{ [key: string]: fabric.IObjectOptions }>,
@@ -23,8 +23,8 @@ interface SceneType {
 }
 
 interface UndoHistoryEntry {
-  selectedGUIDs: Array<string>,
-  objectStates: { [key: string]: CustomFabricObject },
+  selectedGUIDs: Array<CustomFabricObject['guid']>,
+  objectStates: { [key: CustomFabricObject['guid']]: CustomFabricOptions },
 }
 
 export type {

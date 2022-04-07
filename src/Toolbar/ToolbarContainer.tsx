@@ -12,6 +12,8 @@ const ToolbarContainer = () => {
       <Button onClick={(e) => context.handleRedo()}>REDO</Button>
       <Button onClick={e => context.addText()}>Add text</Button>
       <Button onClick={e => context.addSVG()}>Add svg</Button>
+      <Button onClick={e => context.addLabel()}>addLabel</Button>
+      <Button onClick={e => context.handleOpenProjectPreview()}>handleOpenProjectPreview</Button>
     </div>
   )
 }

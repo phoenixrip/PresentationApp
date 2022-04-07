@@ -68,6 +68,7 @@ const LayersPaneContainer: React.FC = () => {
 
   function handleOnDragEnd({ newSorted, newNested, newFlatTree }) {
     context.fabricCanvas.handleRecieveNewFlatOrder(newFlatTree)
+    context.fabricCanvas?.requestRenderAll()
     console.log('handleOnDragEnd', { newSorted, newNested, newFlatTree })
   }
   const flatTreeableData = (context.fabricCanvas?.getObjects() || []) as Array<CustomFabricObject>
@@ -81,7 +82,7 @@ const LayersPaneContainer: React.FC = () => {
       depth: obj.depth,
       treeIndex: obj.treeIndex,
       topLevelIndex: obj.topLevelIndex,
-      collapsed: obj?.collapsed || true
+      collapsed: obj?.collapsed || false
     }))
   const tree = buildTree(treeData)
   return (

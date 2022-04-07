@@ -1,6 +1,6 @@
 import { useContext } from "react"
 import { editorContext, EditorContextTypes } from "../../Editor";
-import { InputNumber, Switch, Button } from "antd"
+import { InputNumber, Switch, Button, Slider } from "antd"
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCoffee, faLock, faUnlock } from '@fortawesome/free-solid-svg-icons'
@@ -8,6 +8,7 @@ import { faCoffee, faLock, faUnlock } from '@fortawesome/free-solid-svg-icons'
 import { EquationInput } from "../EquationInput";
 
 import { calculateFromString } from '../../Utils/calculateFromString.js'
+import Input from "rc-input";
 
 // console.log(calculateFromString("2+2"))
 
@@ -33,8 +34,8 @@ function DimensionsControlPanel() {
 				precision={0}
 				value={selection.width}
 				equation={selection?.widthEquation}
-				onChange={(e: any) => { setOnFabricObject(selection, { width: e.value, widthEquation: e.equation }, "scale") }} 
-				/>
+				onChange={(e: any) => { setOnFabricObject(selection, { width: e.value, widthEquation: e.equation }, "scale") }}
+			/>
 			<EquationInput
 				size={context.state.antdSize}
 				addonBefore="Height:"
@@ -49,7 +50,7 @@ function DimensionsControlPanel() {
 				precision={0}
 				value={selection.height}
 				equation={selection?.heightEquation}
-				onChange={(e:any) => { setOnFabricObject(selection, { height: e.value, heightEquation: e.equation }, "scale") }} />
+				onChange={(e: any) => { setOnFabricObject(selection, { height: e.value, heightEquation: e.equation }, "scale") }} />
 
 			<EquationInput
 				size={context.state.antdSize}
@@ -105,6 +106,15 @@ function DimensionsControlPanel() {
 				onChange={e => {
 					setOnFabricObject(selection, { lockSkewingX: !e })
 					setOnFabricObject(selection, { lockSkewingY: !e })
+				}}
+			/>
+			<Slider
+				value={selection.opacity}
+				min={0}
+				max={1}
+				step={0.01}
+				onChange={value => {
+					setOnFabricObject(selection, { opacity: value })
 				}}
 			/>
 		</>

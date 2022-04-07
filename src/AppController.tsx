@@ -2,6 +2,7 @@ import React, { Component, ReactNode } from "react";
 import { Editor } from "./Editor";
 import { SizeType } from "antd/lib/config-provider/SizeContext";
 import { ProjectDataTypes } from "./Types/ProjectDataTypes";
+import { ProjectController } from "./ProjectController";
 
 const dummyProjectData: ProjectDataTypes = {
 	settings: {
@@ -13,18 +14,18 @@ const dummyProjectData: ProjectDataTypes = {
 	globalObjects: {
 		"rectangle1": {
 			guid: "rectangle1",
-			type: "rect",
+			type: "CRect",
 			top: 0,
 			left: 0,
 			width: 160,
 			height: 90,
-			fill: "red",
+			fill: ["red", 'rgba(0, 0, 0, 0.75)'],
 			firstOccurrenceIndex: 1,
 			userSetName: 'My red rect'
 		},
 		"rectangle2": {
 			guid: "rectangle2",
-			type: "rect",
+			type: "CRect",
 			top: 0,
 			left: 160,
 			width: 160,
@@ -35,7 +36,7 @@ const dummyProjectData: ProjectDataTypes = {
 		},
 		"rectangle3": {
 			guid: "rectangle3",
-			type: "rect",
+			type: "CRect",
 			top: 0,
 			left: 320,
 			width: 160,
@@ -46,7 +47,7 @@ const dummyProjectData: ProjectDataTypes = {
 		},
 		"rectangle4": {
 			guid: "rectangle4",
-			type: "rect",
+			type: "CRect",
 			top: 0,
 			left: 480,
 			width: 160,
@@ -57,7 +58,7 @@ const dummyProjectData: ProjectDataTypes = {
 		},
 		"rectangle5": {
 			guid: "rectangle5",
-			type: "rect",
+			type: "CRect",
 			top: 0,
 			left: 640,
 			width: 160,
@@ -73,57 +74,57 @@ const dummyProjectData: ProjectDataTypes = {
 			activeSceneObjects: {
 				"rectangle1": {
 					guid: "rectangle1",
-					type: "rect",
+					// type: "CRect",
 					top: 0,
 					left: 0,
 					width: 160,
 					height: 90,
-					fill: "red",
-					firstOccurrenceIndex: 1,
+					// fill: ["red", 'rgba(0, 0, 0, 0.75)'],
+					// firstOccurrenceIndex: 1,
 					userSetName: 'My red rect'
 				},
 				"rectangle2": {
 					guid: "rectangle2",
-					type: "rect",
+					// type: "CRect",
 					top: 0,
 					left: 160,
 					width: 160,
 					height: 90,
-					fill: 'green',
-					firstOccurrenceIndex: 1,
+					// fill: 'green',
+					// firstOccurrenceIndex: 1,
 					userSetName: 'My green rect'
 				},
 				"rectangle3": {
 					guid: "rectangle3",
-					type: "rect",
+					// type: "CRect",
 					top: 0,
 					left: 320,
 					width: 160,
 					height: 90,
-					fill: 'purple',
-					firstOccurrenceIndex: 1,
+					// fill: 'purple',
+					// firstOccurrenceIndex: 1,
 					userSetName: 'My purple rect'
 				},
 				"rectangle4": {
 					guid: "rectangle4",
-					type: "rect",
+					// type: "CRect",
 					top: 0,
 					left: 480,
 					width: 160,
 					height: 90,
-					fill: 'black',
-					firstOccurrenceIndex: 1,
+					// fill: 'black',
+					// firstOccurrenceIndex: 1,
 					userSetName: 'My black rect'
 				},
 				"rectangle5": {
 					guid: "rectangle5",
-					type: "rect",
+					// type: "CRect",
 					top: 0,
 					left: 640,
 					width: 160,
 					height: 90,
-					fill: 'blue',
-					firstOccurrenceIndex: 1,
+					// fill: 'blue',
+					// firstOccurrenceIndex: 1,
 					userSetName: 'My blue rect'
 				},
 			},
@@ -154,7 +155,7 @@ class AppController extends Component<{}, AppControllerStateTypes> {
 	}
 	render(): ReactNode {
 		if (this.state?.project) {
-			return <Editor project={this.state.project} />;
+			return <ProjectController project={this.state.project} />;
 		} else {
 			return <p>NO DATA TO OPEN EDITOR WITH</p>;
 		}

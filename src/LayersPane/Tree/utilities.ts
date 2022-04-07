@@ -134,6 +134,9 @@ export function buildTree(flattenedItems: Array<CustomFabricObject>) {
     const parent = nodes[parentID] ?? findItem(items, parentID);
 
     nodes[id] = { ...item, id, children, parentID };
+    if (!parent?.children) {
+      console.log({ parentID })
+    }
     parent.children.push(item);
   }
 

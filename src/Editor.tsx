@@ -22,6 +22,8 @@ import {
   CustomFabricCircle,
   CustomFabricGroup,
   CustomFabricObject,
+  CustomFabricOptions,
+  SimpleSpread,
 } from "./Types/CustomFabricTypes";
 // import { ProjectDataStateTypes } from "./AppController";
 
@@ -34,22 +36,31 @@ import { editorContext, EditorContextTypes, EditorStateTypes } from "./EditorCon
 import { rgbaFromColor } from "./Utils/rgbaFromColor";
 import { tsIntrinsicKeyword } from "@babel/types";
 import { CustomFabricCanvas } from "./Utils/CustomFabricCanvas";
+import { IProjectControllerState, ProjectController } from "./ProjectController";
 
 setFabricDefaults();
 
 interface EditorPropsTypes {
-  project: ProjectDataTypes;
+  project: IProjectControllerState['project'];
+  activeSceneIndexs: IProjectControllerState['activeSceneIndexs'],
+  setActiveSceneIndex: ProjectController['setActiveSceneIndex'],
+  handleFabricMountConfirmed: ProjectController['handleFabricMountConfirmed'],
+  liveObjectsDict: ProjectController['liveObjectsDict']
+  liveObjectScenesReferences: ProjectController['liveObjectScenesReferences']
+  handleRequestDeleteObject: Function,
+  handleGroupObjects: ProjectController['handleGroupObjects'],
+  handleAddObject: ProjectController['handleAddObject'],
+  handleDuplicateScene: ProjectController['handleDuplicateScene'],
+  handleOpenProjectPreview: ProjectController['handleOpenProjectPreview'],
 }
 
 class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
   fabricCanvas: CustomFabricCanvas | null;
   throttledSetNewCanvasPaneDimensions: Function;
-  liveObjectsDict: { [key: string]: CustomFabricObject };
   orderedSelectionGUIDs: Set<string>
   constructor(props: EditorPropsTypes) {
     super(props);
     this.fabricCanvas = null;
-    this.liveObjectsDict = {};
     this.throttledSetNewCanvasPaneDimensions = throttle(
       this.setNewCanvasPanelDimensions,
       300
@@ -71,61 +82,15 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     };
   }
 
-  setActiveSceneIndex = (newSceneIndex: number) => {
-    //not unselecting active object can create issues when a group is selected and scene changed
-    if (this.fabricCanvas?.getActiveObject()?.type === "activeSelection") this.fabricCanvas!.discardActiveObject();
-    this.renderActiveScene(newSceneIndex);
-    this.fabricCanvas?.requestRenderAll();
-    return this.setState({ activeSceneIndex: newSceneIndex });
-  };
+  get liveObjectsDict() {
+    return this.props.liveObjectsDict
+  }
 
-  renderActiveScene = (renderScreenIndex: number) => {
-    //Get current scene
-    const currentSceneObject = this.state.project.scenes[renderScreenIndex];
-    // For each object in active scene
-    for (const [guid, sceneObjectOptions] of Object.entries(
-      currentSceneObject.activeSceneObjects
-    )) {
-      const currentObject = this.liveObjectsDict[guid];
-      const globalObjectSettings: {} =
-        this.state.project.globalObjects[guid];
-
-      currentObject
-        .set(globalObjectSettings) //Reset to global settings
-        .set(sceneObjectOptions) // Set specific scene options
-        .setCoords();
-    }
-  };
-
-  objectsToSelectFromGUIDs = (GUIDs: string | Array<string>) => {
-    if (typeof (GUIDs) === "string") {
-      const GUID = GUIDs
-      const selectedObject = this.liveObjectsDict[GUID] as CustomFabricObject
-
-      let allChildrenAndSelection = new Set<CustomFabricObject>()
-      if (selectedObject?.parentID) {
-        const tallestParent = this.recursivelyFindTallestParent(selectedObject)
-        const recursivelyFindAllChildren = (parentObject: CustomFabricObject) => {
-          allChildrenAndSelection.add(parentObject)
-          if (!parentObject?.members) return
-          for (const childObjectGUID of parentObject.members) {
-            const childObject = this.liveObjectsDict[childObjectGUID] as CustomFabricObject
-            recursivelyFindAllChildren(childObject)
-          }
-        }
-        recursivelyFindAllChildren(tallestParent)
-      }
-
-      const allChildrenAndSelectionArray = Array.from(allChildrenAndSelection)
-      return allChildrenAndSelectionArray
-    } else {
-
-    }
-
+  componentDidMount() {
+    window.addEventListener('drop', this.handleWindowImageDrop, false)
   }
 
   sanitizeEquations = (obj: CustomFabricObject, action: string) => {
-
     switch (action) {
       case "scale":
         obj.widthEquation = undefined
@@ -152,6 +117,7 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       ...canvasPaneDimensions,
       preserveObjectStacking: true
     })
+    // this.fabricCanvas.renderOnAddRemove = false
     // Give the fabricCanvas a reference to our inMemoryObjectDict
     this.fabricCanvas.liveObjectsDict = this.liveObjectsDict
 
@@ -171,10 +137,9 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
 
     // CANVAS EVENT HOOKS
     this.fabricCanvas.on("object:modified", (e: any) => {
-      console.log("object:modfied", e);
       normalizeAllObjectCoords(e.target, e.action)
-      if (!e?.customFire) this.sanitizeEquations(e.target, e.action)
-      return this.normalizeNewSceneState(`object:modified: action: ${e.action}, name: ${e.target?.userSetName || e.target.type}`)
+      // if (!e?.customFire) this.sanitizeEquations(e.target, e.action)
+      // return this.normalizeNewSceneState(`object:modified: action: ${e.action}, name: ${e.target?.userSetName || e.target.type}`)
     });
 
     this.fabricCanvas.on("selection:created", this.selectionCreated)
@@ -182,22 +147,7 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     this.fabricCanvas.on("selection:cleared", this.selectionCleared)
 
     // Init complete editor state
-    const json: any = {
-      objects: Object.values(this.state.project.globalObjects),
-    };
-    this.fabricCanvas.loadFromJSON(
-      json,
-      () => {
-        this.fabricCanvas?.updatePaths()
-        this.fabricCanvas?.logFlatVisual()
-        this.renderActiveScene(this.state.activeSceneIndex);
-        this.fabricCanvas?.requestRenderAll();
-        return this.setState({ isInitted: true })
-      },
-      (options: any, object: any, a: any) => {
-        this.liveObjectsDict[options.guid] = object;
-      }
-    );
+    this.props.handleFabricMountConfirmed()
 
     // return this.setState({ isInitted: false });
   }
@@ -293,43 +243,43 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     }
   }
 
-  normalizeNewSceneState = (reasonForUpdate?: string) => {
-    const { activeSceneIndex } = this.state
-    const activeObject = this.fabricCanvas?.getActiveObject() as CustomFabricObject | fabric.ActiveSelection | undefined
+  // normalizeNewSceneState = (reasonForUpdate?: string) => {
+  //   const { activeSceneIndex } = this.state
+  //   const activeObject = this.fabricCanvas?.getActiveObject() as CustomFabricObject | fabric.ActiveSelection | undefined
 
-    //Tracking selection state of canvas along with canvas state
-    let selectedGUIDs = []
-    if (activeObject && !(activeObject instanceof fabric.ActiveSelection)) {
-      selectedGUIDs.push(activeObject?.guid)
-    } else {
-      const allSelectedObjects = activeObject?.getObjects() as Array<CustomFabricObject>
-      allSelectedObjects?.forEach(obj => selectedGUIDs.push(obj.guid))
-    }
-    const newFabricState = this.fabricCanvas?.toObject(customAttributesToIncludeInFabricCanvasToObject)
-    const newFlatMappedFabricState = flatMapFabricSceneState(newFabricState)
-    console.log({ newFlatMappedFabricState })
-    const newUndoEntryObject: UndoHistoryEntry = {
-      selectedGUIDs,
-      objectStates: newFlatMappedFabricState
-    }
+  //   //Tracking selection state of canvas along with canvas state
+  //   let selectedGUIDs = []
+  //   if (activeObject && !(activeObject instanceof fabric.ActiveSelection)) {
+  //     selectedGUIDs.push(activeObject?.guid)
+  //   } else {
+  //     const allSelectedObjects = activeObject?.getObjects() as Array<CustomFabricObject>
+  //     allSelectedObjects?.forEach(obj => selectedGUIDs.push(obj.guid))
+  //   }
+  //   const newFabricState = this.fabricCanvas?.toObject(customAttributesToIncludeInFabricCanvasToObject)
+  //   const newFlatMappedFabricState = flatMapFabricSceneState(newFabricState)
 
-    const newSceneObj = {
-      ...this.activeSceneObject,
-      undoHistory: this.activeSceneObject.undoHistory.concat(newUndoEntryObject)
-    }
-    const newScenesArray = this.state.project.scenes.map(
-      (sceneObj, sceneIndex) => sceneIndex !== activeSceneIndex
-        ? sceneObj
-        : newSceneObj
-    )
+  //   const newUndoEntryObject: UndoHistoryEntry = {
+  //     selectedGUIDs,
+  //     objectStates: newFlatMappedFabricState
+  //   }
 
-    return this.setState({
-      project: {
-        ...this.state.project,
-        scenes: newScenesArray
-      }
-    })
-  }
+  //   const newSceneObj = {
+  //     ...this.activeSceneObject,
+  //     undoHistory: this.activeSceneObject.undoHistory.concat(newUndoEntryObject)
+  //   }
+  //   const newScenesArray = this.state.project.scenes.map(
+  //     (sceneObj, sceneIndex) => sceneIndex !== activeSceneIndex
+  //       ? sceneObj
+  //       : newSceneObj
+  //   )
+
+  //   return this.setState({
+  //     project: {
+  //       ...this.state.project,
+  //       scenes: newScenesArray
+  //     }
+  //   })
+  // }
 
   /**
    * THE CONVENTION OF OUR DATA STATE
@@ -339,129 +289,129 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
    * to the redo array, ready be re-set as current by any redo request
    */
   handleUndo = () => {
-    this.fabricCanvas?.discardActiveObject()
-    this.fabricCanvas?.renderAll()
-    const { activeSceneIndex } = this.state
-    const stateToAddToRedo: UndoHistoryEntry = this.activeSceneObject.undoHistory[this.activeSceneObject.undoHistory.length - 1]
-    const stateToUndoTo: UndoHistoryEntry = this.activeSceneObject.undoHistory[this.activeSceneObject.undoHistory.length - 2]
-    if (!stateToAddToRedo) return Modal.warn({ content: `You've got nothing to undo!` })
+    //   this.fabricCanvas?.discardActiveObject()
+    //   this.fabricCanvas?.renderAll()
+    //   const { activeSceneIndex } = this.state
+    //   const stateToAddToRedo: UndoHistoryEntry = this.activeSceneObject.undoHistory[this.activeSceneObject.undoHistory.length - 1]
+    //   const stateToUndoTo: UndoHistoryEntry = this.activeSceneObject.undoHistory[this.activeSceneObject.undoHistory.length - 2]
+    //   if (!stateToAddToRedo) return Modal.warn({ content: `You've got nothing to undo!` })
 
-    let newUndoHistoryArray = [...this.activeSceneObject.undoHistory]
-    let newRedoHistoryArray = [...this.activeSceneObject.redoHistory]
-    let useStateToSaturate: UndoHistoryEntry['objectStates']
-    if (stateToUndoTo === undefined) {
-      // Also pop current state to redo
-      newRedoHistoryArray.push(stateToAddToRedo)
-      newUndoHistoryArray.pop()
-      useStateToSaturate = this.activeSceneObject.activeSceneObjects as UndoHistoryEntry['objectStates']
-    } else {
-      // Here we will push the new states to redo as well as pop of the undo state to current
-      newRedoHistoryArray.push(stateToAddToRedo)
-      newUndoHistoryArray.pop()
-      useStateToSaturate = stateToUndoTo.objectStates
-    }
+    //   let newUndoHistoryArray = [...this.activeSceneObject.undoHistory]
+    //   let newRedoHistoryArray = [...this.activeSceneObject.redoHistory]
+    //   let useStateToSaturate: UndoHistoryEntry['objectStates']
+    //   if (stateToUndoTo === undefined) {
+    //     // Also pop current state to redo
+    //     newRedoHistoryArray.push(stateToAddToRedo)
+    //     newUndoHistoryArray.pop()
+    //     useStateToSaturate = this.activeSceneObject.activeSceneObjects as UndoHistoryEntry['objectStates']
+    //   } else {
+    //     // Here we will push the new states to redo as well as pop of the undo state to current
+    //     newRedoHistoryArray.push(stateToAddToRedo)
+    //     newUndoHistoryArray.pop()
+    //     useStateToSaturate = stateToUndoTo.objectStates
+    //   }
 
-    // console.log('handleUndo: ', { useStateToSaturate, newRedoHistoryArray, newUndoHistoryArray })
+    //   // console.log('handleUndo: ', { useStateToSaturate, newRedoHistoryArray, newUndoHistoryArray })
 
-    // Saturate fabric in memory state and commit changes to acrtivescene object to react state
-    // console.log(`🥶 SATURATION`)
-    const selectedGUIDsArray = stateToAddToRedo?.selectedGUIDs || []
-    const fabricObjects = this.fabricCanvas?.getObjects() as Array<CustomFabricObject>
-    let selectedObjects: Array<CustomFabricObject> = []
-    fabricObjects.forEach(obj => {
-      const settingsToSetTo = useStateToSaturate[obj.guid]
-      console.log({ settingsToSetTo })
-      obj.set(settingsToSetTo).setCoords()
-      if (selectedGUIDsArray.includes(obj.guid)) {
-        selectedObjects.push(obj)
-      }
-    })
+    //   // Saturate fabric in memory state and commit changes to acrtivescene object to react state
+    //   // console.log(`🥶 SATURATION`)
+    //   const selectedGUIDsArray = stateToAddToRedo?.selectedGUIDs || []
+    //   const fabricObjects = this.fabricCanvas?.getObjects() as Array<CustomFabricObject>
+    //   let selectedObjects: Array<CustomFabricObject> = []
+    //   fabricObjects.forEach(obj => {
+    //     const settingsToSetTo = useStateToSaturate[obj.guid]
+    //     console.log({ settingsToSetTo })
+    //     obj.set(settingsToSetTo).setCoords()
+    //     if (selectedGUIDsArray.includes(obj.guid)) {
+    //       selectedObjects.push(obj)
+    //     }
+    //   })
 
 
-    if (selectedObjects?.length) {
-      if (selectedGUIDsArray.length === 1) {
-        this.fabricCanvas?.setActiveObject(selectedObjects[0])
-      } else {
-        let newSelection = new fabric.ActiveSelection(selectedObjects, { canvas: this.fabricCanvas as fabric.Canvas })
-        this.fabricCanvas?.setActiveObject(newSelection)
-      }
-    }
-    this.fabricCanvas?.requestRenderAll()
+    //   if (selectedObjects?.length) {
+    //     if (selectedGUIDsArray.length === 1) {
+    //       this.fabricCanvas?.setActiveObject(selectedObjects[0])
+    //     } else {
+    //       let newSelection = new fabric.ActiveSelection(selectedObjects, { canvas: this.fabricCanvas as fabric.Canvas })
+    //       this.fabricCanvas?.setActiveObject(newSelection)
+    //     }
+    //   }
+    //   this.fabricCanvas?.requestRenderAll()
 
-    // Update the react state
-    const newSceneObject = {
-      ...this.activeSceneObject,
-      undoHistory: newUndoHistoryArray,
-      redoHistory: newRedoHistoryArray
-    }
-    return this.setState({
-      project: {
-        ...this.state.project,
-        scenes: this.state.project.scenes.map((sceneObj, currSceneIndex) => (
-          currSceneIndex !== activeSceneIndex ? sceneObj : newSceneObject
-        ))
-      }
-    })
+    //   // Update the react state
+    //   const newSceneObject = {
+    //     ...this.activeSceneObject,
+    //     undoHistory: newUndoHistoryArray,
+    //     redoHistory: newRedoHistoryArray
+    //   }
+    //   return this.setState({
+    //     project: {
+    //       ...this.state.project,
+    //       scenes: this.state.project.scenes.map((sceneObj, currSceneIndex) => (
+    //         currSceneIndex !== activeSceneIndex ? sceneObj : newSceneObject
+    //       ))
+    //     }
+    //   })
   }
 
   handleRedo = () => {
-    this.fabricCanvas?.discardActiveObject()
-    this.fabricCanvas?.renderAll()
-    const { activeSceneIndex } = this.state
-    if (!this.activeSceneObject.redoHistory.length) return Modal.warn({ content: 'You have nothing to redo' })
-    const stateToAddToUndo: UndoHistoryEntry = this.activeSceneObject.redoHistory[this.activeSceneObject.redoHistory.length - 1]
-    let newUndoHistoryArray = [...this.activeSceneObject.undoHistory]
-    let newRedoHistoryArray = [...this.activeSceneObject.redoHistory]
-    const stateToRedoTo = newRedoHistoryArray.pop()
+    //   this.fabricCanvas?.discardActiveObject()
+    //   this.fabricCanvas?.renderAll()
+    //   const { activeSceneIndex } = this.state
+    //   if (!this.activeSceneObject.redoHistory.length) return Modal.warn({ content: 'You have nothing to redo' })
+    //   const stateToAddToUndo: UndoHistoryEntry = this.activeSceneObject.redoHistory[this.activeSceneObject.redoHistory.length - 1]
+    //   let newUndoHistoryArray = [...this.activeSceneObject.undoHistory]
+    //   let newRedoHistoryArray = [...this.activeSceneObject.redoHistory]
+    //   const stateToRedoTo = newRedoHistoryArray.pop()
 
-    let useStateToSaturate: UndoHistoryEntry['objectStates']
-    if (stateToRedoTo === undefined) {
-      // Also pop current state to redo
-      newUndoHistoryArray.push(stateToAddToUndo)
-      useStateToSaturate = this.activeSceneObject.activeSceneObjects as UndoHistoryEntry['objectStates']
-    } else {
-      // Here we will push the new states to redo as well as pop of the undo state to current
-      newUndoHistoryArray.push(stateToAddToUndo)
-      useStateToSaturate = stateToRedoTo.objectStates
-    }
+    //   let useStateToSaturate: UndoHistoryEntry['objectStates']
+    //   if (stateToRedoTo === undefined) {
+    //     // Also pop current state to redo
+    //     newUndoHistoryArray.push(stateToAddToUndo)
+    //     useStateToSaturate = this.activeSceneObject.activeSceneObjects as UndoHistoryEntry['objectStates']
+    //   } else {
+    //     // Here we will push the new states to redo as well as pop of the undo state to current
+    //     newUndoHistoryArray.push(stateToAddToUndo)
+    //     useStateToSaturate = stateToRedoTo.objectStates
+    //   }
 
-    // Saturate fabric in memory state and commit changes to acrtivescene object to react state
-    // console.log(`🥶 SATURATION`)
-    const selectedGUIDsArray = stateToAddToUndo?.selectedGUIDs || []
-    const fabricObjects = this.fabricCanvas?.getObjects() as Array<CustomFabricObject>
-    let selectedObjects: Array<CustomFabricObject> = []
-    fabricObjects.forEach(obj => {
-      const settingsToSetTo = useStateToSaturate[obj.guid]
-      obj.set(settingsToSetTo).setCoords()
-      if (selectedGUIDsArray.includes(obj.guid)) {
-        selectedObjects.push(obj)
-      }
-    })
+    //   // Saturate fabric in memory state and commit changes to acrtivescene object to react state
+    //   // console.log(`🥶 SATURATION`)
+    //   const selectedGUIDsArray = stateToAddToUndo?.selectedGUIDs || []
+    //   const fabricObjects = this.fabricCanvas?.getObjects() as Array<CustomFabricObject>
+    //   let selectedObjects: Array<CustomFabricObject> = []
+    //   fabricObjects.forEach(obj => {
+    //     const settingsToSetTo = useStateToSaturate[obj.guid]
+    //     obj.set(settingsToSetTo).setCoords()
+    //     if (selectedGUIDsArray.includes(obj.guid)) {
+    //       selectedObjects.push(obj)
+    //     }
+    //   })
 
-    if (selectedObjects?.length) {
-      if (selectedGUIDsArray.length === 1) {
-        this.fabricCanvas?.setActiveObject(selectedObjects[0])
-      } else {
-        let newSelection = new fabric.ActiveSelection(selectedObjects, { canvas: this.fabricCanvas as fabric.Canvas })
-        this.fabricCanvas?.setActiveObject(newSelection)
-      }
-    }
-    this.fabricCanvas?.requestRenderAll()
+    //   if (selectedObjects?.length) {
+    //     if (selectedGUIDsArray.length === 1) {
+    //       this.fabricCanvas?.setActiveObject(selectedObjects[0])
+    //     } else {
+    //       let newSelection = new fabric.ActiveSelection(selectedObjects, { canvas: this.fabricCanvas as fabric.Canvas })
+    //       this.fabricCanvas?.setActiveObject(newSelection)
+    //     }
+    //   }
+    //   this.fabricCanvas?.requestRenderAll()
 
-    // Update the react state
-    const newSceneObject = {
-      ...this.activeSceneObject,
-      undoHistory: newUndoHistoryArray,
-      redoHistory: newRedoHistoryArray
-    }
-    return this.setState({
-      project: {
-        ...this.state.project,
-        scenes: this.state.project.scenes.map((sceneObj, currSceneIndex) => (
-          currSceneIndex !== activeSceneIndex ? sceneObj : newSceneObject
-        ))
-      }
-    })
+    //   // Update the react state
+    //   const newSceneObject = {
+    //     ...this.activeSceneObject,
+    //     undoHistory: newUndoHistoryArray,
+    //     redoHistory: newRedoHistoryArray
+    //   }
+    //   return this.setState({
+    //     project: {
+    //       ...this.state.project,
+    //       scenes: this.state.project.scenes.map((sceneObj, currSceneIndex) => (
+    //         currSceneIndex !== activeSceneIndex ? sceneObj : newSceneObject
+    //       ))
+    //     }
+    //   })
   }
 
   get activeSceneObject() {
@@ -475,13 +425,8 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     // Handle select single object
     this.fabricCanvas!
       .discardActiveObject()
-      .setActiveObject(liveObject)
+      .setActiveObject((liveObject as fabric.Object))
       .requestRenderAll()
-    // const sel = new fabric.ActiveSelection([liveObject], { canvas: this.fabricCanvas! })
-    // sel.setCoords()
-    // this.fabricCanvas!
-    //   .setActiveObject(sel)
-    //   .requestRenderAll()
   }
 
   handleSelectGroup = (liveGroupObject: CustomFabricObject) => {
@@ -500,107 +445,28 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       })
     }
     recursiveAdd(selectedGroupInfo.children)
-    const sel = new fabric.ActiveSelection([], { canvas: this.fabricCanvas! })
-    newSelectedObjects.forEach(obj => sel.addWithUpdate(obj))
+    const sel = new fabric.ActiveSelection([], { canvas: (this.fabricCanvas! as fabric.Canvas) })
+    newSelectedObjects.forEach(obj => sel.addWithUpdate((obj as fabric.Object)))
     sel.setCoords()
     this.fabricCanvas!
       .setActiveObject(sel)
       .requestRenderAll()
   }
 
-
-  handleGroupObjects = () => {
-    if (!this.fabricCanvas) return
-    const orderedSelectedGUIDs = Array.from(this.orderedSelectionGUIDs)
-    const orderedSelectedIndexs = orderedSelectedGUIDs.map(guid => this.liveObjectsDict[guid].treeIndex)
-    this.fabricCanvas
-      .groupSelectedByObjectIndexes(orderedSelectedIndexs)
-      .requestRenderAll()
-    console.log({ orderedSelectedGUIDs, orderedSelectedIndexs })
-    // TODO: Must update the zIndex (in memory array order)
-    // So that the group is created at the highest child zIndex
-    // and all the children are moved ABOVE that new group groupIndex in order
-    // if (!this?.fabricCanvas) return
-    // const selection: fabric.Object | fabric.ActiveSelection | undefined = this.fabricCanvas?.getActiveObject()
-    // if (selection?.type !== 'activeSelection') return Modal.warn({ content: 'GIVE ME A GROUPABLE' })
-
-    // if (selection instanceof fabric.ActiveSelection) {
-    //   const newGroupGUID = uuidv4() //GUID of new group
-    //   const selectionObjects = selection.getObjects() as Array<CustomFabricObject> // Currently selected objects
-    //   let objectGUIDsToAssignParent = new Set<string>() // All the GUIDs which will have this new group as parent
-
-    //   for (let obj of selectionObjects) {
-
-    //     // Add tallest parent to collection of GUIDs to assign new group as parent to
-    //     const tallestParent = this.recursivelyFindTallestParent(obj)
-    //     const tallestparentID = tallestParent.guid as string
-    //     objectGUIDsToAssignParent.add(tallestparentID)
-    //   }
-
-    //   //Convert to array for iteration
-    //   const objectGUIDsToAssignParentArray = Array.from(objectGUIDsToAssignParent)
-
-    //   // Assign new group as parent to each top-level child
-    //   for (const objectGUID of objectGUIDsToAssignParentArray) {
-    //     const obj = this.liveObjectsDict[objectGUID] as CustomFabricObject
-    //     obj.parentID = newGroupGUID
-    //   }
-
-    //   // Create new rect to signify group
-    //   const groupRect = new FakeGroup({
-    //     width: selection.width,
-    //     height: selection.height,
-    //     top: selection.top,
-    //     left: selection.left,
-    //   }) as fabric.Object
-    //   const activeGroupRect = groupRect as CustomFabricObject
-    //   activeGroupRect.set({
-    //     userSetName: 'Group',
-    //     guid: newGroupGUID,
-    //     members: objectGUIDsToAssignParentArray //List of objects to assignt this as parent to is same as list of children
-    //   })
-
-    //   this.liveObjectsDict[newGroupGUID] = activeGroupRect
-
-    //   this.fabricCanvas
-    //     .add(groupRect)
-    //     .renderAll()
-    //     .fire("object:modified", {
-    //       action: "group",
-    //       target: {
-    //         type: "group"
-    //       }
-    //     })
-    // }
-  }
-
   addText = () => {
     if (!this.fabricCanvas) return
-
-    const newGUID = uuidv4()
-    // const newTextBox = new fabric.Textbox('New text', {
+    const systemFontStack = `-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"`
     // @ts-ignore
     const newTextBox = new fabric.CTextBox('New text', {
-      fontFamily: 'Arial',
+      fontFamily: 'Helvetica',
       textAlign: 'center',
-      fontSize: 21,
+      fontSize: 29,
       fill: 'white',
       width: this.state.project.settings.dimensions.width * 0.96,
       top: 0,
       left: this.state.project.settings.dimensions.width * 0.02
     })
-    // @ts-ignore
-    newTextBox.guid = newGUID
-    // @ts-ignore
-    newTextBox.userSetName = 'New text'
-    // @ts-ignore
-    newTextBox.parentID = null
-    // @ts-ignore
-    this.liveObjectsDict[newGUID] = newTextBox
-    this.fabricCanvas.add(newTextBox)
-    this.fabricCanvas.updatePaths()
-    this.fabricCanvas?.setActiveObject(newTextBox)
-      .requestRenderAll()
+    this.props.handleAddObject(newTextBox)
   }
 
   addSVG = () => {
@@ -608,35 +474,70 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     if (!svgString) return Modal.warn({ content: 'No svg string provided' })
     try {
       fabric.loadSVGFromString(svgString, (results, options) => {
-        let groupedObjects: Array<CustomFabricObject> = []
         const groupObject = this.fabricCanvas!.createNewGroupAtIndex()
         groupObject.userSetName = 'SVG Group'
-        this.fabricCanvas!.add(groupObject)
+        this.props.handleAddObject(groupObject)
         results.forEach((obj) => {
-          const guid = uuidv4()
-          // @ts-ignore
-          obj.guid = guid
-          // @ts-ignore
-          obj.parentID = groupObject.guid
-          // @ts-ignore
-          obj.userSetName = obj.type
-          // @ts-ignore
-          this.liveObjectsDict[guid] = obj
-          this.fabricCanvas?.add(obj)
-          // @ts-ignore
-          // groupedObjects.push(obj)
+          this.props.handleAddObject((obj as CustomFabricObject), groupObject.guid)
         })
-        // const group = new fabric.Group(groupedObjects, {
-        //   top: 0,
-        //   left: 0,
-        //   // @ts-ignore
-        //   guid: groupObject.guid
-        // })
-        // this.fabricCanvas?.add(group)
       })
     } catch (e: any) {
       return Modal.warn({ content: `Error loading svg: ${e.message}` })
     }
+  }
+
+  addLabel = () => {
+    // @ts-ignore
+    const label = new fabric.LabelElement('Liver', {
+      guid: uuidv4(),
+      parentID: null,
+      structurePath: [],
+      width: 200,
+      fontSize: 29,
+      fontFamily: 'Arial',
+      fill: 'white',
+      userSetName: 'Label'
+    })
+    this.props.handleAddObject(label)
+    // this.liveObjectsDict[label.guid] = label
+    // this.fabricCanvas?.add(label)
+    // this.fabricCanvas?.updatePaths()
+    // this.fabricCanvas?.requestRenderAll()
+  }
+
+  handleWindowImageDrop = (e: DragEvent) => {
+    console.log('handleWindowImageDrop', { e })
+    e.preventDefault()
+    e.stopPropagation()
+    const dt = e.dataTransfer
+    const files = dt?.files
+    if (files) {
+      const filesArray = Array.from(files)
+      filesArray.forEach(file => {
+        let reader = new FileReader()
+        reader.readAsDataURL(file)
+        reader.onloadend = () => {
+          let img = document.createElement('img')
+          //@ts-ignore
+          img.src = reader.result
+          img.onload = () => {
+            const image = new fabric.Image(img, {
+              top: 0,
+              left: 0,// @ts-ignore
+              guid: uuidv4(),// @ts-ignore,
+              parentID: null,// @ts-ignore
+              userSetName: 'Image',
+              width: img.naturalWidth,
+              height: img.naturalHeight
+            })
+            this.props.handleAddObject(image)
+          }
+        }
+      })
+    }
+  }
+
+  deleteObject = () => {
 
   }
 
@@ -644,16 +545,21 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     const contextValue: EditorContextTypes = {
       fabricCanvas: this.fabricCanvas,
       state: this.state,
+      project: this.props.project,
+      activeSceneIndexs: this.props.activeSceneIndexs,
+      setActiveSceneIndex: this.props.setActiveSceneIndex,
       setOnFabricObject: this.setOnFabricObject,
       setOnGlobalObject: this.setOnGlobalObject,
-      setActiveSceneIndex: this.setActiveSceneIndex,
-      handleGroupObjects: this.handleGroupObjects,
+      handleGroupObjects: this.props.handleGroupObjects,
       handleUndo: this.handleUndo,
       handleRedo: this.handleRedo,
       liveObjectsDict: this.liveObjectsDict,
+      liveObjectScenesReferences: this.props.liveObjectScenesReferences,
       handleSelectElementByGUID: this.handleSelectElementByGUID,
       addText: this.addText,
       addSVG: this.addSVG,
+      addLabel: this.addLabel,
+      handleOpenProjectPreview: this.props.handleOpenProjectPreview
     };
     return (
       <div>
@@ -663,13 +569,16 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
             style={{ width: "100vw", height: "100vh" }}
           >
             <ReflexElement minSize={100} maxSize={250} size={180}>
-              <ScenesPane />
+              <ScenesPane
+                handleDuplicateScene={this.props.handleDuplicateScene}
+              />
             </ReflexElement>
             <ReflexSplitter />
             <ReflexElement>
               <ReflexContainer orientation="horizontal">
                 <ReflexElement size={50}>
-                  <ToolbarContainer />
+                  <ToolbarContainer
+                  />
                 </ReflexElement>
                 <ReflexElement>
                   <ReflexContainer orientation="vertical">
@@ -796,3 +705,87 @@ export function findItem(items: TreeItem[], itemId: string) {
       //   this.fabricCanvas?.setActiveObject(newActiveSelection)
       // }
       // this.fabricCanvas?.renderAll()
+
+
+      // objectsToSelectFromGUIDs = (GUIDs: string | Array<string>) => {
+      //   if (typeof (GUIDs) === "string") {
+      //     const GUID = GUIDs
+      //     const selectedObject = this.liveObjectsDict[GUID] as CustomFabricObject
+
+      //     let allChildrenAndSelection = new Set<CustomFabricObject>()
+      //     if (selectedObject?.parentID) {
+      //       const tallestParent = this.recursivelyFindTallestParent(selectedObject)
+      //       const recursivelyFindAllChildren = (parentObject: CustomFabricObject) => {
+      //         allChildrenAndSelection.add(parentObject)
+      //         if (!parentObject?.members) return
+      //         for (const childObjectGUID of parentObject.members) {
+      //           const childObject = this.liveObjectsDict[childObjectGUID] as CustomFabricObject
+      //           recursivelyFindAllChildren(childObject)
+      //         }
+      //       }
+      //       recursivelyFindAllChildren(tallestParent)
+      //     }
+
+      //     const allChildrenAndSelectionArray = Array.from(allChildrenAndSelection)
+      //     return allChildrenAndSelectionArray
+      //   } else {
+
+      //   }
+
+      // }
+
+
+    // So that the group is created at the highest child zIndex
+    // and all the children are moved ABOVE that new group groupIndex in order
+    // if (!this?.fabricCanvas) return
+    // const selection: fabric.Object | fabric.ActiveSelection | undefined = this.fabricCanvas?.getActiveObject()
+    // if (selection?.type !== 'activeSelection') return Modal.warn({ content: 'GIVE ME A GROUPABLE' })
+
+    // if (selection instanceof fabric.ActiveSelection) {
+    //   const newGroupGUID = uuidv4() //GUID of new group
+    //   const selectionObjects = selection.getObjects() as Array<CustomFabricObject> // Currently selected objects
+    //   let objectGUIDsToAssignParent = new Set<string>() // All the GUIDs which will have this new group as parent
+
+    //   for (let obj of selectionObjects) {
+
+    //     // Add tallest parent to collection of GUIDs to assign new group as parent to
+    //     const tallestParent = this.recursivelyFindTallestParent(obj)
+    //     const tallestparentID = tallestParent.guid as string
+    //     objectGUIDsToAssignParent.add(tallestparentID)
+    //   }
+
+    //   //Convert to array for iteration
+    //   const objectGUIDsToAssignParentArray = Array.from(objectGUIDsToAssignParent)
+
+    //   // Assign new group as parent to each top-level child
+    //   for (const objectGUID of objectGUIDsToAssignParentArray) {
+    //     const obj = this.liveObjectsDict[objectGUID] as CustomFabricObject
+    //     obj.parentID = newGroupGUID
+    //   }
+
+    //   // Create new rect to signify group
+    //   const groupRect = new FakeGroup({
+    //     width: selection.width,
+    //     height: selection.height,
+    //     top: selection.top,
+    //     left: selection.left,
+    //   }) as fabric.Object
+    //   const activeGroupRect = groupRect as CustomFabricObject
+    //   activeGroupRect.set({
+    //     userSetName: 'Group',
+    //     guid: newGroupGUID,
+    //     members: objectGUIDsToAssignParentArray //List of objects to assignt this as parent to is same as list of children
+    //   })
+
+    //   this.liveObjectsDict[newGroupGUID] = activeGroupRect
+
+    //   this.fabricCanvas
+    //     .add(groupRect)
+    //     .renderAll()
+    //     .fire("object:modified", {
+    //       action: "group",
+    //       target: {
+    //         type: "group"
+    //       }
+    //     })
+    // }
