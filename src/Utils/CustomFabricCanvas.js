@@ -1,4 +1,3 @@
-// @ts-ignore file
 import { v4 as uuidv4 } from 'uuid';
 import { fabric } from 'fabric'
 import { FakeGroup } from './SetFabricDefaults'
@@ -12,11 +11,15 @@ class CustomFabricCanvas extends fabric.Canvas {
   }
 
   existingSelectionIsCustomCreated = false
-<<<<<<< HEAD
   familyObjectsRemovedFromSelection = false
   _onMouseDown(e) {
     console.log("onmousedown custom", e)
-    let target = this.findTarget(e, true)
+    let target
+    if(e?.shiftKey) { // On shift click we ignore active selections in findTarget so we get actual element clicked
+      target = this.findTarget(e, true)
+    } else {
+      target = this.findTarget(e, false)
+    }
 
     //When shift key isnt held we just select all objects in the family
     if (target && target.parentID && !e?.shiftKey) {
@@ -28,9 +31,10 @@ class CustomFabricCanvas extends fabric.Canvas {
       // setting this.existingSelectionIsCustomCreated = true here -will make all but the target movable
       this.renderAll()
     }
-    else if (e?.shiftKey) {
-      if (target && target.parentID) {
+    else if (target && target.parentID && e?.shiftKey) {
         const currentSelection = this.getActiveObject()
+
+        // if we have shift clicked and selected an object with a family that's not in our current selection add it
         if (currentSelection.type === "activeSelection" && !currentSelection.contains(target)) {
           const allObjectsInFamily = this.objectsInFamilyOfGUID(target.guid)
           const newSelectedObjects = [...currentSelection.getObjects(), ...allObjectsInFamily]
@@ -40,7 +44,7 @@ class CustomFabricCanvas extends fabric.Canvas {
           //this.existingSelectionIsCustomCreated = true
           this.renderAll()
 
-          // if we're shift clicked and select an object with a family we deselect the whole family
+          // if we have shift clicked and select an object with a family in our current selection filter it out of our selection
         } else if (currentSelection.type === "activeSelection" && currentSelection.contains(target)) {
           const allObjectsInFamily = this.objectsInFamilyOfGUID(target.guid)
           const newSelectedObjects = currentSelection.getObjects().filter(obj => !allObjectsInFamily.includes(obj))
@@ -51,7 +55,6 @@ class CustomFabricCanvas extends fabric.Canvas {
           this.familyObjectsRemovedFromSelection = true
           this.renderAll()
         }
-      }
     }
     super._onMouseDown(e)
   }
@@ -82,14 +85,6 @@ class CustomFabricCanvas extends fabric.Canvas {
       this.familyObjectsRemovedFromSelection = false
     }
   }
-=======
-  // _onMouseDown(e) {
-  //   // console.log("onmousedown custom", e)
-  //   const target = this.findTarget(e, false)
-  //   if (target && target?.parentID) {
-  //     // this.handleSelectParentGroupBeforeMouseDown(target)
-  //     if (e?.shiftKey) {
->>>>>>> 0f74dafed82856a37c7f4ee95ae9c15215cef86a
 
   objectsInFamilyOfGUID(GUIDOrGUIDs) {
     //If it's a single string normalise to an array of GUIDs, otherwise use user-supplied array of string
@@ -117,6 +112,7 @@ class CustomFabricCanvas extends fabric.Canvas {
     const allChildrenAndSelectionArray = Array.from(allChildrenAndSelection)
     return allChildrenAndSelectionArray
   }
+
 
   updatePaths() {
     dl('updatePaths')
