@@ -25,8 +25,9 @@ function flatMapFabricSceneState(newFabricState: any) {
 }
 
 function normalizeAllObjectCoords(target: fabric.ActiveSelection | fabric.Object, action: string) {
+  console.log('normalizeAllObjectCoords')
   const isSelection = target?.type === "activeSelection"
-
+  if (isSelection) return
   // ------------------------------------------------------------------------
   // Scale width/height/radius according to scale and reset scale to 1
   // Reset top and left according to rescaled position without active selection
@@ -63,7 +64,7 @@ function normalizeAllObjectCoords(target: fabric.ActiveSelection | fabric.Object
           let newSettings = {} as fabric.IObjectOptions
 
           switch (obj.type) {
-            case "rect":
+            case "CRect":
               newSettings = {
                 width: Math.round((obj?.width || 1) * newScaleX) || 1,
                 height: Math.round((obj?.height || 1) * newScaleY) || 1,
@@ -91,6 +92,7 @@ function normalizeAllObjectCoords(target: fabric.ActiveSelection | fabric.Object
     default:
       break
   }
+  console.log(target.width)
 }
 
 function saturateFabricCanvasFromFlatMapSceneState(fabricCanvas: fabric.Canvas, flatMap: ProjectDataTypes['globalObjects']) {

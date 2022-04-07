@@ -1,10 +1,13 @@
 const customAttributesToIncludeInFabricCanvasToObject: Array<string> = [
-    'uniqueGlobalId',
+    'guid',
     'userSetName',
     'firstOccurrenceIndex',
     'objectIndex',
     'members',
-    'parentGUID',
+    'parentID',
+    'structurePath',
+    'treeIndex',
+    'topLevelIndex',
     'widthEquation',
     'heightEquation'
 ]

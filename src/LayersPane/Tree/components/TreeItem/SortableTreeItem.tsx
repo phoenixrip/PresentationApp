@@ -14,7 +14,6 @@ const animateLayoutChanges: AnimateLayoutChanges = ({ isSorting, wasDragging }) 
   isSorting || wasDragging ? false : true;
 
 export function SortableTreeItem({ id, depth, ...props }: Props) {
-  // console.log({ liveObject })
   const {
     attributes,
     isDragging,

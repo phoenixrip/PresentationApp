@@ -110,7 +110,7 @@ class CanvasPane extends Component<CanvasPanePropsTypes, CanvasPaneStateTypes> {
     fabricCanvas.on('object:scaling', (event: any) => {
       const { transform } = event
       const { target } = transform
-      if (target?.type === 'group') return
+      if (target?.type !== 'CRect') return
       const targetWidth = target.width * target.scaleX;
       const targetHeight = target.height * target.scaleY;
 
@@ -181,34 +181,34 @@ class CanvasPane extends Component<CanvasPanePropsTypes, CanvasPaneStateTypes> {
     })
 
     // Alt key canvas pan
-    fabricCanvas.on('mouse:down', function (this: any, opt) {
-      var evt = opt.e;
-      if (evt.altKey === true) {
-        this.isDragging = true;
-        this.selection = false;
-        this.lastPosX = evt.clientX;
-        this.lastPosY = evt.clientY;
-      }
-    });
-    fabricCanvas.on('mouse:move', function (this: any, opt) {
-      if (this.isDragging) {
-        var e = opt.e;
-        var vpt = this.viewportTransform;
-        vpt[4] += e.clientX - this.lastPosX;
-        vpt[5] += e.clientY - this.lastPosY;
-        this.requestRenderAll();
-        this.lastPosX = e.clientX;
-        this.lastPosY = e.clientY;
-        fireLocalTick()
-      }
-    });
-    fabricCanvas.on('mouse:up', function (this: any, opt) {
-      // on mouse up we want to recalculate new interaction
-      // for all objects, so we call setViewportTransform
-      this.setViewportTransform(this.viewportTransform);
-      this.isDragging = false;
-      this.selection = true;
-    });
+    // fabricCanvas.on('mouse:down', function (this: any, opt) {
+    //   var evt = opt.e;
+    //   if (evt.altKey === true) {
+    //     this.isDragging = true;
+    //     this.selection = false;
+    //     this.lastPosX = evt.clientX;
+    //     this.lastPosY = evt.clientY;
+    //   }
+    // });
+    // fabricCanvas.on('mouse:move', function (this: any, opt) {
+    //   if (this.isDragging) {
+    //     var e = opt.e;
+    //     var vpt = this.viewportTransform;
+    //     vpt[4] += e.clientX - this.lastPosX;
+    //     vpt[5] += e.clientY - this.lastPosY;
+    //     this.requestRenderAll();
+    //     this.lastPosX = e.clientX;
+    //     this.lastPosY = e.clientY;
+    //     fireLocalTick()
+    //   }
+    // });
+    // fabricCanvas.on('mouse:up', function (this: any, opt) {
+    //   // on mouse up we want to recalculate new interaction
+    //   // for all objects, so we call setViewportTransform
+    //   this.setViewportTransform(this.viewportTransform);
+    //   this.isDragging = false;
+    //   this.selection = true;
+    // });
   }
   render() {
     const totalLines = 200
@@ -232,6 +232,25 @@ class CanvasPane extends Component<CanvasPanePropsTypes, CanvasPaneStateTypes> {
         <canvas ref={(c) => (this.domCanvas = c)} />
         <div className={c.svgOverlayContainer}>
           <svg width={this.props.dimensions.width} height={this.props.dimensions.height}>
+            <defs>
+              <mask id='clipper'>
+                <rect
+                  width='100%'
+                  height='100%'
+                  fill='white' />
+                <rect
+                  transform={`matrix(${useTransformMatrix})`}
+                  width={this.context.state.project.settings.dimensions.width}
+                  height={this.context.state.project.settings.dimensions.height}
+                  fill='black'
+                />
+              </mask>
+            </defs>
+            <rect
+              mask="url(#clipper)"
+              width='100%'
+              height='100%'
+              fill='rgba(0, 0, 0, 0.3)' />
             <g transform={`matrix(${useTransformMatrix})`}>
               {
                 linesArray

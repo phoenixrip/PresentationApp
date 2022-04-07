@@ -1,4 +1,7 @@
-interface CustomFabricObject extends fabric.Object {
+import { Gradient, IObjectOptions, Pattern } from "fabric/fabric-impl";
+
+
+interface OurCustomFabricOptions {
   guid: string,
   userSetName: string,
   firstOccurrenceIndex?: number,
@@ -13,14 +16,27 @@ interface CustomFabricObject extends fabric.Object {
   structurePath?: Array<string>,
   text?: string
   widthEquation?: string,
-  heightEquation?: string
+  heightEquation?: string,
+  fill?: string | Pattern | Gradient | Array<string> | undefined,
 }
 
-interface CustomFabricCircle extends CustomFabricObject, fabric.Circle { }
-interface CustomFabricGroup extends CustomFabricObject, fabric.Group { }
+interface CustomFabricOptions extends SimpleSpread<IObjectOptions, OurCustomFabricOptions> { }
+
+type FabricObjectWithoutSet = Exclude<fabric.Object, 'set'>
+interface CustomFabricObject extends SimpleSpread<CustomFabricOptions, FabricObjectWithoutSet> {
+  // set<K extends keyof CustomFabricOptions>(key: K, value: CustomFabricOptions[K] | ((value: CustomFabricOptions[K]) => CustomFabricOptions[K])): this;
+  set(options: Partial<CustomFabricOptions>): this
+}
+
+type SimpleSpread<L, R> = R & Pick<L, Exclude<keyof L, keyof R>>;
+
+interface CustomFabricCircle extends SimpleSpread<CustomFabricObject, fabric.Circle> { }
+interface CustomFabricGroup extends SimpleSpread<CustomFabricObject, fabric.Group> { }
 
 export type {
   CustomFabricObject,
   CustomFabricCircle,
-  CustomFabricGroup
+  CustomFabricGroup,
+  SimpleSpread,
+  CustomFabricOptions
 }

@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { fabric } from 'fabric'
 import { FakeGroup } from './SetFabricDefaults'
 
+const dl = (args, ...rest) => console.log(args, ...rest)
 class CustomFabricCanvas extends fabric.Canvas {
   liveObjectsDict = {}
   constructor(canvas, options) {
@@ -88,11 +89,11 @@ class CustomFabricCanvas extends fabric.Canvas {
     }
   }
   updatePaths() {
+    dl('updatePaths')
     let currentPath = new Set()
     let currentTopLevelIndex = 0
     this._objects.forEach(
       (obj, i) => {
-        console.log({ obj })
         if (!obj.parentID) {
           currentPath.clear()
           currentTopLevelIndex = i
@@ -116,12 +117,12 @@ class CustomFabricCanvas extends fabric.Canvas {
     })
     console.log(string)
   }
-  groupSelectedByObjectIndexes(selectedIndexsArray) {
+  groupSelectedByObjectIndexes(selectedIndexsArray, createdAtSceneIndex) {
     const insertAtIndex = selectedIndexsArray[0]
     let selectedIndexsObj = selectedIndexsArray.reduce((acc, curr) => {
       return { ...acc, [curr]: true }
     }, {})
-    const newGroup = this.createNewGroupAtIndex(insertAtIndex)
+    const newGroup = this.createNewGroupAtIndex(insertAtIndex, createdAtSceneIndex)
     let beforeInsertionIndex = []
     let atInsertionIndex = []
     let afterInserstionIndex = []
@@ -153,15 +154,16 @@ class CustomFabricCanvas extends fabric.Canvas {
     // this.fire('object:modified', { target: { type: 'layoutStructure' } })
     return this
   }
-  createNewGroupAtIndex = (index = null) => {
+  createNewGroupAtIndex = (index = null, createdAtSceneIndex) => {
     const useIndex = index || this._objects.length - 1
-    const objCurrentlyAtIndex = this._objects[useIndex]
+    const objCurrentlyAtIndex = this._objects[useIndex] ?? {}
     const newGUID = uuidv4()
     const newGroup = new fabric.FakeGroup({
       guid: newGUID,
-      parentID: objCurrentlyAtIndex.parentID,
-      structurePath: objCurrentlyAtIndex.structurePath,
-      userSetName: 'Group'
+      parentID: objCurrentlyAtIndex?.parentID,
+      structurePath: objCurrentlyAtIndex?.structurePath || [newGUID],
+      userSetName: 'Group',
+      firstOccurrenceIndex: createdAtSceneIndex
     })
     this.liveObjectsDict[newGUID] = newGroup
     return newGroup
@@ -171,9 +173,23 @@ class CustomFabricCanvas extends fabric.Canvas {
       this.liveObjectsDict[obj.guid].treeIndex = newTreeIndex
       this.liveObjectsDict[obj.guid].parentID = obj.parentID
     })
+    return this.handleReorderObjectArrayToObjectTreeIndexOrder()
+  }
+  handleReorderObjectArrayToObjectTreeIndexOrder = () => {
     this._objects = this._objects.sort((objA, objB) => objA.treeIndex - objB.treeIndex)
     this.updatePaths()
-    this.requestRenderAll()
+    return this
+  }
+  /**
+   * @returns {Record<string, import('../Types/CustomFabricTypes').CustomFabricOptions>}
+   */
+  getSaveableSceneState = () => {
+    console.log('getSaveableState')
+    let newSceneState = {}
+    this._objects.forEach(obj => {
+      newSceneState[obj.guid] = obj.getAnimatableValues()
+    })
+    return newSceneState
   }
 }
 

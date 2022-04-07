@@ -45,6 +45,30 @@ const InspectorContainer = (props: Object) => {
             <Panel header="Shadow" key="5">
               <ShadowControlPanel />
             </Panel>
+            {
+              selection.type === 'image' &&
+              <Panel header="Image" key="6">
+                Image settings
+                <Button onClick={e => {
+                  //@ts-ignore
+                  var filter = new fabric.Image.filters.Blur({
+                    blur: 0.5
+                  });
+                  selection.filters.push(filter)
+                  selection.applyFilters()
+                  // var filter = new fabric.Image.filters.Convolute({
+                  //   matrix: [1 / 9, 1 / 9, 1 / 9,
+                  //   1 / 9, 1 / 9, 1 / 9,
+                  //   1 / 9, 1 / 9, 1 / 9]
+                  // });
+                  // selection.filters.push(filter)
+                  // selection.applyFilters()
+                  context.fabricCanvas?.requestRenderAll()
+                }}>
+                  BLUR
+                </Button>
+              </Panel>
+            }
           </Collapse>
 
           {/* <pre>{selection && JSON.stringify(selection, null, 4)}</pre> */}

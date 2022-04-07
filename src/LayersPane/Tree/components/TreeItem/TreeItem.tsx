@@ -1,7 +1,7 @@
 import React, { forwardRef, HTMLAttributes, useContext } from 'react';
 import classNames from 'classnames';
 // import { UseFaIcon } from '../Utils/UseFaIcon'
-import { faBezierCurve, faCircle, faDrawPolygon, faFileText, faFolder, faFont, faLayerGroup, faSlash, faTextWidth, faVectorSquare } from '@fortawesome/free-solid-svg-icons'
+import { faBezierCurve, faCircle, faDrawPolygon, faFileText, faFolder, faFont, faImage, faLayerGroup, faSlash, faTags, faTextWidth, faVectorSquare } from '@fortawesome/free-solid-svg-icons'
 // import { faFolder, faVectorSquare } from '@fortawesome/free'
 import { Action, Handle, Remove } from './Item/';
 import styles from './TreeItem.module.css';
@@ -16,12 +16,16 @@ const objIcons: ObjIconTypes = {
   'FakeGroup': faFolder,
   'group': faLayerGroup,
   'textbox': faFont,
+  'text': faFont,
   'CTextBox': faFont,
   'path': faBezierCurve,
   'ellipse': faCircle,
   'circle': faCircle,
   'line': faSlash,
-  'polyline': faDrawPolygon
+  'polyline': faDrawPolygon,
+  'polygon': faDrawPolygon,
+  'LabelElement': faTags,
+  'image': faImage
 }
 
 export interface Props extends HTMLAttributes<HTMLLIElement> {
@@ -68,7 +72,14 @@ export const TreeItem = forwardRef<HTMLDivElement, Props>(
     const liveObject = context.liveObjectsDict[guid]
     const objectTypeKey = liveObject?.type || 'default'
     const isSelected = context.state.selectedGUIDsDict[guid]
-    // console.log({ liveObject })
+
+    // const isActiveInPreviousScene = context.liveObjectScenesReferences[guid].has(context.activeSceneIndexs[0] - 1)
+    // const isActiveInNextScene = context.liveObjectScenesReferences[guid].has(context.activeSceneIndexs[0] + 1)
+    // const isLastScreen =
+    //   console.log({
+    //     isActiveInPreviousScene,
+    //     isActiveInNextScene
+    //   })
     function handleMouseDown(e: any) {
       if (e.shiftKey) {
         console.log('shift click')
