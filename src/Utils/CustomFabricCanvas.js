@@ -1,4 +1,3 @@
-// @ts-ignore file
 import { v4 as uuidv4 } from 'uuid';
 import { fabric } from 'fabric'
 import { FakeGroup } from './SetFabricDefaults'
@@ -11,48 +10,83 @@ class CustomFabricCanvas extends fabric.Canvas {
     super(canvas, options)
     console.log('custom fabric canvas constructor', this._objects)
   }
+
   existingSelectionIsCustomCreated = false
-  // _onMouseDown(e) {
-  //   // console.log("onmousedown custom", e)
-  //   const target = this.findTarget(e, false)
-  //   if (target && target?.parentID) {
-  //     // this.handleSelectParentGroupBeforeMouseDown(target)
-  //     if (e?.shiftKey) {
+  familyObjectsRemovedFromSelection = false
+  _onMouseDown(e) {
+    console.log("onmousedown custom", e)
+    let target
+    if(e?.shiftKey) { // On shift click we ignore active selections in findTarget so we get actual element clicked
+      target = this.findTarget(e, true)
+    } else {
+      target = this.findTarget(e, false)
+    }
 
-  //     } else {
+    //When shift key isnt held we just select all objects in the family
+    if (target && target.parentID && !e?.shiftKey) {
+      const allObjectsInFamily = this.objectsInFamilyOfGUID(target.guid)
+      const newSelectionObjects = [...allObjectsInFamily]
+      this._discardActiveObject()
+      const newActiveSelection = new fabric.ActiveSelection(newSelectionObjects, { canvas: this })
+      this._setActiveObject(newActiveSelection)
+      // setting this.existingSelectionIsCustomCreated = true here -will make all but the target movable
+      this.renderAll()
+    }
+    else if (target && target.parentID && e?.shiftKey) {
+        const currentSelection = this.getActiveObject()
 
-  //       if (target?.parentID) {
-  //         const allObjectsInFamily = this.objectsInFamilyOfGUID(target.guid)
-  //         const newSelection = new fabric.ActiveSelection(allObjectsInFamily, { canvas: this })
-  //         this._setActiveObject(newSelection)
-  //         this.existingSelectionIsCustomCreated = true
-  //         this.renderAll()
-  //       }
-  //     }
-  //   }
-  //   super._onMouseDown(e)
-  // }
-  // _onMouseUp(e) {
-  //   super._onMouseUp(e)
-  //   if (!this.existingSelctionIsCustomCreated) {
-  //     const selection = this.getActiveObject()
-  //     if (selection) { // if there's no selection this is null so don't run code below
+        // if we have shift clicked and selected an object with a family that's not in our current selection add it
+        if (currentSelection.type === "activeSelection" && !currentSelection.contains(target)) {
+          const allObjectsInFamily = this.objectsInFamilyOfGUID(target.guid)
+          const newSelectedObjects = [...currentSelection.getObjects(), ...allObjectsInFamily]
+          this._discardActiveObject()
+          const newActiveSelection = new fabric.ActiveSelection(newSelectedObjects, { canvas: this })
+          this._setActiveObject(newActiveSelection)
+          //this.existingSelectionIsCustomCreated = true
+          this.renderAll()
 
-  //       if (selection.type === "activeSelection") {
-  //         let GUIDsToCheck = []
-  //         for (const object of selection.getObjects()) {
-  //           GUIDsToCheck.push(object.guid)
-  //         }
-  //         const objectsInFamily = this.objectsInFamilyOfGUID(GUIDsToCheck)
-  //         this._discardActiveObject()
-  //         const newActiveSelection = new fabric.ActiveSelection(objectsInFamily, { canvas: this })
-  //         this._setActiveObject(newActiveSelection)
-  //         this.renderAll()
-  //       }
-  //     }
-  //   }
-  //   this.existingSelectionIsCustomCreated = false // reset to default 
-  // }
+          // if we have shift clicked and select an object with a family in our current selection filter it out of our selection
+        } else if (currentSelection.type === "activeSelection" && currentSelection.contains(target)) {
+          const allObjectsInFamily = this.objectsInFamilyOfGUID(target.guid)
+          const newSelectedObjects = currentSelection.getObjects().filter(obj => !allObjectsInFamily.includes(obj))
+          this._discardActiveObject()
+          const newActiveSelection = new fabric.ActiveSelection(newSelectedObjects, { canvas: this })
+          this._setActiveObject(newActiveSelection)
+          this.existingSelectionIsCustomCreated = true
+          this.familyObjectsRemovedFromSelection = true
+          this.renderAll()
+        }
+    }
+    super._onMouseDown(e)
+  }
+
+  _onMouseUp(e) {
+    super._onMouseUp(e)
+    if (!this.existingSelectionIsCustomCreated) {
+      const selection = this.getActiveObject()
+      if (selection && selection.type === "activeSelection") {
+        let GUIDsToCheck = []
+        for (const object of selection.getObjects()) {
+          GUIDsToCheck.push(object.guid)
+        }
+        const objectsInFamily = this.objectsInFamilyOfGUID(GUIDsToCheck)
+        this._discardActiveObject()
+        const newActiveSelection = new fabric.ActiveSelection(objectsInFamily, { canvas: this })
+        this._setActiveObject(newActiveSelection)
+        this.renderAll()
+      }
+    }
+    this.existingSelectionIsCustomCreated = false // reset to default 
+
+    //Fabric re-adds selected object to selection on shift-click after we remove the whole family. Remove that single element again here
+    if (this.familyObjectsRemovedFromSelection) {
+      const target = this.findTarget(e, true)
+      const currentSelection = this.getActiveObject()
+      currentSelection.removeWithUpdate(target)
+      this.familyObjectsRemovedFromSelection = false
+    }
+  }
+
   objectsInFamilyOfGUID(GUIDOrGUIDs) {
     //If it's a single string normalise to an array of GUIDs, otherwise use user-supplied array of string
     let GUIDs
@@ -61,34 +95,26 @@ class CustomFabricCanvas extends fabric.Canvas {
 
     let allChildrenAndSelection = new Set()
     for (const GUID of GUIDs) {
-      const selectedObject = this.liveObjectsDict[GUID]
+      const fabricObject = this.liveObjectsDict[GUID]
+      if (fabricObject?.parentID) {
+        const topLevelIndex = fabricObject.topLevelIndex
+        const tallestParent = this._objects[topLevelIndex]
 
-      if (selectedObject?.parentID) {
-        const tallestParent = this.recursivelyFindTallestParent(selectedObject)
-        const recursivelyFindAllChildren = (parentObject) => {
-          allChildrenAndSelection.add(parentObject)
-          if (!parentObject?.members) return
-          for (const childObjectGUID of parentObject.members) {
-            const childObject = this.liveObjectsDict[childObjectGUID]
-            recursivelyFindAllChildren(childObject)
+        for (let i = topLevelIndex + 1; i < this._objects.length; i++) {
+          if (this._objects[i].structurePath.length <= tallestParent.structurePath.length) break
+          if (this._objects[i].type !== "FakeGroup") {
+            allChildrenAndSelection.add(this._objects[i])
           }
         }
-        recursivelyFindAllChildren(tallestParent)
       } else {
-        allChildrenAndSelection.add(selectedObject)
+        allChildrenAndSelection.add(fabricObject)
       }
     }
     const allChildrenAndSelectionArray = Array.from(allChildrenAndSelection)
     return allChildrenAndSelectionArray
   }
-  recursivelyFindTallestParent(obj) {
-    if (obj?.parentID) {
-      const parentObject = this.liveObjectsDict[obj.parentID]
-      return this.recursivelyFindTallestParent(parentObject)
-    } else {
-      return obj
-    }
-  }
+
+
   updatePaths() {
     dl('updatePaths')
     let currentPath = new Set()
