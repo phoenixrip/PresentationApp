@@ -8,6 +8,7 @@ import { customAttributesToIncludeInFabricCanvasToObject } from "./Utils/consts"
 import { flatMapFabricSceneState } from "./Utils/flatMapFabricState";
 import { RenderEngine } from "./RenderEngine/RenderEngine";
 import { fabric } from 'fabric'
+import { greatestCommonDenominator } from "./Utils/greatestCommonDenominator";
 
 interface Props {
   project: ProjectDataTypes
@@ -88,19 +89,38 @@ class ProjectController extends Component<Props, State> {
 
   handleKeyDown = (e: KeyboardEvent) => {
     if (document.activeElement !== document.body) {
-      console.log('not firing editor key down listeners')
+      console.log('not firing editor key down listeners: ', document.activeElement)
       return
     }
     e.preventDefault()
     e.stopPropagation()
-    console.log(document.activeElement)
+    // console.log(document.activeElement)
     // TODO: Some library that handles multiples for us
-    console.log(`Key pressed: ${e.key}`)
+    console.log(`Key pressed: ${e.key}, meta: ${e.metaKey}, control: ${e.ctrlKey}`)
     switch (e.key) {
-      case 'Backspace':
-        return this.handleRequestDeleteObject(e)
+      case 'ArrowUp':
+      case 'ArrowDown':
+      case 'ArrowLeft':
+      case 'ArrowRight':
+        return this.handleArrowKeys(e)
       default:
-        return null
+        break;
+    }
+    if (e.metaKey) {
+      // Handle apple related keyboard shortcuts
+      switch (e.key) {
+        case 'd':
+          return this.handleDuplicateObject(e)
+        default:
+          return null
+      }
+    } else {
+      switch (e.key) {
+        case 'Backspace':
+          return this.handleRequestDeleteObject(e)
+        default:
+          return null
+      }
     }
   }
 
@@ -112,6 +132,7 @@ class ProjectController extends Component<Props, State> {
       leavingSceneObject = this.getSaveableCurrentSceneState()
     }
 
+    this.liveEditor?.fabricCanvas?.tempDeselect()
     const newActiveSceneObject = this.state.project.scenes[newActiveSceneIndex]
 
     // This restores the state of the newly set activeScene
@@ -147,6 +168,7 @@ class ProjectController extends Component<Props, State> {
 
     // Now run all the updates
     this.liveEditor?.fabricCanvas?.handleReorderObjectArrayToObjectTreeIndexOrder()
+    this.liveEditor?.fabricCanvas?.tempReselect()
     this.liveEditor?.fabricCanvas?.requestRenderAll()
 
     let stateUpdateObject = {
@@ -176,6 +198,111 @@ class ProjectController extends Component<Props, State> {
       .groupSelectedByObjectIndexes(orderedSelectedIndexs, this.activeSceneIndex)
       .requestRenderAll()
     this.liveEditor.fabricCanvas.logFlatVisual()
+  }
+
+  handleArrowKeys = (e: KeyboardEvent) => {
+    if (!this.liveEditor || !this.liveEditor?.fabricCanvas) return
+    const activeObject = this.liveEditor.fabricCanvas.getActiveObject() as CustomFabricObject | fabric.ActiveSelection | null
+    if (!activeObject) return
+
+    const shift = e.shiftKey
+    const meta = e.metaKey
+
+    if (shift && meta) {
+      // move to alignment within scene canvas
+      console.log('SHIFT META ARROW')
+      return
+    }
+    if (meta) {
+      console.log('META ARROW')
+      // Move up or down in the scenesArray
+      return
+    }
+
+    if (shift) {
+      // SHIFT MOVES TO NEXT GRID ALIGNMENT
+      const currentGridAspectGreatestCommonDenom = greatestCommonDenominator(this.state.project.settings.dimensions.width, this.state.project.settings.dimensions.height)
+      const currentGridWidth = this.state.project.settings.dimensions.width / currentGridAspectGreatestCommonDenom
+      const currentGridHeight = this.state.project.settings.dimensions.height / currentGridAspectGreatestCommonDenom
+      if (e.key === 'ArrowUp') {
+        const currentTop = activeObject?.top ?? 0
+        const newRounded = roundXToNearestDivisbleY(currentTop, currentGridHeight, 'down')
+        activeObject.set({ top: newRounded })
+      }
+      if (e.key === 'ArrowDown') {
+        const currentTop = activeObject?.top ?? 0
+        const newRounded = roundXToNearestDivisbleY(currentTop, currentGridHeight, 'up')
+        activeObject.set({ top: newRounded })
+      }
+      if (e.key === 'ArrowLeft') {
+        const currentLeft = activeObject?.left ?? 0
+        const newRounded = roundXToNearestDivisbleY(currentLeft, currentGridWidth, 'down')
+        activeObject.set({ left: newRounded })
+      }
+      if (e.key === 'ArrowRight') {
+        const currentLeft = activeObject?.left ?? 0
+        const newRounded = roundXToNearestDivisbleY(currentLeft, currentGridWidth, 'up')
+        activeObject.set({ left: newRounded })
+      }
+      activeObject.setCoords()
+      this.liveEditor.fabricCanvas.requestRenderAll()
+      return
+    }
+
+    function roundXToNearestDivisbleY(x: number, y: number, type = 'down'): number {
+      if (type === 'down') {
+        x -= 1
+        return Math.floor(x / y) * y
+      } else if (type === 'up') {
+        x += 1
+        return Math.ceil(x / y) * y
+      }
+      return 0
+    }
+
+    // Normal arrow
+    let newAttrs: Partial<CustomFabricOptions> = {}
+    switch (e.key) {
+      case 'ArrowUp':
+        newAttrs['top'] = (activeObject?.top || 0) - 1;
+        break;
+      case 'ArrowDown':
+        newAttrs['top'] = (activeObject?.top || 0) + 1;
+        break;
+      case 'ArrowLeft':
+        newAttrs['left'] = (activeObject?.left || 0) - 1;
+        break;
+      case 'ArrowRight':
+        newAttrs['left'] = (activeObject?.left || 0) + 1;
+        break;
+      default:
+        break;
+    }
+    const useActiveObject = activeObject as CustomFabricObject
+    useActiveObject.set(newAttrs)
+    this.liveEditor.fabricCanvas.requestRenderAll()
+    return
+  }
+
+  handleDuplicateObject = (e: KeyboardEvent) => {
+    console.log('DUPLICATE OBJECT')
+    const activeObject = this.liveEditor?.fabricCanvas?.getActiveObject() as CustomFabricObject | fabric.ActiveSelection | undefined
+    if (!activeObject) return Modal.warn({ content: 'Nothing to duplicate' })
+    if (activeObject instanceof fabric.ActiveSelection) {
+      console.log('Duplicate active selection', { activeObject })
+    } else {
+      activeObject.clone((newObject: CustomFabricObject) => {
+        // add it to the project?
+        const liveObject = this.handleAddObject(
+          newObject,
+          undefined,
+          null,
+          activeObject.treeIndex! + 1
+        )
+        this.liveEditor?.fabricCanvas?.setActiveObject((liveObject as fabric.Object))
+        this.liveEditor?.fabricCanvas?.requestRenderAll()
+      }, customAttributesToIncludeInFabricCanvasToObject)
+    }
   }
 
   handleRequestDeleteObject = (e: KeyboardEvent) => {
@@ -242,7 +369,8 @@ class ProjectController extends Component<Props, State> {
   handleAddObject = (
     objectToAdd: CustomFabricObject | fabric.Object,
     parentID: CustomFabricObject['parentID'] | undefined = undefined,
-    userSetName: string | null = null
+    userSetName: string | null = null,
+    insertAtIndex: number | null = null
   ) => {
     /*
       Todo: handle adding when not the last scene by
@@ -271,16 +399,23 @@ class ProjectController extends Component<Props, State> {
     this.liveObjectScenesReferences[newGUID] = this.liveObjectScenesReferences[newGUID] ?? new Set()
     this.liveObjectScenesReferences[newGUID].add(this.activeSceneIndex)
     // Add the object to the canvas
-    this.liveEditor?.fabricCanvas?.add(useAsCustom)
+    if (insertAtIndex !== null) {
+      this.liveEditor?.fabricCanvas?.insertAt(useAsCustom, insertAtIndex, false)
+    } else {
+      this.liveEditor?.fabricCanvas?.add(useAsCustom)
+    }
+
     this.liveEditor?.fabricCanvas?.updatePaths()
     this.liveEditor?.fabricCanvas?.setActiveObject(useAsCustom)
     this.liveEditor?.fabricCanvas?.requestRenderAll()
+    return objectToAdd
   }
 
   handleDuplicateScene = () => {
     console.log('handleDuplicateScene')
     if (this.activeSceneIndex === null) return Modal.warn({ content: 'No active scene to duplicate' })
     // We need to update our objectscrenerefs if the objects are present in the duplicated scene
+
     const newActiveSceneObject = this.getSaveableCurrentSceneState()
     if (!newActiveSceneObject) return
 

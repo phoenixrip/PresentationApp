@@ -6,6 +6,7 @@ import { FakeGroup } from './SetFabricDefaults'
 const dl = (args, ...rest) => console.log(args, ...rest)
 class CustomFabricCanvas extends fabric.Canvas {
   liveObjectsDict = {}
+  projectSettings = {}
   constructor(canvas, options) {
     super(canvas, options)
     console.log('custom fabric canvas constructor', this._objects)
@@ -184,12 +185,35 @@ class CustomFabricCanvas extends fabric.Canvas {
    * @returns {Record<string, import('../Types/CustomFabricTypes').CustomFabricOptions>}
    */
   getSaveableSceneState = () => {
-    console.log('getSaveableState')
+    this.tempDeselect()
     let newSceneState = {}
     this._objects.forEach(obj => {
       newSceneState[obj.guid] = obj.getAnimatableValues()
     })
+    this.tempReselect()
     return newSceneState
+  }
+  tempDeselect() {
+    this.cachedActiveObjectsArray = this.getActiveObjects()
+    console.trace('tempDeselect: ', this.cachedActiveObjectsArray)
+    this._discardActiveObject()
+  }
+  tempReselect() {
+    console.trace('tempReselect', this.cachedActiveObjectsArray)
+    if (!this.cachedActiveObjectsArray) return
+    if (!this.cachedActiveObjectsArray.length) return
+    if (this.cachedActiveObjectsArray.length === 1) {
+      this._setActiveObject(this.cachedActiveObjectsArray[0])
+      this.cachedActiveObjectsArray = null
+      return
+    }
+    let newSelectionArray = []
+    this.cachedActiveObjectsArray.forEach(obj => {
+      if (obj.canvas === this) newSelectionArray.push(obj)
+    })
+    const replaceSelection = new fabric.ActiveSelection(newSelectionArray, { canvas: this })
+    this._setActiveObject(replaceSelection)
+    this.cachedActiveObjectsArray = null
   }
 }
 

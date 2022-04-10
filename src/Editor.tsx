@@ -37,6 +37,8 @@ import { rgbaFromColor } from "./Utils/rgbaFromColor";
 import { tsIntrinsicKeyword } from "@babel/types";
 import { CustomFabricCanvas } from "./Utils/CustomFabricCanvas";
 import { IProjectControllerState, ProjectController } from "./ProjectController";
+import { MultiChoiceLabelEditorComponent } from "./CustomInteractionModules/MultiChoiceLabel/EditorComponent";
+import { EditorComponentClass } from "./CustomInteractionModules/EditorComponentClass";
 
 setFabricDefaults();
 
@@ -52,6 +54,10 @@ interface EditorPropsTypes {
   handleAddObject: ProjectController['handleAddObject'],
   handleDuplicateScene: ProjectController['handleDuplicateScene'],
   handleOpenProjectPreview: ProjectController['handleOpenProjectPreview'],
+}
+
+const availiableCustomInteractionModules = {
+  'multichoicelabel': MultiChoiceLabelEditorComponent
 }
 
 class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
@@ -120,7 +126,7 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     // this.fabricCanvas.renderOnAddRemove = false
     // Give the fabricCanvas a reference to our inMemoryObjectDict
     this.fabricCanvas.liveObjectsDict = this.liveObjectsDict
-
+    this.fabricCanvas.projectSettings = this.props.project.settings
     // Center the project viewport withing the full-Pane-Sized fabricCanvas
     const widthMove = (canvasPaneDimensions.width - projectDimensions.width) / 2;
     const heightMove = (canvasPaneDimensions.height - projectDimensions.height) / 2;
@@ -455,18 +461,41 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
 
   addText = () => {
     if (!this.fabricCanvas) return
+    console.log('addText')
     const systemFontStack = `-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"`
     // @ts-ignore
     const newTextBox = new fabric.CTextBox('New text', {
-      fontFamily: 'Helvetica',
+      fontFamily: 'Arial',
       textAlign: 'center',
-      fontSize: 29,
-      fill: 'white',
+      fontSize: 39,
+      stroke: 'black',
+      strokeWidth: 2,
+      fill: {
+        type: 'linear',
+        colorStops: [
+          { offset: 0, color: '#6ED4EF' },
+          { offset: 1, color: '#2F65F4' },
+        ],
+        gradientUnits: 'percentage',
+        coords: { x1: 0, y1: 0, x2: 0, y2: 1 }
+      },
       width: this.state.project.settings.dimensions.width * 0.96,
       top: 0,
       left: this.state.project.settings.dimensions.width * 0.02
     })
     this.props.handleAddObject(newTextBox)
+  }
+
+  addRect = () => {
+    //@ts-ignore
+    const newRect = new fabric.CRect({
+      width: this.state.project.settings.dimensions.width * 0.1,
+      height: this.state.project.settings.dimensions.height * 0.1,
+      fill: 'rgba(0, 0, 0, 0.5)',
+      top: 0,
+      left: 0
+    })
+    return this.props.handleAddObject(newRect)
   }
 
   addSVG = () => {
@@ -489,20 +518,32 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
   addLabel = () => {
     // @ts-ignore
     const label = new fabric.LabelElement('Liver', {
-      guid: uuidv4(),
-      parentID: null,
-      structurePath: [],
       width: 200,
-      fontSize: 29,
-      fontFamily: 'Arial',
-      fill: 'white',
-      userSetName: 'Label'
+      userSetName: 'Label',
+      fontSize: 39,
+      bgRectOptions: {
+        stroke: 'blue',
+        strokeWidth: 2,
+        fill: 'black'
+      }
     })
     this.props.handleAddObject(label)
-    // this.liveObjectsDict[label.guid] = label
-    // this.fabricCanvas?.add(label)
-    // this.fabricCanvas?.updatePaths()
-    // this.fabricCanvas?.requestRenderAll()
+  }
+
+  addImageFromURL = () => {
+    const url = prompt('Enter image url')
+    if (!url) return Modal.warn({ content: 'No image url provided' })
+    try {
+      fabric.Image.fromURL(url, (imageObject) => {
+        imageObject.scaleToHeight(this.state.project.settings.dimensions.height)
+        if (imageObject.getScaledWidth() > this.state.project.settings.dimensions.width) {
+          imageObject.scaleToWidth(this.state.project.settings.dimensions.width)
+        }
+        this.props.handleAddObject(imageObject)
+      }, { crossOrigin: 'Anonymous' })
+    } catch (error) {
+      return Modal.warn({ content: 'Loading image failed' })
+    }
   }
 
   handleWindowImageDrop = (e: DragEvent) => {
@@ -541,6 +582,10 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
 
   }
 
+  handleInitCustomInteractionComponent = (customComponentClass: typeof EditorComponentClass) => {
+    customComponentClass.handleInit.call(this)
+  }
+
   render() {
     const contextValue: EditorContextTypes = {
       fabricCanvas: this.fabricCanvas,
@@ -558,8 +603,11 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       handleSelectElementByGUID: this.handleSelectElementByGUID,
       addText: this.addText,
       addSVG: this.addSVG,
+      addRect: this.addRect,
       addLabel: this.addLabel,
-      handleOpenProjectPreview: this.props.handleOpenProjectPreview
+      addImageFromURL: this.addImageFromURL,
+      handleOpenProjectPreview: this.props.handleOpenProjectPreview,
+      handleInitCustomInteractionComponent: this.handleInitCustomInteractionComponent
     };
     return (
       <div>
@@ -599,7 +647,9 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
                       />
                     </ReflexElement>
                     <ReflexElement size={300}>
-                      <InspectorContainer />
+                      <InspectorContainer
+                        availiableCustomInteractionModules={availiableCustomInteractionModules}
+                      />
                     </ReflexElement>
                   </ReflexContainer>
                 </ReflexElement>

@@ -1,5 +1,6 @@
 import { SizeType } from 'antd/lib/config-provider/SizeContext'
 import React from 'react'
+import { Editor } from './Editor'
 import { ProjectController } from './ProjectController'
 import { CustomFabricObject } from './Types/CustomFabricTypes'
 import { ProjectDataTypes } from './Types/ProjectDataTypes'
@@ -36,6 +37,9 @@ interface EditorContextTypes {
   handleSelectElementByGUID: Function,
   addText: Function,
   addSVG: Function,
+  addRect: Editor['addRect'],
+  addImageFromURL: Editor['addImageFromURL'],
+  handleInitCustomInteractionComponent: Editor['handleInitCustomInteractionComponent'],
   addLabel: Function,
   handleOpenProjectPreview: ProjectController['handleOpenProjectPreview'],
   liveObjectsDict: {
