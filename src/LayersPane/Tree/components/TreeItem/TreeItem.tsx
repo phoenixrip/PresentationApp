@@ -1,12 +1,13 @@
-import React, { forwardRef, HTMLAttributes, useContext } from 'react';
+import React, { forwardRef, HTMLAttributes, useContext, useState } from 'react';
 import classNames from 'classnames';
 // import { UseFaIcon } from '../Utils/UseFaIcon'
-import { faBezierCurve, faCircle, faDrawPolygon, faFileText, faFolder, faFont, faImage, faLayerGroup, faSlash, faTags, faTextWidth, faVectorSquare } from '@fortawesome/free-solid-svg-icons'
+import { faBezierCurve, faCircle, faDrawPolygon, faFileText, faFolder, faFont, faImage, faLayerGroup, faSlash, faTag, faTags, faTextWidth, faVectorSquare } from '@fortawesome/free-solid-svg-icons'
 // import { faFolder, faVectorSquare } from '@fortawesome/free'
 import { Action, Handle, Remove } from './Item/';
 import styles from './TreeItem.module.css';
 import { editorContext } from '../../../../EditorContext';
 import { UseFaIcon } from '../../../../Utils/UseFaIcon';
+import { Input } from 'antd';
 interface ObjIconTypes {
   [key: string]: any
 }
@@ -24,7 +25,8 @@ const objIcons: ObjIconTypes = {
   'line': faSlash,
   'polyline': faDrawPolygon,
   'polygon': faDrawPolygon,
-  'LabelElement': faTags,
+  'LabelElement': faTag,
+  'ObjectLabelGroup': faTags,
   'image': faImage
 }
 
@@ -73,13 +75,12 @@ export const TreeItem = forwardRef<HTMLDivElement, Props>(
     const objectTypeKey = liveObject?.type || 'default'
     const isSelected = context.state.selectedGUIDsDict[guid]
 
-    // const isActiveInPreviousScene = context.liveObjectScenesReferences[guid].has(context.activeSceneIndexs[0] - 1)
-    // const isActiveInNextScene = context.liveObjectScenesReferences[guid].has(context.activeSceneIndexs[0] + 1)
-    // const isLastScreen =
-    //   console.log({
-    //     isActiveInPreviousScene,
-    //     isActiveInNextScene
-    //   })
+    const [editableUserSetNameValue, setEditableUserSetNameValue] = useState(liveObject?.text || liveObject.userSetName)
+
+    function handleBlurUserSetNameInput() {
+      liveObject.set({ userSetName: editableUserSetNameValue })
+      document.body.focus()
+    }
     function handleMouseDown(e: any) {
       if (e.shiftKey) {
         console.log('shift click')
@@ -126,11 +127,21 @@ export const TreeItem = forwardRef<HTMLDivElement, Props>(
               {collapseIcon}
             </Action>
           )}
-          <span
+          <Input
+            size={'small'}
+            onChange={(e) => setEditableUserSetNameValue(e.target.value)}
+            onBlur={handleBlurUserSetNameInput}
+            onPressEnter={handleBlurUserSetNameInput}
+            value={editableUserSetNameValue}
+            style={{ padding: '0px 4px' }}
+            onFocus={handleMouseDown}
+          // disabled={!isSelected}
+          />
+          {/* <span
             onMouseDown={handleMouseDown}
             className={styles.Text}>{
               liveObject?.text || liveObject.userSetName
-            }</span>
+            }</span> */}
           {/* {!clone && onRemove && <Remove onClick={onRemove} />} */}
           {clone && childCount && childCount > 1 ? (
             <span className={styles.Count}>{childCount}</span>

@@ -13,7 +13,9 @@ const ToolbarContainer = () => {
       <Button onClick={e => context.addText()}>Add text</Button>
       <Button onClick={e => context.addSVG()}>Add svg</Button>
       <Button onClick={e => context.addLabel()}>addLabel</Button>
-      <Button onClick={e => context.handleOpenProjectPreview()}>handleOpenProjectPreview</Button>
+      <Button onClick={e => context.addRect()}>addRect</Button>
+      <Button onClick={e => context.addImageFromURL()}>addImageFromURL</Button>
+      <Button type={'primary'} onClick={e => context.handleOpenProjectPreview()}>handleOpenProjectPreview</Button>
     </div>
   )
 }

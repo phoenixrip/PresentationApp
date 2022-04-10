@@ -1,8 +1,9 @@
 import { fabric } from 'fabric'
 import { customAttributesToIncludeInFabricCanvasToObject } from './consts'
-import gsap from 'gsap'
+import { CTextBox } from './CustomFabricObjects/CTextBox'
 
 function setFabricDefaults() {
+  // All object default settings
   fabric.Object.prototype.set({
     cornerStyle: 'circle',
     transparentCorners: false,
@@ -16,6 +17,8 @@ function setFabricDefaults() {
     strokeWidth: 0,
     hasRotatingPoint: false
   })
+
+  CTextBox()
 
   fabric.Object.prototype.getAnimatableValues = function () {
     let object = {}
@@ -54,46 +57,7 @@ function setFabricDefaults() {
     return obj
   }
 
-  fabric.CTextBox = fabric.util.createClass(fabric.Textbox, {
-    type: 'CTextBox',
-    initialize(text, options) {
-      this.callSuper('initialize', text, options)
-      this.padding = 5
-      this.bgRect = new fabric.Rect({
-        fill: 'rgba(0, 0, 0, 0.5)',
-        objectCaching: false
-      })
-      this.getObjectInTimeline = CTextBoxObjectInAnimations['default'].bind(this)
-    },
-    _render(ctx) {
-      this.bgRect.set({ width: this.width + 10, height: this.height + 10 })
-      this.bgRect._render(ctx)
-      console.log('CTextBoxRender')
-      this.callSuper('_render', ctx)
-    }
-  })
-  fabric.CTextBox.fromObject = function (object, callback) {
-    return fabric.Object._fromObject('CTextBox', object, callback, 'text');
-  }
-  const CTextBoxObjectInAnimations = {
-    'default': function (animationSettings) {
-      // This is the fabric.CTextBox instance
-      console.log('GET CTEXTBOX IN ANIM')
-      const inTL = gsap.timeline({
-        paused: true,
-        onUpdate: () => {
-          console.log('cTextIn update')
-          this.canvas.requestRenderAll()//.bind(this.canvas)
-        }
-      })
-      inTL.fromTo(this.bgRect, {
-        width: 0
-      }, {
-        width: this.width
-      })
-      return inTL
-    }
-  }
+
   fabric.CRect = fabric.util.createClass(fabric.Rect, {
     type: 'CRect',
     initialize(options) {
@@ -126,12 +90,70 @@ function setFabricDefaults() {
     return obj
   }
 
-
   fabric.LabelElement = fabric.util.createClass(fabric.Textbox, {
     type: 'LabelElement',
+    initialize(text, options) {
+      this.callSuper('initialize', text, {
+        fontSize: 29,
+        fontFamily: 'Arial',
+        fill: 'white',
+        ...options
+      })
+      this.bgRect = new fabric.Rect({
+        ...options.bgRectOptions,
+        objectCaching: false
+      })
+    },
     _render(ctx) {
+      this.bgRect.set({ width: this.width + 10, height: this.height + 10 })
+      this.bgRect._render(ctx)
       this.callSuper('_render', ctx)
     }
+  })
+  fabric.LabelElement.fromObject = function (object, callback) {
+    return fabric.Object._fromObject('LabelElement', object, callback, 'text');
+  }
+
+
+  fabric.TargetOverlayPath = fabric.util.createClass(fabric.Rect, {
+    initialize(options, pathObjects = []) {
+      this.callSuper('initialize', options)
+      this.pathObjects = pathObjects.map(pathObj => new fabric.Path(pathObj.path, {
+        top: pathObj.top,
+        left: pathObj.left,
+        scaleX: pathObj.scaleX,
+        scaleY: pathObj.scaleY,
+        fill: 'red',
+        pathOffset: pathObj.pathOffset
+      }))
+      this.on('added', this.handleAdded)
+    },
+    handleAdded() {
+      console.log('TargetOverlayPath added',)
+      this.set({
+        width: this.canvas.projectSettings.dimensions.width,
+        height: this.canvas.projectSettings.dimensions.height,
+        top: 0,
+        left: 0
+      })
+      // this.pathObjects.forEach(obj => this.canvas.add(obj))
+    },
+    _render(ctx) {
+      this.callSuper('_render', ctx)
+      this.pathObjects.forEach(obj => {
+        obj.render(ctx)
+      })
+    }
+  })
+
+  fabric.ObjectLabelGroup = fabric.util.createClass(fabric.Group, {
+    type: 'ObjectLabelGroup',
+    initialize(paths, options) {
+      console.log('ObjectLabelGroup')
+      this.callSuper('initialize', paths, options)
+    },
+    // drawObject: function (ctx) {
+    // },
   })
 }
 

@@ -112,7 +112,7 @@ class SceneController {
   }
   getSceneInTimeline = () => {
     console.log(`getSceneInTimeline scene[${this.sceneIndex}]`)
-    const sceneInTL = new gsap.timeline({
+    const moveTL = new gsap.timeline({
       paused: true,
       onUpdate: this.re.c2.requestRenderAll.bind(this.re.c2),
       defaults: {
@@ -120,8 +120,14 @@ class SceneController {
         duration: 1
       }
     })
-      .add('move')
-      .add('add')
+    const addTL = new gsap.timeline({
+      paused: true,
+      onUpdate: this.re.c2.requestRenderAll.bind(this.re.c2),
+      defaults: {
+        ease: 'expo.inOut',
+        duration: 1
+      }
+    })
     const diffFromPrevScene = diff(this.prevSceneObject.activeSceneObjects, this.sceneObject.activeSceneObjects)
     Object.entries(diffFromPrevScene)
       .forEach(([guid, diffObject]) => {
@@ -133,23 +139,33 @@ class SceneController {
           // Check if the object has a custom in timeline we can use
           const objHasCustomInTL = obj?.getObjectInTimeline?.()
           if (objHasCustomInTL) {
-            sceneInTL.add(
+            addTL.add(
               objHasCustomInTL.play(),
               'add'
             )
           } else {
             // Otherwise default to fading the opacity up
-            sceneInTL.from(obj, {
+            addTL.from(obj, {
               opacity: 0
             }, 'add')
           }
         } else {
           // This is an object change animation
-          sceneInTL.to(obj, {
+          moveTL.to(obj, {
             ...diffObject,
           }, 'move')
         }
       })
+    const sceneInTL = new gsap.timeline({
+      paused: true,
+      onUpdate: this.re.c2.requestRenderAll.bind(this.re.c2),
+      defaults: {
+        ease: 'expo.inOut',
+        duration: 1
+      }
+    })
+      .add(moveTL.play())
+      .add(addTL.play())
     return sceneInTL
   }
   handleSceneIn = () => {

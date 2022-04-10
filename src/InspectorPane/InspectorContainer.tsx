@@ -1,3 +1,4 @@
+//@ts-nocheck
 import React, { useContext } from "react";
 import { editorContext, EditorContextTypes } from "../Editor";
 import { Button, InputNumber, Collapse, Switch, Radio } from 'antd';
@@ -10,9 +11,19 @@ import { DimensionsControlPanel } from "./ControlPanels/DimensionsControlPanel";
 import { FillControlPanel } from "./ControlPanels/FillControlPanel";
 import { BorderControlPanel } from "./ControlPanels/BorderControlPanel";
 import { ShadowControlPanel } from "./ControlPanels/ShadowControlPanel";
+<<<<<<< HEAD
 import { GradientControlPanel } from "./ControlPanels/GradientControlPanel"
+=======
+import { EditorComponentClass } from "../CustomInteractionModules/EditorComponentClass";
+import { MultiChoiceLabelEditorComponent } from "../CustomInteractionModules/MultiChoiceLabel/EditorComponent";
+>>>>>>> 85d01acdccb131b1a5796924ace39459c68bbd2a
 
-const InspectorContainer = (props: Object) => {
+interface Props {
+  availiableCustomInteractionModules: {
+    [key: string]: MultiChoiceLabelEditorComponent
+  }
+}
+const InspectorContainer = (props: Props) => {
   const context: EditorContextTypes = useContext(editorContext);
   const selection: any | undefined = context.fabricCanvas?.getActiveObject()
   const setOnFabricObject: Function = context.setOnFabricObject
@@ -26,6 +37,26 @@ const InspectorContainer = (props: Object) => {
       {
         selection?.type === 'activeSelection' &&
         <Button onClick={(e) => context.handleGroupObjects()}>GROUP OBJECTS</Button>
+      }
+      {
+        selection?.type === 'activeSelection' &&
+        Object.entries(props.availiableCustomInteractionModules)
+          .map(([customComponentKey, customInteractionEditorClass]) => {
+            const thisClass = props.availiableCustomInteractionModules[customComponentKey]
+            const isAddable = thisClass.checkIfSelectionInitable(context.fabricCanvas)
+            if (isAddable) {
+              return (
+                <Button
+                  onClick={() => context.handleInitCustomInteractionComponent(customInteractionEditorClass)}
+                  key={thisClass.displayName}>
+                  Addable: {thisClass.displayName}
+                </Button>
+              )
+            } else {
+              return null
+            }
+            console.log({ isAddable })
+          })
       }
       {selection &&
         <>

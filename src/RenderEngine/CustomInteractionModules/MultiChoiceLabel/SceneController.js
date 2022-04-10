@@ -1,0 +1,7 @@
+class MultiChoiceLabelSceneController {
+
+}
+
+export {
+  MultiChoiceLabelSceneController
+}
