@@ -11,12 +11,8 @@ import { DimensionsControlPanel } from "./ControlPanels/DimensionsControlPanel";
 import { FillControlPanel } from "./ControlPanels/FillControlPanel";
 import { BorderControlPanel } from "./ControlPanels/BorderControlPanel";
 import { ShadowControlPanel } from "./ControlPanels/ShadowControlPanel";
-<<<<<<< HEAD
-import { GradientControlPanel } from "./ControlPanels/GradientControlPanel"
-=======
 import { EditorComponentClass } from "../CustomInteractionModules/EditorComponentClass";
 import { MultiChoiceLabelEditorComponent } from "../CustomInteractionModules/MultiChoiceLabel/EditorComponent";
->>>>>>> 85d01acdccb131b1a5796924ace39459c68bbd2a
 
 interface Props {
   availiableCustomInteractionModules: {
