@@ -10,6 +10,7 @@ import { DimensionsControlPanel } from "./ControlPanels/DimensionsControlPanel";
 import { FillControlPanel } from "./ControlPanels/FillControlPanel";
 import { BorderControlPanel } from "./ControlPanels/BorderControlPanel";
 import { ShadowControlPanel } from "./ControlPanels/ShadowControlPanel";
+import { GradientControlPanel } from "./ControlPanels/GradientControlPanel"
 
 const InspectorContainer = (props: Object) => {
   const context: EditorContextTypes = useContext(editorContext);
@@ -28,7 +29,6 @@ const InspectorContainer = (props: Object) => {
       }
       {selection &&
         <>
-          {/* <Collapse defaultActiveKey={["1", "2", "3", "4", "5"]}> */}
           <Collapse defaultActiveKey={[]}>
             <Panel header="Dimensions" key="1">
               <DimensionsControlPanel />
@@ -45,9 +45,12 @@ const InspectorContainer = (props: Object) => {
             <Panel header="Shadow" key="5">
               <ShadowControlPanel />
             </Panel>
+            <Panel header="Gradient" key="6">
+              <GradientControlPanel />
+            </Panel>
             {
               selection.type === 'image' &&
-              <Panel header="Image" key="6">
+              <Panel header="Image" key="7">
                 Image settings
                 <Button onClick={e => {
                   //@ts-ignore
