@@ -143,10 +143,29 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
 
     // CANVAS EVENT HOOKS
     this.fabricCanvas.on("object:modified", (e: any) => {
+      console.log("object:modified", e)
       normalizeAllObjectCoords(e.target, e.action)
       // if (!e?.customFire) this.sanitizeEquations(e.target, e.action)
       // return this.normalizeNewSceneState(`object:modified: action: ${e.action}, name: ${e.target?.userSetName || e.target.type}`)
     });
+
+    this.fabricCanvas.on("custom:object:modify", (e: any) => {
+      this.setOnFabricObject(e.target, e.settings, e.action)
+    });
+
+    //Update gradient angle controls on selection
+    this.fabricCanvas.on("selection:created", (e:any) => {
+      if(e.selected.length === 1) {
+        const selection = e.selected[0]
+        if(selection?.linearGradientMode || selection?.radialGradientMode ) selection.refreshGradientAngleControls()
+      }
+    })
+      this.fabricCanvas.on("selection:updated", (e:any) => {
+        if(e.selected.length === 1) {
+          const selection = e.selected[0]
+          if(selection?.linearGradientMode || selection?.radialGradientMode ) selection.refreshGradientAngleControls()
+        }
+      })
 
     this.fabricCanvas.on("selection:created", this.selectionCreated)
     this.fabricCanvas.on("selection:updated", this.selectionUpdated)

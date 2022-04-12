@@ -18,9 +18,6 @@ function GradientControlPanel() {
     let selectedColorStop = useRef(null)
 
     useEffect(() => {
-        if(selection.fill?.type === "linear") fabric.Object.prototype.setLinearGradientMode()
-        else if(selection.fill?.type === "radial") fabric.Object.prototype.setRadialGradientMode()
-
         gradientPicker.current = new Grapick({ el: '#gradientPicker' });
         if (selection.fill.type === "linear" || selection.fill.type === "radial") {
             for (const colorStop of selection.fill.colorStops) {
@@ -69,8 +66,6 @@ function GradientControlPanel() {
         gradientPicker.current.on('handler:color:change', e => {
             console.log(e)
         })
-
-        refreshGradientAngleControls()
     }, [])
 
     const refreshGradientPicker = () => {
@@ -80,14 +75,6 @@ function GradientControlPanel() {
                 gradientPicker.current.addHandler(colorStop.offset * 100, colorStop.color)
             }
         }
-    }
-
-    const refreshGradientAngleControls = () => {
-        fabric.Object.prototype.controls.xy1GradientControl.offsetX = (selection.fill?.coords?.x1 - selection.width / 2)
-        fabric.Object.prototype.controls.xy1GradientControl.offsetY = (selection.fill?.coords?.y1 - selection.height / 2)
-        fabric.Object.prototype.controls.xy2GradientControl.offsetX = (selection.fill?.coords?.x2 - selection.width / 2)
-        fabric.Object.prototype.controls.xy2GradientControl.offsetY = (selection.fill?.coords?.y2 - selection.height / 2)
-        console.log(fabric.Object.prototype.controls)
     }
 
     return (
@@ -117,8 +104,8 @@ function GradientControlPanel() {
                     })
                     console.log(selection)
                     refreshGradientPicker()
-                    refreshGradientAngleControls()
-                    fabric.Object.prototype.setLinearGradientMode()
+                    selection.refreshGradientAngleControls()
+                    selection.setLinearGradientMode()
                 }}
             >Linear</Radio>
             <Radio checked={selection?.fill?.type === "radial"}
@@ -150,8 +137,8 @@ function GradientControlPanel() {
                     })
                     console.log(selection)
                     refreshGradientPicker()
-                    refreshGradientAngleControls()
-                    fabric.Object.prototype.setRadialGradientMode()
+                    selection.refreshGradientAngleControls()
+                    selection.setRadialGradientMode()
                 }}>Radial</Radio>
 
             <p></p>

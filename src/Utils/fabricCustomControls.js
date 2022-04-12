@@ -12,73 +12,98 @@ function renderIcon(icon, size, ctx, left, top, fabricObject) {
     ctx.restore();
 }
 
-fabric.Object.prototype.setLinearGradientMode = () => {
-    fabric.Object.prototype.linearGradientMode = true
-    fabric.Object.prototype.radialGradientMode = false
-    fabric.Object.prototype.controls.xy2GradientControl.setVisibility(true)
-}
-fabric.Object.prototype.setRadialGradientMode = () => {
-    fabric.Object.prototype.linearGradientMode = false
-    fabric.Object.prototype.radialGradientMode = true
-    fabric.Object.prototype.controls.xy2GradientControl.setVisibility(false)
+fabric.Object.prototype.setLinearGradientMode = function() {
+    delete this.radialGradientMode
+    this.linearGradientMode = true
+    this.controls.xy2GradientControl.setVisibility(true)
 }
 
-fabric.Object.radialModified = false
+fabric.Object.prototype.setRadialGradientMode = function () {
+    delete this.linearGradientMode
+    this.radialGradientMode = true
+    this.controls.xy2GradientControl.setVisibility(false)
+}
+
+fabric.Object.prototype.refreshGradientAngleControls = function() {
+    this.controls.xy1GradientControl.offsetX = (this.fill?.coords?.x1 - this.width / 2)
+    this.controls.xy1GradientControl.offsetY = (this.fill?.coords?.y1 - this.height / 2)
+    this.controls.xy2GradientControl.offsetX = (this.fill?.coords?.x2 - this.width / 2)
+    this.controls.xy2GradientControl.offsetY = (this.fill?.coords?.y2 - this.height / 2)
+}
 
 fabric.Object.prototype.controls.xy1GradientControl = new fabric.Control({
     x: 0,
     y: 0,
     cursorStyle: 'pointer',
-    actionHandler: (evt, tar, x, y) => {
+    actionName: "gradientSkew",
+    cornerSize: 24,
+    actionHandler: function (evt, tar, x, y) {
         if (evt.type === "mousemove") {
-            const selection = tar.target.canvas.getActiveObject()
-            fabric.Object.prototype.controls.xy1GradientControl.offsetX = x - selection.left - selection.width / 2
-            fabric.Object.prototype.controls.xy1GradientControl.offsetY = y - selection.top - selection.height / 2
+            const selection = tar.target
+            selection.controls.xy1GradientControl.offsetX = x - selection.left - selection.width / 2
+            selection.controls.xy1GradientControl.offsetY = y - selection.top - selection.height / 2
             selection.fill.coords.x1 = x - selection.left
             selection.fill.coords.y1 = y - selection.top
-            if (fabric.Object.prototype.radialGradientMode) {
+            if (selection.radialGradientMode) {
                 selection.fill.coords.x2 = x - selection.left
                 selection.fill.coords.y2 = y - selection.top
             }
-            tar.target.canvas.requestRenderAll()
-            fabric.Object.radialModified = true
+            selection.canvas.requestRenderAll()
+            selection.radialModified = true
         }
     },
     mouseUpHandler: (evt, tar, x, y) => {
-        if(fabric.Object.radialModified) {
-            fabric.Object.radialModified = false
-            tar.target.canvas.fire("radialmodified")
+        const selection = tar.target
+        if (selection.radialModified) {
+            delete selection.radialModified
+            selection.canvas.fire("custom:object:modify", {
+                target: selection,
+                settings: { fill: selection.fill },
+                action: tar.action
+            })
         }
     },
-    cornerSize: 24,
     render: (ctx, left, top, styleOverride, fabricObject) => {
-        if (fabric.Object.prototype.linearGradientMode || fabric.Object.prototype.radialGradientMode) {
+        console.log("hey1", fabricObject)
+        if (fabricObject.linearGradientMode || fabricObject.radialGradientMode) {
             renderIcon(deleteImg, 24, ctx, left, top, fabricObject)
         }
-    },
-    actionName: "gradientSkew"
+    }
 })
 
 fabric.Object.prototype.controls.xy2GradientControl = new fabric.Control({
     x: 0,
     y: 0,
-    cursorStyle: 'pointer',
+    cursorStyle: 'pointer',    
+    actionName: "gradientSkew",
+    cornerSize: 24,
     actionHandler: (evt, tar, x, y) => {
         if (evt.type === "mousemove") {
-            const selection = tar.target.canvas.getActiveObject()
-            fabric.Object.prototype.controls.xy2GradientControl.offsetX = x - selection.left - selection.width / 2
-            fabric.Object.prototype.controls.xy2GradientControl.offsetY = y - selection.top - selection.height / 2
+            const selection = tar.target
+            selection.controls.xy2GradientControl.offsetX = x - selection.left - selection.width / 2
+            selection.controls.xy2GradientControl.offsetY = y - selection.top - selection.height / 2
             selection.fill.coords.x2 = x - selection.left
             selection.fill.coords.y2 = y - selection.top
-            tar.target.canvas.requestRenderAll()
-            fabric.Object.radialModified = true
+            selection.canvas.requestRenderAll()
+            selection.radialModified = true
         }
     },
-    cornerSize: 24,
+    mouseUpHandler: (evt, tar, x, y) => {
+        const selection = tar.target
+        if (selection.radialModified) {
+            delete selection.radialModified
+            selection.canvas.fire("custom:object:modify", {
+                target: selection,
+                settings: { fill: selection.fill },
+                action: tar.action
+            })
+        }
+    },
     render: (ctx, left, top, styleOverride, fabricObject) => {
-        if (fabric.Object.prototype.linearGradientMode || fabric.Object.prototype.radialGradientMode) {
+        console.log("hey2", fabricObject)
+        if (fabricObject?.linearGradientMode) {
+            console.log("hey", ctx, left, top, styleOverride, fabricObject)
             renderIcon(deleteImg, 24, ctx, left, top, fabricObject)
         }
-    },
-    actionName: "gradientSkew"
+    }
 })
