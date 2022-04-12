@@ -12,18 +12,6 @@ function renderIcon(icon, size, ctx, left, top, fabricObject) {
     ctx.restore();
 }
 
-fabric.Object.prototype.setLinearGradientMode = function() {
-    delete this.radialGradientMode
-    this.linearGradientMode = true
-    this.controls.xy2GradientControl.setVisibility(true)
-}
-
-fabric.Object.prototype.setRadialGradientMode = function () {
-    delete this.linearGradientMode
-    this.radialGradientMode = true
-    this.controls.xy2GradientControl.setVisibility(false)
-}
-
 fabric.Object.prototype.refreshGradientAngleControls = function() {
     this.controls.xy1GradientControl.offsetX = (this.fill?.coords?.x1 - this.width / 2)
     this.controls.xy1GradientControl.offsetY = (this.fill?.coords?.y1 - this.height / 2)
@@ -37,14 +25,14 @@ fabric.Object.prototype.controls.xy1GradientControl = new fabric.Control({
     cursorStyle: 'pointer',
     actionName: "gradientSkew",
     cornerSize: 24,
-    actionHandler: function (evt, tar, x, y) {
+    actionHandler: (evt, tar, x, y) => {
         if (evt.type === "mousemove") {
             const selection = tar.target
             selection.controls.xy1GradientControl.offsetX = x - selection.left - selection.width / 2
             selection.controls.xy1GradientControl.offsetY = y - selection.top - selection.height / 2
             selection.fill.coords.x1 = x - selection.left
             selection.fill.coords.y1 = y - selection.top
-            if (selection.radialGradientMode) {
+            if (selection.fill?.type === "radial") {
                 selection.fill.coords.x2 = x - selection.left
                 selection.fill.coords.y2 = y - selection.top
             }
@@ -64,8 +52,7 @@ fabric.Object.prototype.controls.xy1GradientControl = new fabric.Control({
         }
     },
     render: (ctx, left, top, styleOverride, fabricObject) => {
-        console.log("hey1", fabricObject)
-        if (fabricObject.linearGradientMode || fabricObject.radialGradientMode) {
+        if (fabricObject.fill?.type === "linear" || fabricObject.fill?.type === "radial") {
             renderIcon(deleteImg, 24, ctx, left, top, fabricObject)
         }
     }
@@ -100,10 +87,11 @@ fabric.Object.prototype.controls.xy2GradientControl = new fabric.Control({
         }
     },
     render: (ctx, left, top, styleOverride, fabricObject) => {
-        console.log("hey2", fabricObject)
-        if (fabricObject?.linearGradientMode) {
-            console.log("hey", ctx, left, top, styleOverride, fabricObject)
+        if (fabricObject.fill?.type === "linear") {
+            fabricObject.controls.xy2GradientControl.setVisibility(true)
             renderIcon(deleteImg, 24, ctx, left, top, fabricObject)
-        }
+        } else if (fabricObject.fill?.type === "radial") {
+            fabricObject.controls.xy2GradientControl.setVisibility(false)
+        } 
     }
 })

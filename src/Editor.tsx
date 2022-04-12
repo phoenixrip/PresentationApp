@@ -157,13 +157,13 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     this.fabricCanvas.on("selection:created", (e:any) => {
       if(e.selected.length === 1) {
         const selection = e.selected[0]
-        if(selection?.linearGradientMode || selection?.radialGradientMode ) selection.refreshGradientAngleControls()
+        if(selection.fill?.type === "linear" || selection.fill?.type === "radial" ) selection.refreshGradientAngleControls()
       }
     })
       this.fabricCanvas.on("selection:updated", (e:any) => {
         if(e.selected.length === 1) {
           const selection = e.selected[0]
-          if(selection?.linearGradientMode || selection?.radialGradientMode ) selection.refreshGradientAngleControls()
+          if(selection.fill?.type === "linear" || selection.fill?.type === "radial" ) selection.refreshGradientAngleControls()
         }
       })
 
