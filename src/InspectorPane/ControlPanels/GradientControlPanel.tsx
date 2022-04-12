@@ -17,6 +17,7 @@ function GradientControlPanel() {
     let gradientPicker = useRef(null)
     let selectedColorStop = useRef(null)
     const [selectedGrapickHandler, setSelectedGrapickHandler] = useState(null)
+    let refreshing = false
 
     useEffect(() => {
         gradientPicker.current = new Grapick({ el: '#gradientPicker' });
@@ -40,23 +41,26 @@ function GradientControlPanel() {
 
         // Get position and color of new handler and add to fabric js color stops array
         gradientPicker.current.on('handler:add', e => {
-            const newColorStop = { offset: parseFloat(e.position.toFixed(0)) / 100, color: e.color }
-            const newColorStops = [...selection.fill.colorStops, newColorStop]
-            setOnFabricObject(selection, {
-                fill: new fabric.Gradient({
-                    ...selection.fill,
-                    colorStops: newColorStops
+            if (!refreshing) {
+                const newColorStop = { offset: parseFloat(e.position.toFixed(0)) / 100, color: e.color }
+                const newColorStops = [...selection.fill.colorStops, newColorStop]
+                setOnFabricObject(selection, {
+                    fill: new fabric.Gradient({
+                        ...selection.fill,
+                        colorStops: newColorStops,
+                    })
                 })
-            })
+            }
         })
 
         // Remove color stop which has same position as the removed handler
         gradientPicker.current.on('handler:remove', e => {
             const newColorStops = selection.fill.colorStops.filter(cs => cs.offset !== parseFloat(e.position.toFixed(0)) / 100)
+            if (selection.fill.colorStops.length === newColorStops.length) console.log("OOPS", { e, newColorStops })
             setOnFabricObject(selection, {
                 fill: new fabric.Gradient({
                     ...selection.fill,
-                    colorStops: newColorStops
+                    colorStops: newColorStops,
                 })
             })
         })
@@ -76,15 +80,20 @@ function GradientControlPanel() {
                 })
             })
         })
+
+        setSelectedGrapickHandler(gradientPicker.current.getSelected())
     }, [])
 
     const refreshGradientPicker = () => {
+        console.log(gradientPicker.current)
         gradientPicker.current.clear()
+        refreshing = true
         if (selection.fill.type === "linear" || selection.fill.type === "radial") {
             for (const colorStop of selection.fill.colorStops) {
-                gradientPicker.current.addHandler(colorStop.offset * 100, colorStop.color)
+                gradientPicker.current.addHandler(parseFloat((colorStop.offset * 100).toFixed(0)), colorStop.color)
             }
         }
+        refreshing = false
     }
 
 
@@ -102,34 +111,34 @@ function GradientControlPanel() {
                         },
                         colorStops: [
                             {
-                              "offset": 0.72,
-                              "color": "#040404"
+                                "offset": 0.72,
+                                "color": "#040404"
                             },
                             {
-                              "offset": 0.28,
-                              "color": "#6450c8"
+                                "offset": 0.28,
+                                "color": "#6450c8"
                             },
                             {
-                              "offset": 0.13,
-                              "color": "#0d0827"
+                                "offset": 0.13,
+                                "color": "#0d0827"
                             },
                             {
-                              "offset": 0.51,
-                              "color": "#a291f5"
+                                "offset": 0.51,
+                                "color": "#a291f5"
                             },
                             {
-                              "offset": 0.28,
-                              "color": "#6450c8"
+                                "offset": 0.28,
+                                "color": "#6450c8"
                             },
                             {
-                              "offset": 0.87,
-                              "color": "#e9e7f1"
+                                "offset": 0.87,
+                                "color": "#e9e7f1"
                             }
-                          ]
+                        ]
 
                     })
 
-                    setOnFabricObject(selection, {fill: linearGradient}, "setGradient")
+                    setOnFabricObject(selection, { fill: linearGradient }, "setGradient")
                     refreshGradientPicker()
                     selection.refreshGradientAngleControls()
                 }}
@@ -159,7 +168,7 @@ function GradientControlPanel() {
                             }
                         ]
                     })
-                    setOnFabricObject(selection, {fill: radialGradient}, "setGradient")
+                    setOnFabricObject(selection, { fill: radialGradient }, "setGradient")
                     refreshGradientPicker()
                     selection.refreshGradientAngleControls()
                 }}>Radial</Radio>
@@ -167,8 +176,8 @@ function GradientControlPanel() {
             <p></p>
             <div id="gradientPicker"></div>
             <p></p>
-            <ChromePicker value={selectedGrapickHandler?.color}
-                onChange={(e) => selectedGrapickHandler.setColor(e.hex)} />
+            <ChromePicker color={selectedGrapickHandler?.color}
+                onChangeComplete={(e) => selectedGrapickHandler?.setColor(`rgba(${e.rgb.r},${e.rgb.g},${e.rgb.b},${e.rgb.a})`)} />
         </>
     )
 
