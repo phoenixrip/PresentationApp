@@ -7,6 +7,7 @@ import Grapick from "grapick";
 import { useEffect, useContext, useState, useRef } from "react";
 import "../../../node_modules/grapick/dist/grapick.min.css"
 import "../../Utils/fabricCustomControls"
+import { ChromePicker } from 'react-color';
 
 function GradientControlPanel() {
     const context: EditorContextTypes = useContext(editorContext);
@@ -17,6 +18,9 @@ function GradientControlPanel() {
     let selectedColorStop = useRef(null)
 
     useEffect(() => {
+        if(selection.fill?.type === "linear") fabric.Object.prototype.setLinearGradientMode()
+        else if(selection.fill?.type === "radial") fabric.Object.prototype.setRadialGradientMode()
+
         gradientPicker.current = new Grapick({ el: '#gradientPicker' });
         if (selection.fill.type === "linear" || selection.fill.type === "radial") {
             for (const colorStop of selection.fill.colorStops) {
@@ -62,8 +66,11 @@ function GradientControlPanel() {
             })
         })
 
-        refreshGradientAngleControls()
+        gradientPicker.current.on('handler:color:change', e => {
+            console.log(e)
+        })
 
+        refreshGradientAngleControls()
     }, [])
 
     const refreshGradientPicker = () => {
@@ -76,10 +83,11 @@ function GradientControlPanel() {
     }
 
     const refreshGradientAngleControls = () => {
-        fabric.Object.prototype.controls.xy1GradientControl.offsetX = (selection.fill?.coords?.x1 - selection.width / 2) || 0
-        fabric.Object.prototype.controls.xy1GradientControl.offsetY = (selection.fill?.coords?.y1 - selection.height / 2) || 0
-        fabric.Object.prototype.controls.xy2GradientControl.offsetX = (selection.fill?.coords?.x2 - selection.width / 2) || 0
-        fabric.Object.prototype.controls.xy2GradientControl.offsetY = (selection.fill?.coords?.y2 - selection.height / 2) || 0
+        fabric.Object.prototype.controls.xy1GradientControl.offsetX = (selection.fill?.coords?.x1 - selection.width / 2)
+        fabric.Object.prototype.controls.xy1GradientControl.offsetY = (selection.fill?.coords?.y1 - selection.height / 2)
+        fabric.Object.prototype.controls.xy2GradientControl.offsetX = (selection.fill?.coords?.x2 - selection.width / 2)
+        fabric.Object.prototype.controls.xy2GradientControl.offsetY = (selection.fill?.coords?.y2 - selection.height / 2)
+        console.log(fabric.Object.prototype.controls)
     }
 
     return (
@@ -97,7 +105,7 @@ function GradientControlPanel() {
                             },
                             colorStops: [
                                 {
-                                    offset: 0, // value 0 - 1
+                                    offset: 0,
                                     color: "#000",
                                 },
                                 {
@@ -107,8 +115,10 @@ function GradientControlPanel() {
                             ]
                         })
                     })
+                    console.log(selection)
                     refreshGradientPicker()
                     refreshGradientAngleControls()
+                    fabric.Object.prototype.setLinearGradientMode()
                 }}
             >Linear</Radio>
             <Radio checked={selection?.fill?.type === "radial"}
@@ -117,16 +127,18 @@ function GradientControlPanel() {
                         fill: new fabric.Gradient({
                             type: "radial",
                             coords: {
-                                x1: 0,
-                                y1: 0,
-                                x2: 0,
-                                y2: 0,
-                                r1: 30,
-                                r2: 2,
+                                r1: selection.height / 2 + selection.width / 4,
+                                r2: selection.width * .05,
+
+                                x1: selection.width / 2,
+                                y1: selection.height / 2,
+
+                                x2: selection.width / 2,
+                                y2: selection.height / 2
                             },
                             colorStops: [
                                 {
-                                    offset: 0, // value 0 - 1
+                                    offset: 0,
                                     color: "#000",
                                 },
                                 {
@@ -136,100 +148,16 @@ function GradientControlPanel() {
                             ]
                         })
                     })
+                    console.log(selection)
                     refreshGradientPicker()
                     refreshGradientAngleControls()
+                    fabric.Object.prototype.setRadialGradientMode()
                 }}>Radial</Radio>
-            {/* <EquationInput
-                size={context.state.antdSize}
-                addonBefore="x1:"
-                precision={0}
-                value={selection?.fill?.coords?.x1}
-                onChange={(e: any) => {
-                    setOnFabricObject(selection, {
-                        fill: new fabric.Gradient({
-                            ...selection.fill,
-                            coords: { ...selection.fill.coords, x1: e.value }
-                        }
-                        )
-                    })
-                }} />
-            <EquationInput
-                size={context.state.antdSize}
-                addonBefore="y1:"
-                precision={0}
-                value={selection?.fill?.coords?.y1}
-                onChange={(e: any) => {
-                    setOnFabricObject(selection, {
-                        fill: new fabric.Gradient({
-                            ...selection.fill,
-                            coords: { ...selection.fill.coords, y1: e.value }
-                        }
-                        )
-                    })
-                }} />
-            <EquationInput
-                size={context.state.antdSize}
-                addonBefore="x2"
-                precision={0}
-                value={selection?.fill?.coords?.x2}
-                onChange={(e: any) => {
-                    setOnFabricObject(selection, {
-                        fill: new fabric.Gradient({
-                            ...selection.fill,
-                            coords: { ...selection.fill.coords, x2: e.value }
-                        }
-                        )
-                    })
-                }} />
-            <EquationInput
-                size={context.state.antdSize}
-                addonBefore="y2:"
-                precision={0}
-                value={selection?.fill?.coords?.y2}
-                onChange={(e: any) => {
-                    setOnFabricObject(selection, {
-                        fill: new fabric.Gradient({
-                            ...selection.fill,
-                            coords: { ...selection.fill.coords, y2: e.value }
-                        }
-                        )
-                    })
-                }} />
-            {selection?.fill?.type === "radial" &&
-                <>
-                    <EquationInput
-                        size={context.state.antdSize}
-                        addonBefore="r1:"
-                        precision={0}
-                        value={selection?.fill?.coords?.r1}
-                        onChange={(e: any) => {
-                            setOnFabricObject(selection, {
-                                fill: new fabric.Gradient({
-                                    ...selection.fill,
-                                    coords: { ...selection.fill.coords, r1: e.value }
-                                }
-                                )
-                            })
-                        }} />
-                    <EquationInput
-                        size={context.state.antdSize}
-                        addonBefore="r2:"
-                        precision={0}
-                        value={selection?.fill?.coords?.r2}
-                        onChange={(e: any) => {
-                            setOnFabricObject(selection, {
-                                fill: new fabric.Gradient({
-                                    ...selection.fill,
-                                    coords: { ...selection.fill.coords, r2: e.value }
-                                }
-                                )
-                            })
-                        }} />
-                </>
 
-            } */}
             <p></p>
             <div id="gradientPicker"></div>
+            <p></p>
+            <ChromePicker />
         </>
     )
 

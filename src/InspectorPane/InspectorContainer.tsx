@@ -11,6 +11,7 @@ import { DimensionsControlPanel } from "./ControlPanels/DimensionsControlPanel";
 import { FillControlPanel } from "./ControlPanels/FillControlPanel";
 import { BorderControlPanel } from "./ControlPanels/BorderControlPanel";
 import { ShadowControlPanel } from "./ControlPanels/ShadowControlPanel";
+import { GradientControlPanel } from "./ControlPanels/GradientControlPanel"
 import { EditorComponentClass } from "../CustomInteractionModules/EditorComponentClass";
 import { MultiChoiceLabelEditorComponent } from "../CustomInteractionModules/MultiChoiceLabel/EditorComponent";
 
