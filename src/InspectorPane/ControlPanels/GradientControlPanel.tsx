@@ -17,7 +17,7 @@ function GradientControlPanel() {
     let gradientPicker = useRef(null)
     let selectedColorStop = useRef(null)
     const [selectedGrapickHandler, setSelectedGrapickHandler] = useState(null)
-    let refreshing = false
+    let refreshing = useRef(false)
 
     useEffect(() => {
         gradientPicker.current = new Grapick({ el: '#gradientPicker' });
@@ -36,20 +36,27 @@ function GradientControlPanel() {
         //Set offset on selected color stop in fabric object to new position given in event
         gradientPicker.current.on('handler:drag', e => {
             selectedColorStop.current.offset = parseFloat(e.position.toFixed(0)) / 100
-            setOnFabricObject(selection, { fill: selection.fill })
+            const newColorStopsOrdered = selection.fill.colorStops.sort(function (a, b) { return a.offset - b.offset })
+            setOnFabricObject(selection, {
+                fill: new fabric.Gradient({
+                    ...selection.fill,
+                    colorStops: newColorStopsOrdered,
+                })
+            }, "setGradient")
         })
 
         // Get position and color of new handler and add to fabric js color stops array
         gradientPicker.current.on('handler:add', e => {
-            if (!refreshing) {
+            if (!refreshing.current) {
                 const newColorStop = { offset: parseFloat(e.position.toFixed(0)) / 100, color: e.color }
                 const newColorStops = [...selection.fill.colorStops, newColorStop]
+                const newColorStopsOrdered = newColorStops.sort(function (a, b) { return a.offset - b.offset })
                 setOnFabricObject(selection, {
                     fill: new fabric.Gradient({
                         ...selection.fill,
-                        colorStops: newColorStops,
+                        colorStops: newColorStopsOrdered,
                     })
-                })
+                }, "setGradient")
             }
         })
 
@@ -62,7 +69,7 @@ function GradientControlPanel() {
                     ...selection.fill,
                     colorStops: newColorStops,
                 })
-            })
+            }, "setGradient")
         })
 
         gradientPicker.current.on('handler:color:change', e => {
@@ -78,7 +85,7 @@ function GradientControlPanel() {
                     ...selection.fill,
                     colorStops: newColorStops
                 })
-            })
+            }, "setGradient")
         })
 
         setSelectedGrapickHandler(gradientPicker.current.getSelected())
@@ -87,13 +94,13 @@ function GradientControlPanel() {
     const refreshGradientPicker = () => {
         console.log(gradientPicker.current)
         gradientPicker.current.clear()
-        refreshing = true
+        refreshing.current = true
         if (selection.fill.type === "linear" || selection.fill.type === "radial") {
             for (const colorStop of selection.fill.colorStops) {
                 gradientPicker.current.addHandler(parseFloat((colorStop.offset * 100).toFixed(0)), colorStop.color)
             }
         }
-        refreshing = false
+        refreshing.current = false
     }
 
 
@@ -159,13 +166,26 @@ function GradientControlPanel() {
                         },
                         colorStops: [
                             {
-                                offset: 0,
-                                color: "#000",
+                                "offset": 0.2,
+                                "color": "#fff"
                             },
                             {
-                                offset: 1,
-                                color: "#fff",
-                            }
+                                "offset": 0.32,
+                                "color": "#000"
+                            },
+                            {
+                                "offset": 0.45,
+                                "color": "rgba(110,89,215,1)"
+                            },
+
+                            {
+                                "offset": 0.64,
+                                "color": "rgba(54, 18, 234, 255)"
+                            },
+                            {
+                                "offset": 0.82,
+                                "color": "rgba(52,15,235,1)"
+                            },
                         ]
                     })
                     setOnFabricObject(selection, { fill: radialGradient }, "setGradient")
@@ -178,6 +198,38 @@ function GradientControlPanel() {
             <p></p>
             <ChromePicker color={selectedGrapickHandler?.color}
                 onChangeComplete={(e) => selectedGrapickHandler?.setColor(`rgba(${e.rgb.r},${e.rgb.g},${e.rgb.b},${e.rgb.a})`)} />
+            {selection.fill?.type === "radial" &&
+                <>
+                    <EquationInput
+                        addonBefore="r1:"
+                        addonAfter="px"
+                        precision={0}
+                        value={selection.fill?.coords?.r1}
+                        onChange={(e: any) => {
+                            setOnFabricObject(selection, {
+                                fill: new fabric.Gradient({
+                                    ...selection.fill,
+                                    coords: { ...selection.fill.coords, r1: e.value }
+                                })
+                            }, "setGradient")
+                        }}
+                    />
+                    <EquationInput
+                        addonBefore="r1:"
+                        addonAfter="px"
+                        precision={0}
+                        value={selection.fill?.coords?.r2}
+                        onChange={(e: any) => {
+                            setOnFabricObject(selection, {
+                                fill: new fabric.Gradient({
+                                    ...selection.fill,
+                                    coords: { ...selection.fill.coords, r2: e.value }
+                                })
+                            }, "setGradient")
+                        }}
+                    />
+                </>
+            }
         </>
     )
 
