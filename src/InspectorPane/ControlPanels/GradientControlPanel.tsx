@@ -11,11 +11,11 @@ import './grapickCustom.css'
 import { ChromePicker } from 'react-color';
 
 interface Props {
-	selection: any | undefined
-  }
+    selection: any | undefined
+}
 
 
-const GradientControlPanel = ({selection}: Props) => {
+const GradientControlPanel = ({ selection }: Props) => {
     const context: EditorContextTypes = useContext(editorContext);
     const setOnFabricObject: Function = context.setOnFabricObject
 
@@ -25,7 +25,7 @@ const GradientControlPanel = ({selection}: Props) => {
     let refreshing = useRef(false)
 
     useEffect(() => {
-        console.log("gradient render")
+        console.log("mount me baby")
         gradientPicker.current = new Grapick({ el: '#gradientPicker' });
         if (selection.fill.type === "linear" || selection.fill.type === "radial") {
             for (const colorStop of selection.fill.colorStops) {
@@ -68,14 +68,21 @@ const GradientControlPanel = ({selection}: Props) => {
 
         // Remove color stop which has same position as the removed handler
         gradientPicker.current.on('handler:remove', e => {
-            const newColorStops = selection.fill.colorStops.filter(cs => cs.offset !== parseFloat(e.position.toFixed(0)) / 100)
-            if (selection.fill.colorStops.length === newColorStops.length) console.log("OOPS", { e, newColorStops })
-            setOnFabricObject(selection, {
-                fill: new fabric.Gradient({
-                    ...selection.fill,
-                    colorStops: newColorStops,
-                })
-            }, "setGradient")
+            if (!refreshing.current) {
+                const newColorStops = selection.fill.colorStops.filter(cs => cs.offset !== parseFloat(e.position.toFixed(0)) / 100)
+                
+                //only for testing
+                if (selection.fill.colorStops.length === newColorStops.length) {
+                    console.log("OOPS BABY") 
+                    console.log({ old: selection.fill.colorStops, new: newColorStops })
+                }
+                setOnFabricObject(selection, {
+                    fill: new fabric.Gradient({
+                        ...selection.fill,
+                        colorStops: newColorStops,
+                    })
+                }, "setGradient")
+            }
         })
 
         gradientPicker.current.on('handler:color:change', e => {
@@ -103,9 +110,9 @@ const GradientControlPanel = ({selection}: Props) => {
     }, [selection])
 
     const refreshGradientPicker = () => {
-        console.log(gradientPicker.current)
-        gradientPicker.current.clear()
+        console.log("shit that's refreshing")
         refreshing.current = true
+        gradientPicker.current.clear()
         if (selection.fill.type === "linear" || selection.fill.type === "radial") {
             for (const colorStop of selection.fill.colorStops) {
                 gradientPicker.current.addHandler(parseFloat((colorStop.offset * 100).toFixed(0)), colorStop.color)
@@ -117,7 +124,7 @@ const GradientControlPanel = ({selection}: Props) => {
     const handleDeleteGrapickHandler = () => {
         selectedGrapickHandler.remove()
         const remainingHandlers = gradientPicker.current.getHandlers()
-        if(remainingHandlers.length) remainingHandlers[0].select()
+        if (remainingHandlers.length) remainingHandlers[0].select()
     }
 
     return (
