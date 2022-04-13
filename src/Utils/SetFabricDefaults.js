@@ -1,6 +1,7 @@
 import { fabric } from 'fabric'
 import { customAttributesToIncludeInFabricCanvasToObject } from './consts'
 import { CTextBox } from './CustomFabricObjects/CTextBox'
+import { FakeGroup } from './CustomFabricObjects/FakeGroup'
 
 function setFabricDefaults() {
   // All object default settings
@@ -18,7 +19,10 @@ function setFabricDefaults() {
     hasRotatingPoint: false
   })
 
-  CTextBox()
+  fabric.Object.prototype.controls = {
+    ...fabric.Object.prototype.controls,
+    mtr: new fabric.Control({ visible: false })
+  }
 
   fabric.Object.prototype.getAnimatableValues = function () {
     let object = {}
@@ -39,24 +43,43 @@ function setFabricDefaults() {
     return object
   }
 
-  fabric.FakeGroup = fabric.util.createClass(fabric.Rect, {
-    type: 'FakeGroup',
-    initialize(options) {
-      this.callSuper('initialize', options)
-      this.set({
-        selectable: false,
-        evented: false,
-        fill: undefined,
-        visible: false,
-      })
+  fabric.Object.prototype.toggleUserLocked = function () {
+    if (!this.userLocked) {
+      this.setUserLocked(true)
+    } else {
+      this.setUserLocked(false)
     }
-  })
-
-  fabric.FakeGroup.fromObject = function (object, callback) {
-    const obj = fabric.Object._fromObject('FakeGroup', object, callback);
-    return obj
+    this.canvas?.requestRenderAll()
+    return this
   }
 
+  fabric.Object.prototype.toggleVisibility = function () {
+    if (!this.visible) {
+      this.set({ visible: true })
+    } else {
+      this.set({ visible: false })
+    }
+    this.canvas?.requestRenderAll()
+    return this
+  }
+
+  fabric.Object.prototype.setUserLocked = function (newUserLockedValue = true) {
+    if (newUserLockedValue) {
+      this.userLocked = true
+      this.selectable = false
+      this.evented = false
+    } else {
+      this.selectable = true
+      this.evented = true
+      this.userLocked = false
+    }
+  }
+
+  CTextBox()
+  FakeGroup()
+
+  fabric.Image.prototype.handleChildrenMode = 'default'
+  fabric.Image.prototype.canRecieveTypes = { 'LabelElement': true }
 
   fabric.CRect = fabric.util.createClass(fabric.Rect, {
     type: 'CRect',
@@ -92,11 +115,19 @@ function setFabricDefaults() {
 
   fabric.LabelElement = fabric.util.createClass(fabric.Textbox, {
     type: 'LabelElement',
+    handleChildrenMode: 'default',
+    canRecieveTypes: {
+      'path': true,
+      'polygon': true,
+      'polyline': true,
+      'CRect': true
+    },
     initialize(text, options) {
       this.callSuper('initialize', text, {
         fontSize: 29,
         fontFamily: 'Arial',
         fill: 'white',
+        textAlign: 'center',
         ...options
       })
       this.bgRect = new fabric.Rect({
@@ -105,15 +136,29 @@ function setFabricDefaults() {
       })
     },
     _render(ctx) {
-      this.bgRect.set({ width: this.width + 10, height: this.height + 10 })
+      this.bgRect.set({ width: this.width + 20, height: this.height + 20 })
       this.bgRect._render(ctx)
       this.callSuper('_render', ctx)
     }
   })
+
   fabric.LabelElement.fromObject = function (object, callback) {
     return fabric.Object._fromObject('LabelElement', object, callback, 'text');
   }
 
+
+
+  fabric.LabelAndTargetsGroup = fabric.util.createClass(fabric.FakeGroup, {
+    type: 'LabelAndTargetsGroup',
+    handleChildrenMode: 'locked',
+    initialize(options) {
+      this.callSuper('initialize', options)
+    }
+  })
+  fabric.LabelAndTargetsGroup.fromObject = function (object, callback) {
+    const obj = fabric.Object._fromObject('LabelAndTargetsGroup', object, callback);
+    return obj
+  }
 
   fabric.TargetOverlayPath = fabric.util.createClass(fabric.Rect, {
     initialize(options, pathObjects = []) {
@@ -136,7 +181,6 @@ function setFabricDefaults() {
         top: 0,
         left: 0
       })
-      // this.pathObjects.forEach(obj => this.canvas.add(obj))
     },
     _render(ctx) {
       this.callSuper('_render', ctx)
@@ -146,14 +190,23 @@ function setFabricDefaults() {
     }
   })
 
+  fabric.ImageLabelGroup = fabric.util.createClass(fabric.FakeGroup, {
+    type: 'ImageLabelGroup',
+    initialize() {
+
+    }
+  })
+
   fabric.ObjectLabelGroup = fabric.util.createClass(fabric.Group, {
     type: 'ObjectLabelGroup',
     initialize(paths, options) {
       console.log('ObjectLabelGroup')
       this.callSuper('initialize', paths, options)
     },
-    // drawObject: function (ctx) {
-    // },
+  })
+
+  fabric.LockedGroup = fabric.util.createClass(fabric.FakeGroup, {
+    type: 'LockedGroup',
   })
 }
 

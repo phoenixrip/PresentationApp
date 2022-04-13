@@ -1,11 +1,19 @@
+import { v4 as uuidv4 } from 'uuid';
 import { customAttributesToIncludeInFabricCanvasToObject } from "../../Utils/consts"
 import { CustomFabricCanvas } from "../../Utils/CustomFabricCanvas"
 import { EditorComponentClass } from "../EditorComponentClass"
 
+/**
+ * @typedef {Object} ValidObjects
+ * @property {Array[fabric.Object]} hasLabelObject - The label objects
+ * @property {Array[fabric.Object]} hasTargetables - The target objects
+ * @property {Array[fabric.Object]} hasImage - The image objects
+ */
+
 class MultiChoiceLabelEditorComponent extends EditorComponentClass {
   static key = 'multichoicelabel'
   static displayName = 'Multiple choice label'
-  static action
+  static action = 'Create '
   /**
    * 
    * @param {CustomFabricCanvas} fabricCanvas 
@@ -14,59 +22,57 @@ class MultiChoiceLabelEditorComponent extends EditorComponentClass {
   static checkIfSelectionInitable(fabricCanvas) {
     const fabricActiveSelectionArray = fabricCanvas.getActiveObjects()
     // Check we have a path or a poly
-    let labelables = []
-    fabricActiveSelectionArray.forEach(obj => {
+    const valid = MultiChoiceLabelEditorComponent.getValidObjectsFromArray(fabricActiveSelectionArray)
+    return (
+      valid.hasLabelObject.length
+      && valid.hasTargetables.length
+      && valid.hasImage.length
+    )
+    // return labelables.length
+  }
+  /**
+   * @param {Array[fabric.Object]} objectsArray 
+   * @returns {ValidObjects}
+   */
+  static getValidObjectsFromArray(objectsArray) {
+    let hasLabelObject = []
+    let hasTargetables = []
+    let hasImage = []
+    objectsArray.forEach(obj => {
       switch (obj.type) {
         case 'path':
         case 'polygon':
-          labelables.push(obj)
+          hasTargetables.push(obj)
           break;
+        case 'image':
+          hasImage.push(obj)
+          break;
+        case 'LabelElement':
+          hasLabelObject.push(obj)
         default:
           break;
       }
     })
-    return labelables.length
+    return {
+      hasLabelObject,
+      hasTargetables,
+      hasImage
+    }
   }
-  /**
+  /** handleInit
    * @this {Editor}
-   * @param {import("../../EditorContext").EditorContextTypes} editorContext 
    */
   static async handleInit() {
     // This is the editor component
     const selectedObjects = this.fabricCanvas.getActiveObjects()
 
     this.fabricCanvas.discardActiveObject()
-    this.fabricCanvas.renderAll()
-
-    const selectedPathObjects = selectedObjects
-      .filter(obj => obj.type === 'path' || obj.type === 'polygon')
-    let paths = []
-
-    const bgRect = new fabric.Rect({
-      width: this.state.project.settings.dimensions.width,
-      height: this.state.project.settings.dimensions.height,
-      top: 0,
-      left: 0,
-      fill: 'rgba(0, 0, 0, 0.65)'
+    const valid = MultiChoiceLabelEditorComponent.getValidObjectsFromArray(selectedObjects)
+    const parentGroupGUID = uuidv4()
+    const newGroupObject = new fabric.LabelAndTargetsGroup({
+      guid: parentGroupGUID,
     })
-    paths.push(bgRect)
-    for (const obj of selectedPathObjects) {
-      const newPathObject = await clone(obj)
-      newPathObject.set({ fill: 'black', globalCompositeOperation: 'destination-out' })
-      paths.push(newPathObject)
-      const newPathOutline = await clone(obj)
-      newPathOutline.set({ stroke: 'blue', strokeWidth: 2 })
-      paths.push(newPathOutline)
-    }
-    const group = new fabric.ObjectLabelGroup(paths, {
-
-    })
-    this.props.handleAddObject(
-      group,
-      selectedPathObjects[0].parentID,
-      'Target Overlay',
-      selectedPathObjects[0].treeIndex + 1
-    )
+    this.props.addObject()
   }
 }
 export {

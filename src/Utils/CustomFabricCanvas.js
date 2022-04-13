@@ -14,9 +14,9 @@ class CustomFabricCanvas extends fabric.Canvas {
   existingSelectionIsCustomCreated = false
   familyObjectsRemovedFromSelection = false
   _onMouseDown(e) {
-    console.log("onmousedown custom", e)
+    // console.log("onmousedown custom", e)
     let target
-    if(e?.shiftKey) { // On shift click we ignore active selections in findTarget so we get actual element clicked
+    if (e?.shiftKey) { // On shift click we ignore active selections in findTarget so we get actual element clicked
       target = this.findTarget(e, true)
     } else {
       target = this.findTarget(e, false)
@@ -33,29 +33,29 @@ class CustomFabricCanvas extends fabric.Canvas {
       this.renderAll()
     }
     else if (target && target.parentID && e?.shiftKey) {
-        const currentSelection = this.getActiveObject()
+      const currentSelection = this.getActiveObject()
 
-        // if we have shift clicked and selected an object with a family that's not in our current selection add it
-        if (currentSelection.type === "activeSelection" && !currentSelection.contains(target)) {
-          const allObjectsInFamily = this.objectsInFamilyOfGUID(target.guid)
-          const newSelectedObjects = [...currentSelection.getObjects(), ...allObjectsInFamily]
-          this._discardActiveObject()
-          const newActiveSelection = new fabric.ActiveSelection(newSelectedObjects, { canvas: this })
-          this._setActiveObject(newActiveSelection)
-          //this.existingSelectionIsCustomCreated = true
-          this.renderAll()
+      // if we have shift clicked and selected an object with a family that's not in our current selection add it
+      if (currentSelection.type === "activeSelection" && !currentSelection.contains(target)) {
+        const allObjectsInFamily = this.objectsInFamilyOfGUID(target.guid)
+        const newSelectedObjects = [...currentSelection.getObjects(), ...allObjectsInFamily]
+        this._discardActiveObject()
+        const newActiveSelection = new fabric.ActiveSelection(newSelectedObjects, { canvas: this })
+        this._setActiveObject(newActiveSelection)
+        //this.existingSelectionIsCustomCreated = true
+        this.renderAll()
 
-          // if we have shift clicked and select an object with a family in our current selection filter it out of our selection
-        } else if (currentSelection.type === "activeSelection" && currentSelection.contains(target)) {
-          const allObjectsInFamily = this.objectsInFamilyOfGUID(target.guid)
-          const newSelectedObjects = currentSelection.getObjects().filter(obj => !allObjectsInFamily.includes(obj))
-          this._discardActiveObject()
-          const newActiveSelection = new fabric.ActiveSelection(newSelectedObjects, { canvas: this })
-          this._setActiveObject(newActiveSelection)
-          this.existingSelectionIsCustomCreated = true
-          this.familyObjectsRemovedFromSelection = true
-          this.renderAll()
-        }
+        // if we have shift clicked and select an object with a family in our current selection filter it out of our selection
+      } else if (currentSelection.type === "activeSelection" && currentSelection.contains(target)) {
+        const allObjectsInFamily = this.objectsInFamilyOfGUID(target.guid)
+        const newSelectedObjects = currentSelection.getObjects().filter(obj => !allObjectsInFamily.includes(obj))
+        this._discardActiveObject()
+        const newActiveSelection = new fabric.ActiveSelection(newSelectedObjects, { canvas: this })
+        this._setActiveObject(newActiveSelection)
+        this.existingSelectionIsCustomCreated = true
+        this.familyObjectsRemovedFromSelection = true
+        this.renderAll()
+      }
     }
     super._onMouseDown(e)
   }
@@ -160,7 +160,7 @@ class CustomFabricCanvas extends fabric.Canvas {
         obj.parentID = newGroup.guid
         atInsertionIndex.push(obj)
         dealtWithIndex = i
-        if (obj.type === 'FakeGroup') {
+        if (obj?.handleChildrenMode !== undefined) {
           const groupPath = obj.structurePath
           let currentIterationIndex = dealtWithIndex + 1
           while (this._objects[currentIterationIndex].structurePath.length > groupPath.length) {
@@ -221,11 +221,11 @@ class CustomFabricCanvas extends fabric.Canvas {
   }
   tempDeselect() {
     this.cachedActiveObjectsArray = this.getActiveObjects()
-    console.trace('tempDeselect: ', this.cachedActiveObjectsArray)
+    // console.trace('tempDeselect: ', this.cachedActiveObjectsArray)
     this._discardActiveObject()
   }
   tempReselect() {
-    console.trace('tempReselect', this.cachedActiveObjectsArray)
+    // console.trace('tempReselect', this.cachedActiveObjectsArray)
     if (!this.cachedActiveObjectsArray) return
     if (!this.cachedActiveObjectsArray.length) return
     if (this.cachedActiveObjectsArray.length === 1) {

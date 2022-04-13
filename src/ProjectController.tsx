@@ -19,6 +19,11 @@ interface State {
   activeSceneIndexs: Array<number>,
   projectPreviewOpen: boolean
 }
+
+interface IAddGroupedObjectsConfig {
+  addAtIndex?: number
+}
+
 export type { State as IProjectControllerState }
 
 class ProjectController extends Component<Props, State> {
@@ -385,7 +390,6 @@ class ProjectController extends Component<Props, State> {
 
     const newGUID = uuidv4()
     // Apply custom settings to object
-    // const useAsCustomObject = objectToAdd as CustomFabricObject
     const useUserSetName = useAsCustom?.userSetName ?? userSetName ?? useAsCustom.type
     const useParentID = useAsCustom?.parentID ?? parentID
     useAsCustom.set({
@@ -409,6 +413,12 @@ class ProjectController extends Component<Props, State> {
     this.liveEditor?.fabricCanvas?.setActiveObject(useAsCustom)
     this.liveEditor?.fabricCanvas?.requestRenderAll()
     return objectToAdd
+  }
+
+  handleAddGroupedObjects = (addGroupedObjectsConfig: IAddGroupedObjectsConfig) => {
+    console.log({
+      addGroupedObjectsConfig
+    })
   }
 
   handleDuplicateScene = () => {

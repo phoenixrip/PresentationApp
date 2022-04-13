@@ -136,3 +136,26 @@
 .Collapse.collapsed svg {
   transform: rotate(-90deg);
 }
+
+.actionsContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.rightActionContainer {
+  margin: 0px 4px;
+  font-size: 11px;
+  color: #808080;
+}
+
+.rightActionContainer.active {
+  color: #dbdbdb;
+}
+
+.rightActionContainer.inactive {
+  visibility: hidden;
+}
+
+.Wrapper:hover .inactive {
+  visibility: visible;
+}
