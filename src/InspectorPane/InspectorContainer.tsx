@@ -14,7 +14,6 @@ import { ShadowControlPanel } from "./ControlPanels/ShadowControlPanel";
 import { GradientControlPanel } from "./ControlPanels/GradientControlPanel"
 import { EditorComponentClass } from "../CustomInteractionModules/EditorComponentClass";
 import { MultiChoiceLabelEditorComponent } from "../CustomInteractionModules/MultiChoiceLabel/EditorComponent";
-import { GradientControlPanel } from "./ControlPanels/GradientControlPanel";
 
 interface Props {
   availiableCustomInteractionModules: {
