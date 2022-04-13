@@ -143,12 +143,12 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
 
     // CANVAS EVENT HOOKS
     this.fabricCanvas.on("object:modified", (e: any) => {
-      console.log("object:modified", e)
       normalizeAllObjectCoords(e.target, e.action)
       // if (!e?.customFire) this.sanitizeEquations(e.target, e.action)
       // return this.normalizeNewSceneState(`object:modified: action: ${e.action}, name: ${e.target?.userSetName || e.target.type}`)
     });
 
+    // This is used to hook changes in fabric.object.prototype gradientcontrols into our react workflow.
     this.fabricCanvas.on("custom:object:modify", (e: any) => {
       this.setOnFabricObject(e.target, e.settings, e.action)
     });

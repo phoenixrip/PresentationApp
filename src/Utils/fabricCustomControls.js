@@ -17,6 +17,7 @@ fabric.Object.prototype.refreshGradientAngleControls = function() {
     this.controls.xy1GradientControl.offsetY = (this.fill?.coords?.y1 - this.height / 2)
     this.controls.xy2GradientControl.offsetX = (this.fill?.coords?.x2 - this.width / 2)
     this.controls.xy2GradientControl.offsetY = (this.fill?.coords?.y2 - this.height / 2)
+    this.controls.xy2GradientControl.setVisibility(true) //otherwise the render function doesn't run
 }
 
 fabric.Object.prototype.controls.xy1GradientControl = new fabric.Control({

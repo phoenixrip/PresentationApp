@@ -18,18 +18,17 @@ import { MultiChoiceLabelEditorComponent } from "../CustomInteractionModules/Mul
 interface Props {
   availiableCustomInteractionModules: {
     [key: string]: MultiChoiceLabelEditorComponent
-  }
+  },
 }
-const InspectorContainer = (props: Props) => {
+const InspectorContainer = ({availiableCustomInteractionModules}: Props) => {
   const context: EditorContextTypes = useContext(editorContext);
   const selection: any | undefined = context.fabricCanvas?.getActiveObject()
   const setOnFabricObject: Function = context.setOnFabricObject
 
-  // if (selection) console.log("strokedash", !selection?.strokeDashArray)
   return (
     <>
       {!selection &&
-        <p>no element selected</p>
+        <p>Project inspector pane</p>
       }
       {
         selection?.type === 'activeSelection' &&
@@ -37,9 +36,9 @@ const InspectorContainer = (props: Props) => {
       }
       {
         selection?.type === 'activeSelection' &&
-        Object.entries(props.availiableCustomInteractionModules)
+        Object.entries(availiableCustomInteractionModules)
           .map(([customComponentKey, customInteractionEditorClass]) => {
-            const thisClass = props.availiableCustomInteractionModules[customComponentKey]
+            const thisClass = availiableCustomInteractionModules[customComponentKey]
             const isAddable = thisClass.checkIfSelectionInitable(context.fabricCanvas)
             if (isAddable) {
               return (
@@ -59,22 +58,22 @@ const InspectorContainer = (props: Props) => {
         <>
           <Collapse defaultActiveKey={[]}>
             <Panel header="Dimensions" key="1">
-              <DimensionsControlPanel />
+              <DimensionsControlPanel selection={selection}/>
             </Panel>
             <Panel header="Position" key="2">
-              <PositionControlPanel />
+              <PositionControlPanel selection={selection} />
             </Panel>
             <Panel header="Fill" key="3">
-              <FillControlPanel />
+              <FillControlPanel selection={selection} />
             </Panel>
             <Panel header="Border" key="4">
-              <BorderControlPanel />
+              <BorderControlPanel selection={selection} />
             </Panel>
             <Panel header="Shadow" key="5">
-              <ShadowControlPanel />
+              <ShadowControlPanel selection={selection} />
             </Panel>
             <Panel header="Gradient" key="6">
-              <GradientControlPanel />
+              <GradientControlPanel selection={selection} />
             </Panel>
             {
               selection.type === 'image' &&

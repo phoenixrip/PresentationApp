@@ -7,11 +7,16 @@ import Grapick from "grapick";
 import { useEffect, useContext, useState, useRef } from "react";
 import "../../../node_modules/grapick/dist/grapick.min.css"
 import "../../Utils/fabricCustomControls"
+import './grapickCustom.css'
 import { ChromePicker } from 'react-color';
 
-function GradientControlPanel() {
+interface Props {
+	selection: any | undefined
+  }
+
+
+const GradientControlPanel = ({selection}: Props) => {
     const context: EditorContextTypes = useContext(editorContext);
-    const selection: any | undefined = context.fabricCanvas?.getActiveObject()
     const setOnFabricObject: Function = context.setOnFabricObject
 
     let gradientPicker = useRef(null)
@@ -20,6 +25,7 @@ function GradientControlPanel() {
     let refreshing = useRef(false)
 
     useEffect(() => {
+        console.log("gradient render")
         gradientPicker.current = new Grapick({ el: '#gradientPicker' });
         if (selection.fill.type === "linear" || selection.fill.type === "radial") {
             for (const colorStop of selection.fill.colorStops) {
@@ -91,6 +97,11 @@ function GradientControlPanel() {
         setSelectedGrapickHandler(gradientPicker.current.getSelected())
     }, [])
 
+    //refresh grapick on selection change
+    useEffect(() => {
+        refreshGradientPicker()
+    }, [selection])
+
     const refreshGradientPicker = () => {
         console.log(gradientPicker.current)
         gradientPicker.current.clear()
@@ -103,6 +114,11 @@ function GradientControlPanel() {
         refreshing.current = false
     }
 
+    const handleDeleteGrapickHandler = () => {
+        selectedGrapickHandler.remove()
+        const remainingHandlers = gradientPicker.current.getHandlers()
+        if(remainingHandlers.length) remainingHandlers[0].select()
+    }
 
     return (
         <>
@@ -196,9 +212,11 @@ function GradientControlPanel() {
             <p></p>
             <div id="gradientPicker"></div>
             <p></p>
+            <Button onClick={handleDeleteGrapickHandler}>Delete Color Stop</Button>
             <ChromePicker color={selectedGrapickHandler?.color}
                 onChangeComplete={(e) => selectedGrapickHandler?.setColor(`rgba(${e.rgb.r},${e.rgb.g},${e.rgb.b},${e.rgb.a})`)} />
-            {selection.fill?.type === "radial" &&
+            {
+                selection.fill?.type === "radial" &&
                 <>
                     <EquationInput
                         addonBefore="r1:"
@@ -215,7 +233,7 @@ function GradientControlPanel() {
                         }}
                     />
                     <EquationInput
-                        addonBefore="r1:"
+                        addonBefore="r2:"
                         addonAfter="px"
                         precision={0}
                         value={selection.fill?.coords?.r2}
