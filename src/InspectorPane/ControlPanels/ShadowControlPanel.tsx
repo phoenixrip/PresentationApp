@@ -5,9 +5,12 @@ import { Button, InputNumber, Collapse, Switch, Radio } from 'antd';
 import { fabric } from "fabric";
 import { EquationInput } from "../EquationInput";
 
-function ShadowControlPanel() {
+interface Props {
+	selection: any | undefined
+  }
+
+const ShadowControlPanel = ({selection}: Props) => {
     const context: EditorContextTypes = useContext(editorContext);
-    const selection: any | undefined = context.fabricCanvas?.getActiveObject()
     const setOnFabricObject: Function = context.setOnFabricObject
 
     return (

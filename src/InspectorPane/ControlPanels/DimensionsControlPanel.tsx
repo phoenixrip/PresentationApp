@@ -7,16 +7,15 @@ import { faCoffee, faLock, faUnlock } from '@fortawesome/free-solid-svg-icons'
 
 import { EquationInput } from "../EquationInput";
 
-import { calculateFromString } from '../../Utils/calculateFromString.js'
 import Input from "rc-input";
 
-// console.log(calculateFromString("2+2"))
+interface Props {
+	selection: any | undefined
+  }
 
-function DimensionsControlPanel() {
+const DimensionsControlPanel = ({selection}: Props) => {
 	const context: EditorContextTypes = useContext(editorContext)
-	const selection: any | undefined = context.fabricCanvas?.getActiveObject()
 	const setOnFabricObject: Function = context.setOnFabricObject
-
 
 	return (
 		<>

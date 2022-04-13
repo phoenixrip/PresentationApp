@@ -3,9 +3,14 @@ import { editorContext, EditorContextTypes } from "../../Editor";
 import { Button, InputNumber } from "antd"
 import { EquationInput } from "../EquationInput";
 
-function PositionControlPanel() {
+interface Props {
+	selection: any | undefined
+  }
+
+
+const PositionControlPanel = ({selection}: Props) => {
   const context: EditorContextTypes = useContext(editorContext);
-  const selection: any | undefined = context.fabricCanvas?.getActiveObject()
+
   const setOnFabricObject: Function = context.setOnFabricObject
 
   return (

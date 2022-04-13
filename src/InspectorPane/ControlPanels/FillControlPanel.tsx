@@ -2,9 +2,13 @@ import { useContext } from "react";
 import { editorContext, EditorContextTypes } from "../../Editor";
 import { CirclePicker, ChromePicker } from 'react-color';
 
-function FillControlPanel() {
+interface Props {
+	selection: any | undefined
+  }
+
+
+const FillControlPanel = ({selection}: Props) => {
   const context: EditorContextTypes = useContext(editorContext);
-  const selection: any | undefined = context.fabricCanvas?.getActiveObject()
   const setOnFabricObject: Function = context.setOnFabricObject
 
   return (

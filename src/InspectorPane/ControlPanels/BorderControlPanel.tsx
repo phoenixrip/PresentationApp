@@ -4,9 +4,13 @@ import { CirclePicker } from 'react-color';
 import { Button, InputNumber, Collapse, Switch, Radio } from 'antd';
 import { EquationInput } from "../EquationInput";
 
-function BorderControlPanel() {
+interface Props {
+	selection: any | undefined
+  }
+
+
+const BorderControlPanel = ({selection}: Props) => {
   const context: EditorContextTypes = useContext(editorContext);
-  const selection: any | undefined = context.fabricCanvas?.getActiveObject()
   const setOnFabricObject: Function = context.setOnFabricObject
 
   const getStrokeDashState = () => {

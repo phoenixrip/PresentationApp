@@ -148,6 +148,25 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       // return this.normalizeNewSceneState(`object:modified: action: ${e.action}, name: ${e.target?.userSetName || e.target.type}`)
     });
 
+    // This is used to hook changes in fabric.object.prototype gradientcontrols into our react workflow.
+    this.fabricCanvas.on("custom:object:modify", (e: any) => {
+      this.setOnFabricObject(e.target, e.settings, e.action)
+    });
+
+    //Update gradient angle controls on selection
+    this.fabricCanvas.on("selection:created", (e:any) => {
+      if(e.selected.length === 1) {
+        const selection = e.selected[0]
+        if(selection.fill?.type === "linear" || selection.fill?.type === "radial" ) selection.refreshGradientAngleControls()
+      }
+    })
+      this.fabricCanvas.on("selection:updated", (e:any) => {
+        if(e.selected.length === 1) {
+          const selection = e.selected[0]
+          if(selection.fill?.type === "linear" || selection.fill?.type === "radial" ) selection.refreshGradientAngleControls()
+        }
+      })
+
     this.fabricCanvas.on("selection:created", this.selectionCreated)
     this.fabricCanvas.on("selection:updated", this.selectionUpdated)
     this.fabricCanvas.on("selection:cleared", this.selectionCleared)
