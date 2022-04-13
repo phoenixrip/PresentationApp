@@ -28,9 +28,15 @@ export function getProjection(
   dragOffset: number,
   indentationWidth: number
 ) {
+  const activeItemIndex = items.findIndex(({ id }) => id === activeId)
+  const activeItem = items[activeItemIndex]
+
   const overItemIndex = items.findIndex(({ id }) => id === overId);
-  const activeItemIndex = items.findIndex(({ id }) => id === activeId);
-  const activeItem = items[activeItemIndex];
+  const overItem = items[overItemIndex]
+  // const canDropInOver = canDropIn(overItem)
+  // console.log(`overItemIndex: ${overItemIndex}, can drop: ${canDropInOver}`)
+
+
   const newItems = arrayMove(items, activeItemIndex, overItemIndex);
   const previousItem = newItems[overItemIndex - 1];
   const nextItem = newItems[overItemIndex + 1];
@@ -38,11 +44,23 @@ export function getProjection(
   const projectedDepth = activeItem.depth + dragDepth
 
   const effectiveNextDepth = nextItem?.depth || 0
-  const effectivePrevDepth = (!previousItem)
-    ? 0
-    : previousItem.type === 'FakeGroup'
-      ? previousItem.depth + 1
-      : previousItem?.depth || 0
+  let effectivePrevDepth = 0
+  if (previousItem) {
+    if (previousItem?.handleChildrenMode !== undefined) {
+      const isDefinedAsCantRecieve = previousItem?.cantRecieveTypes?.[activeItem.type]
+      const isCanRecieveDefined = previousItem?.canRecieveTypes !== undefined
+      const isDefinedAsCanRecieve = previousItem?.canRecieveTypes?.[activeItem.type]
+      const canDropUnder = (isDefinedAsCantRecieve || (isCanRecieveDefined && isDefinedAsCanRecieve))
+      console.log(`${canDropUnder ? 'CAN' : 'cant'} drop a ${activeItem.type} into a ${previousItem.type}`)
+      if (canDropUnder) {
+        effectivePrevDepth = (previousItem.depth + 1)
+      } else {
+        effectivePrevDepth = previousItem.depth
+      }
+    } else {
+      effectivePrevDepth = previousItem?.depth ?? 0
+    }
+  }
 
   const maxDepth = Math.max(effectiveNextDepth, effectivePrevDepth)
   const minDepth = Math.min(effectiveNextDepth, effectivePrevDepth)
@@ -74,6 +92,14 @@ export function getProjection(
       .reverse()
       .find((item) => item.depth === depth)?.parentID;
     return newParent ?? null;
+  }
+  function canDropIn(checkItem) {
+    if (!checkItem?.handleChildrenMode) return false
+    const isDefinedAsCantRecieve = checkItem?.cantRecieveTypes?.[activeItem.type]
+    const isCanRecieveDefined = checkItem?.canRecieveTypes !== undefined
+    const isDefinedAsCanRecieve = checkItem?.canRecieveTypes?.[activeItem.type]
+    const canDropUnder = (isDefinedAsCantRecieve || (isCanRecieveDefined && isDefinedAsCanRecieve))
+    return canDropUnder
   }
 }
 
@@ -126,7 +152,23 @@ export type { NewTreeItem }
 export function buildTree(flattenedItems: Array<CustomFabricObject>) {
   const root = { id: 'root', children: [] }
   const nodes = { [root.id]: root };
-  const items: Array<NewFlattenedItem> = flattenedItems.map((item) => ({ ...item, children: [] }));
+  const items: Array<NewFlattenedItem> = flattenedItems.map((item) => ({
+    type: item.type,
+    id: item.guid,
+    guid: item.guid,
+    children: [],
+    depth: item.depth,
+    parentID: item.parentID,
+    structurePath: item.structurePath,
+    treeIndex: item.treeIndex,
+    topLevelIndex: item.topLevelIndex,
+    userLocked: item.userLocked,
+    handleChildrenMode: item.handleChildrenMode,
+    canRecieveTypes: item.canRecieveTypes,
+    cantRecieveTypes: item.cantRecieveTypes,
+    children: [],
+    collapsed: item.collapsed
+  }));
 
   for (const item of items) {
     const { id, children } = item;
@@ -134,9 +176,6 @@ export function buildTree(flattenedItems: Array<CustomFabricObject>) {
     const parent = nodes[parentID] ?? findItem(items, parentID);
 
     nodes[id] = { ...item, id, children, parentID };
-    if (!parent?.children) {
-      console.log({ parentID })
-    }
     parent.children.push(item);
   }
 

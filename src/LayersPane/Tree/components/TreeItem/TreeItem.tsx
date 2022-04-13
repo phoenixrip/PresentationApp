@@ -1,7 +1,7 @@
-import React, { forwardRef, HTMLAttributes, useContext, useState } from 'react';
+import React, { forwardRef, HTMLAttributes, MutableRefObject, useContext, useRef, useState } from 'react';
 import classNames from 'classnames';
 // import { UseFaIcon } from '../Utils/UseFaIcon'
-import { faBezierCurve, faCircle, faDrawPolygon, faFileText, faFolder, faFont, faImage, faLayerGroup, faSlash, faTag, faTags, faTextWidth, faVectorSquare } from '@fortawesome/free-solid-svg-icons'
+import { faBezierCurve, faCircle, faDrawPolygon, faEyeSlash, faFileText, faFolder, faFont, faImage, faLayerGroup, faLock, faMitten, faSlash, faTag, faTags, faTextWidth, faVectorSquare } from '@fortawesome/free-solid-svg-icons'
 // import { faFolder, faVectorSquare } from '@fortawesome/free'
 import { Action, Handle, Remove } from './Item/';
 import styles from './TreeItem.module.css';
@@ -12,9 +12,11 @@ interface ObjIconTypes {
   [key: string]: any
 }
 const objIcons: ObjIconTypes = {
+  'default': faMitten,
   'CRect': faVectorSquare,
   'rect': faVectorSquare,
   'FakeGroup': faFolder,
+  'LabelAndTargetsGroup': faFolder,
   'group': faLayerGroup,
   'textbox': faFont,
   'text': faFont,
@@ -70,23 +72,37 @@ export const TreeItem = forwardRef<HTMLDivElement, Props>(
     ref
   ) => {
     const context = useContext(editorContext)
+    const inputRef = useRef(null)
     const guid = value
     const liveObject = context.liveObjectsDict[guid]
     const objectTypeKey = liveObject?.type || 'default'
     const isSelected = context.state.selectedGUIDsDict[guid]
+    const isUserLocked = liveObject?.userLocked
+    const isHidden = (liveObject?.visible !== undefined && liveObject?.visible !== true)
 
     const [editableUserSetNameValue, setEditableUserSetNameValue] = useState(liveObject?.text || liveObject.userSetName)
 
     function handleBlurUserSetNameInput() {
       liveObject.set({ userSetName: editableUserSetNameValue })
+      setIsInEditingNameMode(false)
       document.body.focus()
     }
     function handleMouseDown(e: any) {
       if (e.shiftKey) {
-        console.log('shift click')
+        console.log('**shift click')
       }
       context.handleSelectElementByGUID(liveObject.guid)
     }
+
+    function handleDoubleClick(e: any) {
+      console.log('input double')
+      setIsInEditingNameMode(true)
+      //@ts-ignore
+      inputRef.current.select()
+    }
+
+    const [isInEditingNameMode, setIsInEditingNameMode] = useState(false)
+
     return (
       <li
         className={classNames(
@@ -128,15 +144,42 @@ export const TreeItem = forwardRef<HTMLDivElement, Props>(
             </Action>
           )}
           <Input
+            ref={inputRef}
             size={'small'}
             onChange={(e) => setEditableUserSetNameValue(e.target.value)}
             onBlur={handleBlurUserSetNameInput}
             onPressEnter={handleBlurUserSetNameInput}
             value={editableUserSetNameValue}
-            style={{ padding: '0px 4px' }}
-            onFocus={handleMouseDown}
-          // disabled={!isSelected}
+            style={{
+              padding: '0px 4px',
+              border: 0,
+              cursor: isInEditingNameMode ? 'text' : 'pointer',
+              userSelect: isInEditingNameMode ? 'text' : 'none',
+            }}
+            onDoubleClick={handleDoubleClick}
+            onMouseDown={handleMouseDown}
+            readOnly={!isInEditingNameMode}
           />
+          <div className={styles.actionsContainer}>
+            <div className={classNames(
+              styles.rightActionContainer,
+              (isUserLocked ? styles.active : styles.inactive),
+              styles.lockContainer
+            )}
+              onClick={() => liveObject.toggleUserLocked()}
+            >
+              <UseFaIcon icon={faLock} />
+            </div>
+            <div className={classNames(
+              styles.rightActionContainer,
+              (isHidden ? styles.active : styles.inactive),
+              styles.visibilityContainer
+            )}
+              onClick={() => liveObject.toggleVisibility()}
+            >
+              <UseFaIcon icon={faEyeSlash} />
+            </div>
+          </div>
           {/* <span
             onMouseDown={handleMouseDown}
             className={styles.Text}>{

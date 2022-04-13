@@ -150,7 +150,7 @@ interface AppControllerStateTypes {
 class AppController extends Component<{}, AppControllerStateTypes> {
 	constructor(props: Object) {
 		super(props);
-		console.clear()
+		// console.clear()
 		this.state = dummyAppControllerState;
 	}
 	render(): ReactNode {

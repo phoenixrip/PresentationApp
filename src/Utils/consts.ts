@@ -9,7 +9,8 @@ const customAttributesToIncludeInFabricCanvasToObject: Array<string> = [
     'treeIndex',
     'topLevelIndex',
     'widthEquation',
-    'heightEquation'
+    'heightEquation',
+    'userLocked'
 ]
 
 

@@ -243,7 +243,6 @@ export function SortableTree({
 
     if (projected && over) {
       const { depth, parentID } = projected;
-      console.log({ depth, parentID })
       const clonedItems: FlattenedItem[] = JSON.parse(
         JSON.stringify(flattenTree(items))
       );

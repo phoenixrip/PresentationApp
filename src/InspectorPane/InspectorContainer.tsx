@@ -13,6 +13,7 @@ import { BorderControlPanel } from "./ControlPanels/BorderControlPanel";
 import { ShadowControlPanel } from "./ControlPanels/ShadowControlPanel";
 import { EditorComponentClass } from "../CustomInteractionModules/EditorComponentClass";
 import { MultiChoiceLabelEditorComponent } from "../CustomInteractionModules/MultiChoiceLabel/EditorComponent";
+import { GradientControlPanel } from "./ControlPanels/GradientControlPanel";
 
 interface Props {
   availiableCustomInteractionModules: {
