@@ -1,4 +1,3 @@
-//@ts-nocheck
 import { editorContext, EditorContextTypes } from "../../Editor";
 import { Button, InputNumber, Radio, } from "antd"
 import { EquationInput } from "../EquationInput";
@@ -8,40 +7,64 @@ import { useEffect, useContext, useState, useRef } from "react";
 import "../../../node_modules/grapick/dist/grapick.min.css"
 import "../../Utils/fabricCustomControls"
 import './grapickCustom.css'
-import { ChromePicker } from 'react-color';
+import { ChromePicker, Color } from 'react-color';
 
 interface Props {
     selection: any | undefined,
-    tickRadialModeSwitch: Boolean
+    tickGradientModeSwitch: Boolean
 }
 
-const GradientControlPanel = ({ selection, tickRadialModeSwitch }: Props) => {
+interface ColorStop {
+    offset: number,
+    color: String
+}
+
+type GrapickType = {
+    addHandler: Function,
+    on: Function,
+    getSelected: Function
+    clear: Function,
+    getHandlers: Function
+}
+
+type GrapickHandler = {
+    color: Color,
+    remove: Function,
+    setColor: Function
+}
+
+const GradientControlPanel = ({ selection, tickGradientModeSwitch }: Props) => {
     const context: EditorContextTypes = useContext(editorContext);
     const setOnFabricObject: Function = context.setOnFabricObject
 
-    let gradientPicker = useRef(null)
-    let selectedColorStop = useRef(null)
-    const [selectedGrapickHandler, setSelectedGrapickHandler] = useState(null)
+    let gradientPicker = useRef<GrapickType | null>(null)
+    let selectedColorStop = useRef<ColorStop | null>(null)
+    const [selectedGrapickHandler, setSelectedGrapickHandler] = useState<GrapickHandler | null>(null)
     let refreshing = useRef(false)
 
     useEffect(() => {
         gradientPicker.current = new Grapick({ el: '#gradientPicker' });
         if (selection.fill.type === "linear" || selection.fill.type === "radial") {
             for (const colorStop of selection.fill.colorStops) {
-                gradientPicker.current.addHandler(colorStop.offset * 100, colorStop.color)
+                gradientPicker.current!.addHandler(colorStop.offset * 100, colorStop.color)
             }
         }
 
         //Get reference to color stop in selection that has same position as the handler selected in the gradient picker
-        gradientPicker.current.on("handler:select", e => {
-            setSelectedGrapickHandler(e)
-            selectedColorStop.current = selection.fill.colorStops.filter(cs => cs.offset === parseFloat(e.position.toFixed(0)) / 100)[0]
+        gradientPicker!.current!.on("handler:select", (e: any) => {
+            if (!refreshing.current) {
+                const currentColorStops = selection.fill.colorStops as Array<ColorStop>
+                setSelectedGrapickHandler(e)
+                selectedColorStop.current = currentColorStops.filter(cs => cs.offset === parseFloat(e.position.toFixed(0)) / 100)[0]
+                console.log(currentColorStops.filter(cs => cs.offset === parseFloat(e.position.toFixed(0)) / 100))
+            }
         })
 
         //Set offset on selected color stop in fabric object to new position given in event
-        gradientPicker.current.on('handler:drag', e => {
-            selectedColorStop.current.offset = parseFloat(e.position.toFixed(0)) / 100
-            const newColorStopsOrdered = selection.fill.colorStops.sort(function (a, b) { return a.offset - b.offset })
+        gradientPicker!.current!.on('handler:drag', (e: any) => {
+            //console.log("after", selectedColorStop.current)
+            selectedColorStop!.current!.offset = parseFloat(e.position.toFixed(0)) / 100
+            const newColorStopsOrdered = selection.fill.colorStops.sort(function (a: ColorStop, b: ColorStop) { return a.offset - b.offset })
             setOnFabricObject(selection, {
                 fill: new fabric.Gradient({
                     ...selection.fill,
@@ -51,7 +74,7 @@ const GradientControlPanel = ({ selection, tickRadialModeSwitch }: Props) => {
         })
 
         // Get position and color of new handler and add to fabric js color stops array
-        gradientPicker.current.on('handler:add', e => {
+        gradientPicker!.current!.on('handler:add', (e: any) => {
             if (!refreshing.current) {
                 const newColorStop = { offset: parseFloat(e.position.toFixed(0)) / 100, color: e.color }
                 const newColorStops = [...selection.fill.colorStops, newColorStop]
@@ -66,15 +89,10 @@ const GradientControlPanel = ({ selection, tickRadialModeSwitch }: Props) => {
         })
 
         // Remove color stop which has same position as the removed handler
-        gradientPicker.current.on('handler:remove', e => {
+        gradientPicker!.current!.on('handler:remove', (e: any) => {
             if (!refreshing.current) {
-                const newColorStops = selection.fill.colorStops.filter(cs => cs.offset !== parseFloat(e.position.toFixed(0)) / 100)
-                
-                //only for testing
-                if (selection.fill.colorStops.length === newColorStops.length) {
-                    console.log("OOPS BABY") 
-                    console.log({ old: selection.fill.colorStops, new: newColorStops })
-                }
+                const currentColorStops = selection.fill.colorStops as Array<ColorStop>
+                const newColorStops = currentColorStops.filter(cs => cs.offset !== parseFloat(e.position.toFixed(0)) / 100)
                 setOnFabricObject(selection, {
                     fill: new fabric.Gradient({
                         ...selection.fill,
@@ -84,8 +102,9 @@ const GradientControlPanel = ({ selection, tickRadialModeSwitch }: Props) => {
             }
         })
 
-        gradientPicker.current.on('handler:color:change', e => {
-            const newColorStops = selection.fill.colorStops.map((cs) => {
+        gradientPicker!.current!.on('handler:color:change', (e: any) => {
+            const currentColorStops = selection.fill.colorStops as Array<ColorStop>
+            const newColorStops = currentColorStops.map((cs) => {
                 if (cs.offset === parseFloat(e.position.toFixed(0)) / 100) {
                     return { ...cs, color: e.color }
                 } else {
@@ -100,28 +119,28 @@ const GradientControlPanel = ({ selection, tickRadialModeSwitch }: Props) => {
             }, "setGradient")
         })
 
-        setSelectedGrapickHandler(gradientPicker.current.getSelected())
+        setSelectedGrapickHandler(gradientPicker!.current!.getSelected())
     }, [])
 
-    //refresh grapick on selection change
+    //refresh grapick on selection change and tick
     useEffect(() => {
         refreshGradientPicker()
-    }, [selection, tickRadialModeSwitch])
+    }, [selection, tickGradientModeSwitch])
 
     const refreshGradientPicker = () => {
         refreshing.current = true
-        gradientPicker.current.clear()
+        gradientPicker!.current!.clear()
         if (selection.fill.type === "linear" || selection.fill.type === "radial") {
             for (const colorStop of selection.fill.colorStops) {
-                gradientPicker.current.addHandler(parseFloat((colorStop.offset * 100).toFixed(0)), colorStop.color)
+                gradientPicker.current!.addHandler(colorStop.offset * 100, colorStop.color)
             }
         }
         refreshing.current = false
     }
 
     const handleDeleteGrapickHandler = () => {
-        selectedGrapickHandler.remove()
-        const remainingHandlers = gradientPicker.current.getHandlers()
+        selectedGrapickHandler!.remove()
+        const remainingHandlers = gradientPicker!.current!.getHandlers()
         if (remainingHandlers.length) remainingHandlers[0].select()
     }
 
