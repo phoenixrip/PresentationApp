@@ -26,6 +26,7 @@ interface EditorStateTypes {
 interface EditorContextTypes {
   fabricCanvas: CustomFabricCanvas | null;
   state: EditorStateTypes;
+  fonts: Array<String>,
   project: ProjectDataTypes;
   activeSceneIndexs: Array<number>;
   setOnFabricObject: Function;

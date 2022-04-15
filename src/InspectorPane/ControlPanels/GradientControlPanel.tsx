@@ -39,8 +39,8 @@ const GradientControlPanel = ({ selection, tickGradientModeSwitch }: Props) => {
 
     let gradientPicker = useRef<GrapickType | null>(null)
     let selectedColorStop = useRef<ColorStop | null>(null)
-    const [selectedGrapickHandler, setSelectedGrapickHandler] = useState<GrapickHandler | null>(null)
     let refreshing = useRef(false)
+    const [selectedGrapickHandler, setSelectedGrapickHandler] = useState<GrapickHandler | null>(null)
 
     useEffect(() => {
         gradientPicker.current = new Grapick({ el: '#gradientPicker' });
@@ -56,7 +56,9 @@ const GradientControlPanel = ({ selection, tickGradientModeSwitch }: Props) => {
                 const currentColorStops = selection.fill.colorStops as Array<ColorStop>
                 setSelectedGrapickHandler(e)
                 selectedColorStop.current = currentColorStops.filter(cs => cs.offset === parseFloat(e.position.toFixed(0)) / 100)[0]
-                console.log(currentColorStops.filter(cs => cs.offset === parseFloat(e.position.toFixed(0)) / 100))
+                if(selectedColorStop.current === undefined) {
+                    throw "YOUR HANDS IN THE AIR"
+                }
             }
         })
 
