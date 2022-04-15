@@ -14,6 +14,7 @@ import { ShadowControlPanel } from "./ControlPanels/ShadowControlPanel";
 import { GradientControlPanel } from "./ControlPanels/GradientControlPanel"
 import { EditorComponentClass } from "../CustomInteractionModules/EditorComponentClass";
 import { MultiChoiceLabelEditorComponent } from "../CustomInteractionModules/MultiChoiceLabel/EditorComponent";
+import { TextControlPanel } from "./ControlPanels/TextControlPanel"
 
 interface Props {
   availiableCustomInteractionModules: {
@@ -54,6 +55,7 @@ const InspectorContainer = ({ availiableCustomInteractionModules }: Props) => {
             console.log({ isAddable })
           })
       }
+
       {selection &&
         <>
           <Collapse defaultActiveKey={[]}>
@@ -63,17 +65,19 @@ const InspectorContainer = ({ availiableCustomInteractionModules }: Props) => {
             <Panel header="Position" key="2">
               <PositionControlPanel selection={selection} />
             </Panel>
-            <Panel header="Fill" key="3">
-              <FillControlPanel selection={selection} />
-            </Panel>
+            {(selection.type !== "CTextBox" || selection.type !== "TextBox") &&
+              < Panel header="Fill" key="3">
+                <FillControlPanel selection={selection} />
+              </Panel>
+            }
             <Panel header="Border" key="4">
               <BorderControlPanel selection={selection} />
             </Panel>
             <Panel header="Shadow" key="5">
               <ShadowControlPanel selection={selection} />
             </Panel>
-            <Panel header="Gradient" key="6">
-              <GradientControlPanel selection={selection} />
+            <Panel header="Text" key="6">
+              <TextControlPanel selection={selection} />
             </Panel>
             {
               selection.type === 'image' &&

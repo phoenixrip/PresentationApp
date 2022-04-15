@@ -150,6 +150,8 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       if (e.selected.length === 1) {
         const selection = e.selected[0]
         if (selection.fill?.type === "linear" || selection.fill?.type === "radial") selection.refreshGradientAngleControls()
+        console.log(selection)
+        if (selection.fill?.type === "linear" || selection.fill?.type === "radial") selection.refreshGradientAngleControls()
       }
     })
 
@@ -640,7 +642,8 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       addLabel: this.addLabel,
       addImageFromURL: this.addImageFromURL,
       handleOpenProjectPreview: this.props.handleOpenProjectPreview,
-      handleInitCustomInteractionComponent: this.handleInitCustomInteractionComponent
+      handleInitCustomInteractionComponent: this.handleInitCustomInteractionComponent,
+      fonts: ["Roboto", "Raleway"]
     };
     return (
       <div>
