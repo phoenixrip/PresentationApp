@@ -8,6 +8,7 @@ import styles from './TreeItem.module.css';
 import { editorContext } from '../../../../EditorContext';
 import { UseFaIcon } from '../../../../Utils/UseFaIcon';
 import { Input } from 'antd';
+import { UserSetNameInput } from './UserSetNameInput';
 interface ObjIconTypes {
   [key: string]: any
 }
@@ -81,27 +82,37 @@ export const TreeItem = forwardRef<HTMLDivElement, Props>(
     const isHidden = (liveObject?.visible !== undefined && liveObject?.visible !== true)
 
     const [editableUserSetNameValue, setEditableUserSetNameValue] = useState(liveObject?.text || liveObject.userSetName)
-
+    const [isInEditingNameMode, setIsInEditingNameMode] = useState(false)
+    // const [timeout, set] = useRef(null)
     function handleBlurUserSetNameInput() {
       liveObject.set({ userSetName: editableUserSetNameValue })
       setIsInEditingNameMode(false)
       document.body.focus()
     }
     function handleMouseDown(e: any) {
+      console.log('TreeItem handleMouseDown')
       if (e.shiftKey) {
         console.log('**shift click')
       }
+      // setTimeout(() => {
+      //   console.log({ isInEditingNameMode })
+      //   if (isInEditingNameMode) return
+      //   window.focus()
+      //   if (document.activeElement) {
+      //     // @ts-ignore
+      //     document?.activeElement?.blur()
+      //   }
+      // }, 600)
       context.handleSelectElementByGUID(liveObject.guid)
     }
 
-    function handleDoubleClick(e: any) {
-      console.log('input double')
-      setIsInEditingNameMode(true)
-      //@ts-ignore
-      inputRef.current.select()
-    }
-
-    const [isInEditingNameMode, setIsInEditingNameMode] = useState(false)
+    // function handleDoubleClick(e: any) {
+    //   console.log('input double')
+    //   setIsInEditingNameMode(true)
+    //   // clearTimeout()
+    //   //@ts-ignore
+    //   inputRef.current.select()
+    // }
 
     return (
       <li
@@ -143,7 +154,12 @@ export const TreeItem = forwardRef<HTMLDivElement, Props>(
               {collapseIcon}
             </Action>
           )}
-          <Input
+          <UserSetNameInput
+            liveObject={liveObject}
+            triggerSelect={handleMouseDown}
+            isEditable={liveObject?.text === undefined}
+          />
+          {/* <Input
             ref={inputRef}
             size={'small'}
             onChange={(e) => setEditableUserSetNameValue(e.target.value)}
@@ -159,7 +175,7 @@ export const TreeItem = forwardRef<HTMLDivElement, Props>(
             onDoubleClick={handleDoubleClick}
             onMouseDown={handleMouseDown}
             readOnly={!isInEditingNameMode}
-          />
+          /> */}
           <div className={styles.actionsContainer}>
             <div className={classNames(
               styles.rightActionContainer,

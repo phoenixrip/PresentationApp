@@ -3,6 +3,9 @@ import { Editor } from "./Editor";
 import { SizeType } from "antd/lib/config-provider/SizeContext";
 import { ProjectDataTypes } from "./Types/ProjectDataTypes";
 import { ProjectController } from "./ProjectController";
+import { setFabricDefaults } from "./Utils/SetFabricDefaults";
+
+setFabricDefaults()
 
 const dummyProjectData: ProjectDataTypes = {
 	settings: {

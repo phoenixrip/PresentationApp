@@ -6,10 +6,10 @@ import { fabric } from "fabric";
 import { EquationInput } from "../EquationInput";
 
 interface Props {
-	selection: any | undefined
-  }
+    selection: any | undefined
+}
 
-const ShadowControlPanel = ({selection}: Props) => {
+const ShadowControlPanel = ({ selection }: Props) => {
     const context: EditorContextTypes = useContext(editorContext);
     const setOnFabricObject: Function = context.setOnFabricObject
 
@@ -24,7 +24,7 @@ const ShadowControlPanel = ({selection}: Props) => {
                         setOnFabricObject(selection, { shadow: undefined })
                         return
                     } else {
-                        setOnFabricObject(selection, { shadow: new fabric.Shadow("50px 50px 50px rgba(0,0,0,1)") })
+                        setOnFabricObject(selection, { shadow: new fabric.Shadow("0px 0px 10px rgba(0, 0, 0, 1)") })
                     }
                 }}
             />
@@ -36,7 +36,7 @@ const ShadowControlPanel = ({selection}: Props) => {
                         max={1000}
                         precision={0}
                         value={selection.shadow.blur}
-                        onChange={(e:any) => setOnFabricObject(selection, { shadow: { ...selection.shadow, blur: e.value } })}
+                        onChange={(e: any) => setOnFabricObject(selection, { shadow: { ...selection.shadow, blur: e.value } })}
                     />
                     <CirclePicker
                         color={selection.shadow.color || "rgba(10,10,10,0.5)"}
@@ -48,16 +48,16 @@ const ShadowControlPanel = ({selection}: Props) => {
                         max={1000}
                         precision={0}
                         value={selection.shadow.offsetX}
-                        onChange={(e:any) => setOnFabricObject(selection, { shadow: { ...selection.shadow, offsetX: e.value} })}
-                        />
+                        onChange={(e: any) => setOnFabricObject(selection, { shadow: { ...selection.shadow, offsetX: e.value } })}
+                    />
                     <EquationInput addonBefore="Y-offset"
                         addonAfter="px"
                         min={-1000}
                         max={1000}
                         precision={0}
                         value={selection.shadow.offsetY}
-                        onChange={(e:any) => setOnFabricObject(selection, { shadow: { ...selection.shadow, offsetY: e.value} })}
-                        />
+                        onChange={(e: any) => setOnFabricObject(selection, { shadow: { ...selection.shadow, offsetY: e.value } })}
+                    />
                     <pre>{selection && JSON.stringify(selection.shadow, null, 4)}</pre>
                 </>
             }

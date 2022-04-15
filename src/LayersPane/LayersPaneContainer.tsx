@@ -10,9 +10,10 @@ const LayersPaneContainer: React.FC = () => {
   const context = useContext(editorContext)
 
   function handleOnDragEnd({ newSorted, newNested, newFlatTree }) {
-    context.fabricCanvas.handleRecieveNewFlatOrder(newFlatTree)
-    context.fabricCanvas?.requestRenderAll()
     console.log('handleOnDragEnd', { newSorted, newNested, newFlatTree })
+    context.fabricCanvas.handleRecieveNewFlatOrder(newFlatTree)
+    context.fabricCanvas?.logFlatVisual()
+    context.fabricCanvas?.requestRenderAll()
   }
   const flatTreeableData = (context.fabricCanvas?.getObjects() || []) as Array<CustomFabricObject>
   const tree = buildTree(flatTreeableData)

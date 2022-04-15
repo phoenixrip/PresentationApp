@@ -88,7 +88,7 @@ class SceneController {
     // Add and remove objects
     Object.entries(this.re.liveObjectsDict)
       .forEach(([guid, obj]) => {
-        const isInScene = this.sceneObject.activeSceneObjects?.[guid]
+        const isInScene = this.sceneObject.activeSceneObjects?.[guid] && this.sceneObject.activeSceneObjects?.[guid].visible
         const isInCanvasObjectsArray = obj?.canvas !== undefined
         if (isInScene && !isInCanvasObjectsArray) {
           // console.log('adding ', obj.type, obj.guid)
@@ -133,6 +133,7 @@ class SceneController {
       .forEach(([guid, diffObject]) => {
         const obj = this.re.liveObjectsDict[guid]
         const wasInPreviousScene = this.prevSceneObject.activeSceneObjects?.[guid] !== undefined
+          && this.prevSceneObject.activeSceneObjects?.[guid].visible
         if (!wasInPreviousScene) {
           // This is an object enter animation
           obj.set(diffObject)

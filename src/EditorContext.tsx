@@ -34,7 +34,7 @@ interface EditorContextTypes {
   handleGroupObjects: Function;
   handleUndo: Function,
   handleRedo: Function,
-  handleSelectElementByGUID: Function,
+  handleSelectElementByGUID: Editor['handleSelectElementByGUID'],
   addText: Function,
   addSVG: Function,
   addRect: Editor['addRect'],

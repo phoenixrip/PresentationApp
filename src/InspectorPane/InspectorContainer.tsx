@@ -14,14 +14,13 @@ import { ShadowControlPanel } from "./ControlPanels/ShadowControlPanel";
 import { GradientControlPanel } from "./ControlPanels/GradientControlPanel"
 import { EditorComponentClass } from "../CustomInteractionModules/EditorComponentClass";
 import { MultiChoiceLabelEditorComponent } from "../CustomInteractionModules/MultiChoiceLabel/EditorComponent";
-import { GradientControlPanel } from "./ControlPanels/GradientControlPanel";
 
 interface Props {
   availiableCustomInteractionModules: {
     [key: string]: MultiChoiceLabelEditorComponent
   },
 }
-const InspectorContainer = ({availiableCustomInteractionModules}: Props) => {
+const InspectorContainer = ({ availiableCustomInteractionModules }: Props) => {
   const context: EditorContextTypes = useContext(editorContext);
   const selection: any | undefined = context.fabricCanvas?.getActiveObject()
   const setOnFabricObject: Function = context.setOnFabricObject
@@ -59,7 +58,7 @@ const InspectorContainer = ({availiableCustomInteractionModules}: Props) => {
         <>
           <Collapse defaultActiveKey={[]}>
             <Panel header="Dimensions" key="1">
-              <DimensionsControlPanel selection={selection}/>
+              <DimensionsControlPanel selection={selection} />
             </Panel>
             <Panel header="Position" key="2">
               <PositionControlPanel selection={selection} />

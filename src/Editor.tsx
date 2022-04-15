@@ -1,5 +1,5 @@
 import { fabric } from "fabric";
-import React, { Component } from "react";
+import { Component } from "react";
 import { ReflexContainer, ReflexSplitter, ReflexElement } from "react-reflex";
 import { ScenesPane } from "./ScenesPane/ScenesPane";
 import CanvasPane from "./CanvasPane/CanvasPane";
@@ -9,38 +9,24 @@ import "./styles.css";
 import "react-reflex/styles.css";
 import "./dark.css";
 import { LayersPaneContainer } from "./LayersPane/LayersPaneContainer";
-// import { debounce } from "./Utils/debounce";
 import { throttle } from "./Utils/throttle";
-import { customAttributesToIncludeInFabricCanvasToObject } from './Utils/consts'
 import { ToolbarContainer } from "./Toolbar/ToolbarContainer";
 
 import { SizeType } from "antd/lib/config-provider/SizeContext";
-// import { SceneType } from "./Types/sceneType";
 import { setFabricDefaults } from "./Utils/SetFabricDefaults";
-import { ProjectDataTypes, SceneType, UndoHistoryEntry } from "./Types/ProjectDataTypes";
+import { SceneType } from "./Types/ProjectDataTypes";
 import {
-  CustomFabricCircle,
-  CustomFabricGroup,
   CustomFabricObject,
-  CustomFabricOptions,
-  SimpleSpread,
 } from "./Types/CustomFabricTypes";
-// import { ProjectDataStateTypes } from "./AppController";
 
-import { diff } from "./Utils/diff";
-import { ActiveSelection, IEvent } from "fabric/fabric-impl";
 import { Modal } from "antd";
 import { v4 as uuidv4 } from 'uuid';
-import { flatMapFabricSceneState, normalizeAllObjectCoords } from "./Utils/flatMapFabricState";
+import { normalizeAllObjectCoords } from "./Utils/flatMapFabricState";
 import { editorContext, EditorContextTypes, EditorStateTypes } from "./EditorContext";
-import { rgbaFromColor } from "./Utils/rgbaFromColor";
-import { tsIntrinsicKeyword } from "@babel/types";
 import { CustomFabricCanvas } from "./Utils/CustomFabricCanvas";
 import { IProjectControllerState, ProjectController } from "./ProjectController";
 import { MultiChoiceLabelEditorComponent } from "./CustomInteractionModules/MultiChoiceLabel/EditorComponent";
 import { EditorComponentClass } from "./CustomInteractionModules/EditorComponentClass";
-
-setFabricDefaults();
 
 interface EditorPropsTypes {
   project: IProjectControllerState['project'];
@@ -154,18 +140,18 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     });
 
     //Update gradient angle controls on selection
-    this.fabricCanvas.on("selection:created", (e:any) => {
-      if(e.selected.length === 1) {
+    this.fabricCanvas.on("selection:created", (e: any) => {
+      if (e.selected.length === 1) {
         const selection = e.selected[0]
-        if(selection.fill?.type === "linear" || selection.fill?.type === "radial" ) selection.refreshGradientAngleControls()
+        if (selection.fill?.type === "linear" || selection.fill?.type === "radial") selection.refreshGradientAngleControls()
       }
     })
-      this.fabricCanvas.on("selection:updated", (e:any) => {
-        if(e.selected.length === 1) {
-          const selection = e.selected[0]
-          if(selection.fill?.type === "linear" || selection.fill?.type === "radial" ) selection.refreshGradientAngleControls()
-        }
-      })
+    this.fabricCanvas.on("selection:updated", (e: any) => {
+      if (e.selected.length === 1) {
+        const selection = e.selected[0]
+        if (selection.fill?.type === "linear" || selection.fill?.type === "radial") selection.refreshGradientAngleControls()
+      }
+    })
 
     this.fabricCanvas.on("selection:created", this.selectionCreated)
     this.fabricCanvas.on("selection:updated", this.selectionUpdated)
@@ -567,7 +553,7 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     // @ts-ignore
     const label = new fabric.LabelElement('Liver', {
       width: 150,
-      userSetName: 'Label',
+      // userSetName: 'Label',
       bgRectOptions: {
         stroke: 'blue',
         strokeWidth: 2,

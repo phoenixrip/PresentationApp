@@ -2,9 +2,12 @@ import { fabric } from 'fabric'
 import { customAttributesToIncludeInFabricCanvasToObject } from './consts'
 import { CTextBox } from './CustomFabricObjects/CTextBox'
 import { FakeGroup } from './CustomFabricObjects/FakeGroup'
+import { createCustomControls } from './fabricCustomControls'
 
 function setFabricDefaults() {
   // All object default settings
+  createCustomControls()
+
   fabric.Object.prototype.set({
     cornerStyle: 'circle',
     transparentCorners: false,
@@ -18,6 +21,7 @@ function setFabricDefaults() {
     strokeWidth: 0,
     hasRotatingPoint: false
   })
+
 
   fabric.Object.prototype.controls = {
     ...fabric.Object.prototype.controls,
@@ -37,7 +41,8 @@ function setFabricDefaults() {
         'height',
         'scaleX',
         'scaleY',
-        'opacity'
+        'opacity',
+        'visible'
       ]
     )
     return object
@@ -50,7 +55,26 @@ function setFabricDefaults() {
       this.setUserLocked(false)
     }
     this.canvas?.requestRenderAll()
+    if (this?.handleChildrenMode) {
+      if (this.userLocked) {
+        this.forEachChild(obj => obj.setUserLocked(true))
+      } else {
+        this.forEachChild(obj => obj.setUserLocked(false))
+      }
+    }
     return this
+  }
+
+  fabric.Object.prototype.forEachChild = function (callBack) {
+    this.canvas.logFlatVisual()
+    const myStructurePathLength = this.structurePath.length
+    let currI = (this?.treeIndex ?? 0) + 1
+    while (this.canvas._objects?.[currI] && this.canvas._objects[currI].structurePath.length > myStructurePathLength) {
+      const currChildObject = this.canvas._objects[currI]
+      console.log(currChildObject.type, currChildObject.structurePath)
+      callBack(currChildObject)
+      currI++
+    }
   }
 
   fabric.Object.prototype.toggleVisibility = function () {
@@ -58,6 +82,13 @@ function setFabricDefaults() {
       this.set({ visible: true })
     } else {
       this.set({ visible: false })
+    }
+    if (this?.handleChildrenMode) {
+      if (this.visible) {
+        this.forEachChild(obj => obj.set({ visible: true }))
+      } else {
+        this.forEachChild(obj => obj.set({ visible: false }))
+      }
     }
     this.canvas?.requestRenderAll()
     return this

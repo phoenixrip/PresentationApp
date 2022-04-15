@@ -10,20 +10,21 @@ class CustomFabricCanvas extends fabric.Canvas {
     super(canvas, options)
     console.log('custom fabric canvas constructor', this._objects)
   }
-
   existingSelectionIsCustomCreated = false
   familyObjectsRemovedFromSelection = false
   _onMouseDown(e) {
-    // console.log("onmousedown custom", e)
-    let target
-    if (e?.shiftKey) { // On shift click we ignore active selections in findTarget so we get actual element clicked
-      target = this.findTarget(e, true)
-    } else {
-      target = this.findTarget(e, false)
-    }
+    let target = this.findTarget(e, e?.shiftKey) // On shift click we ignore active selections in findTarget so we get actual element clicked
+
+    let shouldRunCustomGrabGroup = true
+    const alreadySelected = target === this._activeObject
+    const metaKeyDown = e.metaKey
+
+    if (alreadySelected) shouldRunCustomGrabGroup = false
+    if (metaKeyDown) shouldRunCustomGrabGroup = false
+
 
     //When shift key isnt held we just select all objects in the family
-    if (target && target.parentID && !e?.shiftKey) {
+    if (shouldRunCustomGrabGroup && target && target.parentID && !e?.shiftKey) {
       const allObjectsInFamily = this.objectsInFamilyOfGUID(target.guid)
       const newSelectionObjects = [...allObjectsInFamily]
       this._discardActiveObject()
@@ -32,7 +33,7 @@ class CustomFabricCanvas extends fabric.Canvas {
       // setting this.existingSelectionIsCustomCreated = true here -will make all but the target movable
       this.renderAll()
     }
-    else if (target && target.parentID && e?.shiftKey) {
+    else if (shouldRunCustomGrabGroup && target && target.parentID && e?.shiftKey) {
       const currentSelection = this.getActiveObject()
 
       // if we have shift clicked and selected an object with a family that's not in our current selection add it
@@ -59,7 +60,6 @@ class CustomFabricCanvas extends fabric.Canvas {
     }
     super._onMouseDown(e)
   }
-
   _onMouseUp(e) {
     super._onMouseUp(e)
     if (!this.existingSelectionIsCustomCreated) {
@@ -86,7 +86,6 @@ class CustomFabricCanvas extends fabric.Canvas {
       this.familyObjectsRemovedFromSelection = false
     }
   }
-
   objectsInFamilyOfGUID(GUIDOrGUIDs) {
     //If it's a single string normalise to an array of GUIDs, otherwise use user-supplied array of string
     let GUIDs
@@ -113,25 +112,26 @@ class CustomFabricCanvas extends fabric.Canvas {
     const allChildrenAndSelectionArray = Array.from(allChildrenAndSelection)
     return allChildrenAndSelectionArray
   }
-
-
   updatePaths() {
     dl('updatePaths')
+    let currPath = []
     let currentPath = new Set()
     let currentTopLevelIndex = 0
     this._objects.forEach(
       (obj, i) => {
         if (!obj.parentID) {
-          currentPath.clear()
-          currentTopLevelIndex = i
+          obj.structurePath = [obj.guid]
+          obj.depth = 0
+          obj.treeIndex = i
+          obj.topLevelIndex = i
         } else {
-          currentPath.add(obj.parentID)
+          const liveParentObj = this.liveObjectsDict[obj.parentID]
+          obj.structurePath = [...liveParentObj.structurePath, obj.guid]
+          obj.depth = (obj.structurePath.length - 1)
+          obj.treeIndex = i
+          obj.parentIndex = liveParentObj.treeIndex
+          obj.topLevelIndex = this.liveObjectsDict[obj.structurePath[0]].topLevelIndex
         }
-        const usePath = [...currentPath, obj.guid]
-        obj.structurePath = usePath
-        obj.depth = usePath.length
-        obj.treeIndex = i
-        obj.topLevelIndex = currentTopLevelIndex
       }
     )
   }
