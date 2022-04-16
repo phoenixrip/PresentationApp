@@ -5,7 +5,6 @@ import { fabric } from "fabric";
 import Grapick from "grapick";
 import { useEffect, useContext, useState, useRef } from "react";
 import "../../../node_modules/grapick/dist/grapick.min.css"
-import "../../Utils/fabricCustomControls"
 import './grapickCustom.css'
 import { ChromePicker, Color } from 'react-color';
 

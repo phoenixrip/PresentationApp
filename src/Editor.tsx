@@ -1,4 +1,5 @@
 import { fabric } from "fabric";
+import "./Utils/fabricCustomControls"
 import React, { Component } from "react";
 import { ReflexContainer, ReflexSplitter, ReflexElement } from "react-reflex";
 import { ScenesPane } from "./ScenesPane/ScenesPane";
@@ -25,6 +26,7 @@ import {
   CustomFabricOptions,
   SimpleSpread,
 } from "./Types/CustomFabricTypes";
+
 // import { ProjectDataStateTypes } from "./AppController";
 
 import { diff } from "./Utils/diff";
