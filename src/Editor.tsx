@@ -4,7 +4,7 @@ import { ReflexContainer, ReflexSplitter, ReflexElement } from "react-reflex";
 import { ScenesPane } from "./ScenesPane/ScenesPane";
 import CanvasPane from "./CanvasPane/CanvasPane";
 import { InspectorContainer } from "./InspectorPane/InspectorContainer";
-
+import "./Utils/fabricCustomControls"
 import "./styles.css";
 import "react-reflex/styles.css";
 import "./dark.css";
