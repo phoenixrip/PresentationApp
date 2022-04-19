@@ -1,14 +1,17 @@
 import { v4 as uuidv4 } from 'uuid';
 import { fabric } from 'fabric'
 import { FakeGroup } from './SetFabricDefaults'
+import { greatestCommonDenominator } from './greatestCommonDenominator';
 
 const dl = (args, ...rest) => console.log(args, ...rest)
 class CustomFabricCanvas extends fabric.Canvas {
   liveObjectsDict = {}
   projectSettings = {}
+  gridWidth = 1
+  gridHeight = 1
   constructor(canvas, options) {
+    console.log('custom fabric canvas constructor')
     super(canvas, options)
-    console.log('custom fabric canvas constructor', this._objects)
   }
   existingSelectionIsCustomCreated = false
   familyObjectsRemovedFromSelection = false
@@ -241,6 +244,23 @@ class CustomFabricCanvas extends fabric.Canvas {
     this._setActiveObject(replaceSelection)
     this.cachedActiveObjectsArray = null
   }
+  initProjectSettings(projectSettings) {
+    this.projectSettings = projectSettings
+    const currentGridAspectGreatestCommonDenom = greatestCommonDenominator(projectSettings.dimensions.width, projectSettings.dimensions.height)
+    this.gridWidth = projectSettings.dimensions.width / currentGridAspectGreatestCommonDenom
+    this.gridHeight = projectSettings.dimensions.height / currentGridAspectGreatestCommonDenom
+  }
+}
+
+function roundXToNearestDivisbleY(x, y, type = 'down') {
+  if (type === 'down') {
+    x -= 1
+    return Math.floor(x / y) * y
+  } else if (type === 'up') {
+    x += 1
+    return Math.ceil(x / y) * y
+  }
+  return 0
 }
 
 export { CustomFabricCanvas }

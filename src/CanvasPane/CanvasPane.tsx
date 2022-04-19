@@ -1,6 +1,7 @@
 // import { fabric } from "fabric";
 import { faC } from "@fortawesome/free-solid-svg-icons";
 import React, { Component } from "react";
+import { Editor } from "../Editor";
 import { editorContext, EditorContextTypes } from "../EditorContext";
 
 
@@ -8,7 +9,7 @@ import { editorContext, EditorContextTypes } from "../EditorContext";
 import c from './CanvasPane.module.css'
 
 type CanvasPanePropsTypes = {
-  initFabricCanvas: Function;
+  initFabricCanvas: Editor['initFabricCanvas'];
   updateCanvasPaneDimensions: Function,
   dimensions: {
     width: number;
@@ -33,9 +34,13 @@ class CanvasPane extends Component<CanvasPanePropsTypes, CanvasPaneStateTypes> {
     }
   }
   componentDidMount() {
-    const width = this.div?.offsetWidth
-    const height = this.div?.offsetHeight
-    this.props.initFabricCanvas(this.domCanvas, { width, height }, this.attatchLocalEvents)
+    const width = this.div?.offsetWidth || 0
+    const height = this.div?.offsetHeight || 0
+    this.props.initFabricCanvas(
+      (this.domCanvas as HTMLCanvasElement),
+      { width, height },
+      this.attatchLocalEvents
+    )
   }
 
   componentDidUpdate(prevProps: CanvasPanePropsTypes, prevState: Object) {
@@ -110,7 +115,10 @@ class CanvasPane extends Component<CanvasPanePropsTypes, CanvasPaneStateTypes> {
     fabricCanvas.on('object:scaling', (event: any) => {
       const { transform } = event
       const { target } = transform
-      if (target?.type !== 'CRect') return
+
+      console.log('scaling ', target.type)
+      if (target.type !== 'CRect' && target.type !== 'CustomMediaObject') return
+      console.log('snapping')
       const targetWidth = target.width * target.scaleX;
       const targetHeight = target.height * target.scaleY;
 
@@ -220,11 +228,18 @@ class CanvasPane extends Component<CanvasPanePropsTypes, CanvasPaneStateTypes> {
         style={{ width: '100%', height: '100%' }} ref={d => this.div = d}>
         <div className={c.svgUnderlayContainer}>
           <svg width={this.props.dimensions.width} height={this.props.dimensions.height}>
+            <defs>
+              <linearGradient gradientUnits="userSpaceOnUse" x1="448" y1="0" x2="448" y2="504" id="gradient-0">
+                <stop offset="0" style={{ stopColor: '#000000' }}></stop>
+                <stop offset="1" style={{ stopColor: '#3B3B3B' }}></stop>
+              </linearGradient>
+            </defs>
             <g transform={`matrix(${useTransformMatrix})`}>
               <rect
                 width={this.context.state.project.settings.dimensions.width}
                 height={this.context.state.project.settings.dimensions.height}
-                fill='rgb(255, 255, 255)'
+                // fill='rgb(255, 255, 255)'
+                fill='url(#gradient-0)'
               />
             </g>
           </svg>

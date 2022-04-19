@@ -1,7 +1,10 @@
 import { fabric } from 'fabric'
 import { customAttributesToIncludeInFabricCanvasToObject } from './consts'
 import { CTextBox } from './CustomFabricObjects/CTextBox'
+import { CustomImageObject } from './CustomFabricObjects/CustomImageObject'
+import { CustomMediaObject } from './CustomFabricObjects/CustomMediaObject'
 import { FakeGroup } from './CustomFabricObjects/FakeGroup'
+import fillableTextBox from './CustomFabricObjects/FillableTextBox'
 import { createCustomControls } from './fabricCustomControls'
 
 function setFabricDefaults() {
@@ -19,12 +22,15 @@ function setFabricDefaults() {
     setUserName: "",
     includeDefaultValues: false,
     strokeWidth: 0,
-    hasRotatingPoint: false
   })
 
 
   fabric.Object.prototype.controls = {
     ...fabric.Object.prototype.controls,
+    mtr: new fabric.Control({ visible: false })
+  }
+  fabric.Textbox.prototype.controls = {
+    ...fabric.Textbox.prototype.controls,
     mtr: new fabric.Control({ visible: false })
   }
 
@@ -108,9 +114,9 @@ function setFabricDefaults() {
 
   CTextBox()
   FakeGroup()
-
-  fabric.Image.prototype.handleChildrenMode = 'default'
-  fabric.Image.prototype.canRecieveTypes = { 'LabelElement': true }
+  CustomImageObject()
+  CustomMediaObject()
+  fillableTextBox()
 
   fabric.CRect = fabric.util.createClass(fabric.Rect, {
     type: 'CRect',
@@ -239,6 +245,20 @@ function setFabricDefaults() {
   fabric.LockedGroup = fabric.util.createClass(fabric.FakeGroup, {
     type: 'LockedGroup',
   })
+
+  fabric.InteractionCreatorRect = fabric.util.createClass(fabric.CRect, {
+    type: 'InteractionCreatorRect',
+    active: false,
+    initialize(options) {
+      this.callSuper(options)
+      this.set({
+        fill: 'rgba(0, 0, 0, 0.5)',
+        stroke: '#478bff',
+        strokeWidth: 2,
+      })
+    }
+  })
+
 }
 
 export {
