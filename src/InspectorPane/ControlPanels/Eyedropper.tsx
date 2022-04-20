@@ -1,57 +1,51 @@
-import { Input, InputNumber, Select, } from "antd"
 import { editorContext, EditorContextTypes } from "../../Editor";
-import { useContext, useState, useRef, useEffect } from "react";
-import "../../../node_modules/grapick/dist/grapick.min.css"
-import './grapickCustom.css'
-import { RgbaStringColorPicker } from "react-colorful";
+import { useContext, useState, useRef, useEffect, useCallback } from "react";
 import { UseFaIcon } from "../../Utils/UseFaIcon";
 import { faEyedropper } from "@fortawesome/free-solid-svg-icons";
 const tinycolor = require("tinycolor2");
-import c from './Colorpicker.module.css'
 
-interface ColorpickerPropsType {
+interface EydropperPropsType {
     onChange: Function
 }
 
-const Eyedropper = ({ onChange }: ColorpickerPropsType) => {
+const Eyedropper = ({ onChange }: EydropperPropsType) => {
     const context: EditorContextTypes = useContext(editorContext);
     const eyedropperPreview = useRef<any>(null)
-    const [enabled, setEnabled] = useState(false)
+    const [enabled, setEnabled] = useState(true)
 
-    const updateEyedropperColor = (e: any) => {
+    console.log(enabled)
+
+    const updateEyedropperColor = useCallback((e: any) => {
         const canvasContext = context.fabricCanvas?.getContext()
         const mouse = context.fabricCanvas!.getPointer(e, true)
         const px = canvasContext!.getImageData(mouse.x, mouse.y, 1, 1).data
         eyedropperPreview.current.style.backgroundColor = `rgba(${px[0]},${px[1]},${px[2]},${px[3]})`
         eyedropperPreview.current.style.color = `rgba(${px[0]},${px[1]},${px[2]},${px[3]})`
-    }
+    }, [])
 
-    const selectEyedropperColor = (e: any) => {
+    const selectEyedropperColor = useCallback((e: any) => {
         onChange(tinycolor(eyedropperPreview.current!.style.backgroundColor).toRgb())
         setEnabled(false)
-    }
+    }, [])
 
-    const handleMouseMove = (e: any) => {
+    const handleMouseMove = useCallback((e: any) => {
         eyedropperPreview.current!.style.left = e.pageX + 'px';
         eyedropperPreview.current!.style.top = e.pageY + 'px';
-    }
+    }, [])
 
-    // const toggleEyedropper = () => {
     useEffect(() => {
-        if (!enabled) {
+        if (enabled) {
             context.fabricCanvas!.eyedropperActive = true
-            document.addEventListener("mousemove", handleMouseMove)
+            document.addEventListener("mousemove", handleMouseMove, true)
             context.fabricCanvas!.on("mouse:move", updateEyedropperColor)
             context.fabricCanvas!.on("mouse:down", selectEyedropperColor)
         } else {
-            document.removeEventListener("mousemove", handleMouseMove)
+            document.removeEventListener("mousemove", handleMouseMove, true)
             context.fabricCanvas!.off("mouse:move", updateEyedropperColor)
             context.fabricCanvas!.off("mouse:down", selectEyedropperColor)
             context.fabricCanvas!.eyedropperActive = false
         }
     }, [enabled])
-
-
 
     return (
         <>
