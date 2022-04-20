@@ -1,7 +1,7 @@
 import React, { forwardRef, HTMLAttributes, MutableRefObject, useContext, useRef, useState } from 'react';
 import classNames from 'classnames';
 // import { UseFaIcon } from '../Utils/UseFaIcon'
-import { faBezierCurve, faCircle, faDrawPolygon, faEyeSlash, faFileText, faFolder, faFont, faImage, faLayerGroup, faLock, faMitten, faSlash, faTag, faTags, faTextWidth, faVectorSquare } from '@fortawesome/free-solid-svg-icons'
+import { faBezierCurve, faCircle, faDrawPolygon, faEyeSlash, faFileText, faFolder, faFont, faImage, faLayerGroup, faLock, faMitten, faPuzzlePiece, faSlash, faTag, faTags, faTextWidth, faVectorSquare } from '@fortawesome/free-solid-svg-icons'
 // import { faFolder, faVectorSquare } from '@fortawesome/free'
 import { Action, Handle, Remove } from './Item/';
 import styles from './TreeItem.module.css';
@@ -15,12 +15,14 @@ interface ObjIconTypes {
 const objIcons: ObjIconTypes = {
   'default': faMitten,
   'CRect': faVectorSquare,
+  'InteractionCreatorRect': faPuzzlePiece,
   'rect': faVectorSquare,
   'FakeGroup': faFolder,
   'LabelAndTargetsGroup': faFolder,
   'group': faLayerGroup,
   'textbox': faFont,
   'text': faFont,
+  'FillableTextBox': faFont,
   'CTextBox': faFont,
   'path': faBezierCurve,
   'ellipse': faCircle,
@@ -30,7 +32,8 @@ const objIcons: ObjIconTypes = {
   'polygon': faDrawPolygon,
   'LabelElement': faTag,
   'ObjectLabelGroup': faTags,
-  'image': faImage
+  'image': faImage,
+  'CustomMediaObject': faImage,
 }
 
 export interface Props extends HTMLAttributes<HTMLLIElement> {

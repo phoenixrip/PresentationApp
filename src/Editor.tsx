@@ -112,7 +112,7 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     // this.fabricCanvas.renderOnAddRemove = false
     // Give the fabricCanvas a reference to our inMemoryObjectDict
     this.fabricCanvas.liveObjectsDict = this.liveObjectsDict
-    this.fabricCanvas.projectSettings = this.props.project.settings
+    this.fabricCanvas.initProjectSettings(this.props.project.settings)
     // Center the project viewport withing the full-Pane-Sized fabricCanvas
     const widthMove = (canvasPaneDimensions.width - projectDimensions.width) / 2;
     const heightMove = (canvasPaneDimensions.height - projectDimensions.height) / 2;
@@ -472,21 +472,13 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     console.log('addText')
     const systemFontStack = `-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"`
     // @ts-ignore
-    const newTextBox = new fabric.CTextBox('New text', {
+    const newTextBox = new fabric.FillableTextBox('New text', {
       fontFamily: 'Arial',
       textAlign: 'center',
       fontSize: 39,
       stroke: 'black',
       strokeWidth: 2,
-      fill: {
-        type: 'linear',
-        colorStops: [
-          { offset: 0, color: '#6ED4EF' },
-          { offset: 1, color: '#2F65F4' },
-        ],
-        gradientUnits: 'percentage',
-        coords: { x1: 0, y1: 0, x2: 0, y2: 1 }
-      },
+      fill: 'white',
       width: this.state.project.settings.dimensions.width * 0.96,
       top: 0,
       left: this.state.project.settings.dimensions.width * 0.02
@@ -544,6 +536,12 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
         groupObject.userSetName = 'SVG Group'
         this.props.handleAddObject(groupObject)
         results.forEach((obj) => {
+          if (obj.type === 'image') {
+            //@ts-ignore
+            const customMediaObject = new fabric.CustomMediaObject(obj.getElement(), obj)
+            return this.props.handleAddObject((customMediaObject as CustomFabricObject), groupObject.guid)
+            // console.log('adding image')
+          }
           this.props.handleAddObject((obj as CustomFabricObject), groupObject.guid)
         })
       })
@@ -570,7 +568,14 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     const url = prompt('Enter image url')
     if (!url) return Modal.warn({ content: 'No image url provided' })
     try {
-      fabric.Image.fromURL(url, (imageObject) => {
+      fabric.Image.fromURL(url, (img) => {
+        const el = img.getElement()
+        //@ts-ignore
+        const imageObject = new fabric.CustomMediaObject(el, {
+          width: 400,
+          height: 400
+        })
+        console.log(imageObject)
         imageObject.scaleToHeight(this.state.project.settings.dimensions.height)
         if (imageObject.getScaledWidth() > this.state.project.settings.dimensions.width) {
           imageObject.scaleToWidth(this.state.project.settings.dimensions.width)
