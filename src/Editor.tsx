@@ -238,6 +238,7 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     this.setOnGlobalObject(obj, settings);
     obj.set(settings);
     obj.setCoords();
+    console.log("obj", obj)
     this.fabricCanvas?.requestRenderAll();
     this.fabricCanvas?.fire("object:modified", {
       action: action,

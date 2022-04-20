@@ -3,12 +3,14 @@ import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 
 interface UseFaIconPropTypes {
   icon: IconDefinition,
-  style?: React.CSSProperties
+  style?: React.CSSProperties,
+  // All other props
+  [x:string]: any;
 }
 const UseFaIcon: React.FC<UseFaIconPropTypes> = (props: UseFaIconPropTypes) => {
   return (
     // <div style={props?.style || {}}>
-    <FontAwesomeIcon icon={props.icon} />
+    <FontAwesomeIcon  {...props} />
     // </div>
 
   )
