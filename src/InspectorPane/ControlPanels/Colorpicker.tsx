@@ -1,11 +1,6 @@
 import { Input, InputNumber, Select, } from "antd"
-import { editorContext, EditorContextTypes } from "../../Editor";
-import { useContext, useState, useRef } from "react";
-import "../../../node_modules/grapick/dist/grapick.min.css"
-import './grapickCustom.css'
+import { useState, useRef } from "react";
 import { RgbaStringColorPicker } from "react-colorful";
-import { UseFaIcon } from "../../Utils/UseFaIcon";
-import { faEyedropper } from "@fortawesome/free-solid-svg-icons";
 const tinycolor = require("tinycolor2");
 import c from './Colorpicker.module.css'
 import { Eyedropper } from "./Eyedropper";
@@ -17,15 +12,15 @@ interface ColorpickerPropsType {
 }
 
 const Colorpicker = ({ color, onChange, palette }: ColorpickerPropsType) => {
-    const context: EditorContextTypes = useContext(editorContext);
-
     const [stringInputMode, setStringInputMode] = useState("HEX")
-    const [inputIsValid, setInputIsValid] = useState(true)
 
     const initialColor = tinycolor(color)
     const internalHexColor = useRef(initialColor.toHex())
     const internalHSLAColor = useRef(initialColor.toHsl())
     const internalRGBAColor = useRef(initialColor.toRgb())
+    const [tick, setTick] = useState(false)
+
+    console.log(stringInputMode)
 
     let colorPalette
     if (palette) {
@@ -61,24 +56,30 @@ const Colorpicker = ({ color, onChange, palette }: ColorpickerPropsType) => {
     const saturation = useRef<HTMLInputElement>(null)
     const lightness = useRef<HTMLInputElement>(null)
     const alphahsla = useRef<HTMLInputElement>(null)
-    const eyedropperPreview = useRef<HTMLDivElement>(null)
 
     const parseColor = (e: any) => {
         const newColor = tinycolor(e)
         if (newColor.isValid()) {
-            setInputIsValid(true)
             internalHexColor.current = newColor.toHex()
             internalHSLAColor.current = newColor.toHsl()
             internalRGBAColor.current = newColor.toRgb()
             if (onChange) onChange(newColor.toRgb())
-        } else {
-            setInputIsValid(false)
+            setTick(!tick)
         }
     }
 
-    const handleInput = () => {
+    const handleInput = (e: any) => {
         if (stringInputMode === "HEX") {
-            parseColor(hex.current?.input.value)
+            // this needs to handle its parsing directly here because formatting the hex input field also happens from the actual color picker and eyedropper
+            // so if it happens in parseColor then valid but short hex strings (e.g fff) will resolve to the full equivalent (fffff)
+            internalHexColor.current = e.target.value
+            const newColor = tinycolor(e.target.value)
+            if(newColor.isValid()) {
+                internalHSLAColor.current = newColor.toHsl()
+                internalRGBAColor.current = newColor.toRgb()
+                if (onChange) onChange(newColor.toRgb())
+            }
+            setTick(!tick)
         } else if (stringInputMode === "RGBA" && red.current?.value && green.current?.value && blue.current?.value && alphargba.current?.value) {
             parseColor({ r: red.current.value, g: green.current.value, b: blue.current.value, a: alphargba.current.value })
         } else if (stringInputMode === "HSLA" && hue.current?.value && saturation.current?.value && lightness.current?.value && alphahsla.current?.value) {
@@ -92,7 +93,6 @@ const Colorpicker = ({ color, onChange, palette }: ColorpickerPropsType) => {
             <Eyedropper onChange={parseColor} />
             <RgbaStringColorPicker className={c["react-colorful"]} color={color} onChange={parseColor} />
             <Input.Group compact>
-
                 <Select value={stringInputMode} onChange={setStringInputMode} style={{ width: "20%" }}>
                     <Select.Option value="HEX">HEX</Select.Option>
                     <Select.Option value="RGBA">RGB</Select.Option>
@@ -106,7 +106,6 @@ const Colorpicker = ({ color, onChange, palette }: ColorpickerPropsType) => {
                         addonBefore={"#"}
                         maxLength={7}
                         onChange={handleInput}
-                        status={inputIsValid ? "" : "warning"}
                         style={{ width: "80%" }}
                     />
                 }

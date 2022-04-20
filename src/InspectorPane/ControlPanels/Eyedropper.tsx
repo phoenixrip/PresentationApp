@@ -11,9 +11,7 @@ interface EydropperPropsType {
 const Eyedropper = ({ onChange }: EydropperPropsType) => {
     const context: EditorContextTypes = useContext(editorContext);
     const eyedropperPreview = useRef<any>(null)
-    const [enabled, setEnabled] = useState(true)
-
-    console.log(enabled)
+    const [enabled, setEnabled] = useState(false)
 
     const updateEyedropperColor = useCallback((e: any) => {
         const canvasContext = context.fabricCanvas?.getContext()
