@@ -5,6 +5,7 @@ import { Button, InputNumber, Collapse, Switch, Radio, Dropdown, Menu, Checkbox 
 import { EquationInput } from "../EquationInput";
 import { customAttributesToIncludeInFabricCanvasToObject } from "../../Utils/consts";
 import { cornersOfRectangle } from "@dnd-kit/core/dist/utilities/algorithms/helpers";
+import { Colorpicker } from "./Colorpicker";
 
 interface Props {
   selection: any | undefined
@@ -105,17 +106,18 @@ const TextControlPanel = ({ selection }: Props) => {
       <Checkbox checked={sharedAttributes?.overline} onClick={(e: any) => handleStyleChange({ overline: e.target.checked })}>‾</Checkbox>
       <Checkbox checked={sharedAttributes?.linethrough} onClick={(e: any) => handleStyleChange({ linethrough: e.target.checked })}>-</Checkbox>
       <Checkbox checked={sharedAttributes?.underline} onClick={(e: any) => handleStyleChange({ underline: e.target.checked })}>_</Checkbox>
-      <ChromePicker
+      <Colorpicker
         color={sharedAttributes?.fill}
-        onChange={e => {
-          handleStyleChange({ fill: `rgba(${e.rgb.r},${e.rgb.g},${e.rgb.b},${e.rgb.a})` })
+        onChange={(e: any) => {
+          handleStyleChange({ fill: `rgba(${e.r},${e.g},${e.b},${e.a})` })
         }} />
 
       <Checkbox checked={Boolean(sharedAttributes?.textBackgroundColor)} onClick={(e: any) => handleStyleChange({ textBackgroundColor: e.target.checked ? "rgba(255,255,255,1)" : null })}>BG Color</Checkbox>
-      {sharedAttributes?.textBackgroundColor && <ChromePicker
+      {sharedAttributes?.textBackgroundColor && 
+      <Colorpicker
         color={sharedAttributes?.textBackgroundColor}
-        onChange={e => {
-          handleStyleChange({ textBackgroundColor: `rgba(${e.rgb.r},${e.rgb.g},${e.rgb.b},${e.rgb.a})` })
+        onChange={(e: any) => {
+          handleStyleChange({ textBackgroundColor: `rgba(${e.r},${e.g},${e.b},${e.a})` })
         }} />
       }
     </>

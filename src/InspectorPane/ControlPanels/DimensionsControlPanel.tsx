@@ -1,6 +1,6 @@
 import { useContext } from "react"
 import { editorContext, EditorContextTypes } from "../../Editor";
-import { InputNumber, Switch, Button, Slider } from "antd"
+import { InputNumber, Switch, Button, Slider, Row, Col } from "antd"
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCoffee, faLock, faUnlock } from '@fortawesome/free-solid-svg-icons'
@@ -19,6 +19,49 @@ const DimensionsControlPanel = ({ selection }: Props) => {
 
 	return (
 		<>
+			<Row>
+				<Col span={2}>
+					L
+				</Col>
+				<Col span={22}>
+					<Row>
+						<EquationInput
+							size={context.state.antdSize}
+							addonBefore="W"
+							min={0}
+							max={1000}
+							precision={0}
+							value={selection.width}
+							equation={selection?.widthEquation}
+							onChange={(e: any) => { setOnFabricObject(selection, { width: e.value, widthEquation: e.equation }, "scale") }}
+						/>
+					</Row>
+					<Row>
+					<EquationInput
+				size={context.state.antdSize}
+				addonBefore="Width:"
+				min={0}
+				max={1000}
+				precision={0}
+				value={selection.width}
+				equation={selection?.widthEquation}
+				onChange={(e: any) => { setOnFabricObject(selection, { width: e.value, widthEquation: e.equation }, "scale") }}
+			/>
+
+					</Row>
+				</Col>
+			</Row>
+			<EquationInput
+				size={context.state.antdSize}
+				addonBefore="W"
+				min={0}
+				max={1000}
+				precision={0}
+				value={selection.width}
+				equation={selection?.widthEquation}
+				onChange={(e: any) => { setOnFabricObject(selection, { width: e.value, widthEquation: e.equation }, "scale") }}
+			/>
+			<p> OOOOOOLLLLLDDD</p>
 			<EquationInput
 				size={context.state.antdSize}
 				addonBefore="Width:"

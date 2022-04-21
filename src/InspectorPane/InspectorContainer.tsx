@@ -1,7 +1,7 @@
 //@ts-nocheck
 import React, { useContext } from "react";
 import { editorContext, EditorContextTypes } from "../Editor";
-import { Button, Collapse} from 'antd';
+import { Button, Collapse } from 'antd';
 const { Panel } = Collapse;
 import { fabric } from "fabric";
 import { PositionControlPanel } from "./ControlPanels/PositionControlPanel";
@@ -71,9 +71,11 @@ const InspectorContainer = ({ availiableCustomInteractionModules }: Props) => {
             <Panel header="Shadow" key="5">
               <ShadowControlPanel selection={selection} />
             </Panel>
-            <Panel header="Text" key="6">
-              <TextControlPanel selection={selection} />
-            </Panel>
+            {selection.type === "FillableTextBox" &&
+              <Panel header="Text" key="6">
+                <TextControlPanel selection={selection} />
+              </Panel>
+            }
             {
               selection.type === 'image' &&
               <Panel header="Image" key="7">
