@@ -15,16 +15,44 @@ const BorderControlPanel = ({selection}: Props) => {
   const setOnFabricObject: Function = context.setOnFabricObject
 
   const getStrokeDashState = () => {
-    return "lol"
+    switch(selection.strokeDashArray) {
+      case [5, 5]:
+        return "dotted"
+      case [10, 10]:
+        return "dashed"
+      case [15, 15]:
+        return "large-dashed"
+      default:
+        return "solid"
+    }
+  }
+
+  const handleStrokeDashSelect = (e: any) => {
+    let newStrokeDashArray: [number, number] | []
+    switch(e.target.value) {
+      case "dotted":
+        newStrokeDashArray = [5, 5]
+        break
+      case "dashed":
+        newStrokeDashArray = [10, 10]
+        break
+      case "large-dashed":
+        newStrokeDashArray = [15, 15]
+        break
+      default:
+        newStrokeDashArray = []
+        break
+    }
+    setOnFabricObject(selection, {strokeDashArray: newStrokeDashArray})
   }
 
   return (
     <>
       <Radio.Group value={getStrokeDashState()} size="small" style={{ marginTop: 16 }}>
-        <Radio.Button value="solid" onClick={() => { }}>-</Radio.Button>
-        <Radio.Button value="dotted" onClick={() => { }}>...</Radio.Button>
-        <Radio.Button value="dashed" onClick={() => { }}>---</Radio.Button>
-        <Radio.Button value="large-dashed" onClick={() => { }}>- -</Radio.Button>
+        <Radio.Button value="solid" onClick={handleStrokeDashSelect}>-</Radio.Button>
+        <Radio.Button value="dotted" onClick={handleStrokeDashSelect}>...</Radio.Button>
+        <Radio.Button value="dashed" onClick={handleStrokeDashSelect}>---</Radio.Button>
+        <Radio.Button value="large-dashed" onClick={handleStrokeDashSelect}>- -</Radio.Button>
       </Radio.Group>
 
       <EquationInput
