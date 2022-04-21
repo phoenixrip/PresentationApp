@@ -29,21 +29,20 @@ function CustomMediaObject() {
       return [scale, 0, 0, scale, overFlowX, overFlowY]
     },
     _render(ctx) {
-      console.log('custom render')
       this.patternFill.patternTransform = this.getCenteredPatternTransform()
       this.callSuper('_render', ctx)
     },
     getSrc() {
       return this._element.src;
     },
-    setSrc: function (src, options) {
-      var _this = this;
-      return fabric.util.loadImage(src, options).then(function (img) {
-        _this.setElement(img, options);
-        _this._setWidthHeight();
-        return _this;
-      });
-    },
+    // setSrc: function (src, options) {
+    //   var _this = this;
+    //   return fabric.util.loadImage(src, options).then(function (img) {
+    //     _this.setElement(img, options);
+    //     _this._setWidthHeight();
+    //     return _this;
+    //   });
+    // },
     toObject: function (propertiesToInclude) {
       const objectRep = {
         ...this.callSuper('toObject', propertiesToInclude),
@@ -56,7 +55,6 @@ function CustomMediaObject() {
   fabric.CustomMediaObject.async = true
   fabric.CustomMediaObject.fromObject = function (_object, callback) {
     var object = fabric.util.object.clone(_object)
-    console.log({ object })
     fabric.util.loadImage(object.src, function (img, isError) {
       if (isError) {
         callback && callback(null, true);

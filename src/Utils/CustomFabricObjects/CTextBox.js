@@ -1,3 +1,4 @@
+import { fabric } from 'fabric'
 import gsap from 'gsap'
 
 function CTextBox() {

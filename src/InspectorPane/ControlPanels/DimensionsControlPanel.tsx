@@ -11,9 +11,9 @@ import Input from "rc-input";
 
 interface Props {
 	selection: any | undefined
-  }
+}
 
-const DimensionsControlPanel = ({selection}: Props) => {
+const DimensionsControlPanel = ({ selection }: Props) => {
 	const context: EditorContextTypes = useContext(editorContext)
 	const setOnFabricObject: Function = context.setOnFabricObject
 
@@ -83,6 +83,11 @@ const DimensionsControlPanel = ({selection}: Props) => {
 				precision={0}
 				value={selection.skewY}
 				onChange={(e: any) => { setOnFabricObject(selection, { skewY: e.value }) }} />
+			<InputNumber
+				addonBefore={'ScaleX'}
+				value={selection.scaleX}
+			// onChange={(e: any) => { setOnFabricObject(selection, { skewY: e.value }) }} />
+			/>
 			{//TODO: lockScalingX is the only thing checked for both scaling locks
 				//Should we also onchange lockScalingX/Y also lock the other=
 			}
