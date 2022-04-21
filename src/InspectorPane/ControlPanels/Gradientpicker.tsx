@@ -15,6 +15,7 @@ interface Props {
 type GrapickType = {
     addHandler: Function,
     on: Function,
+    off: Function,
     getSelected: Function
     clear: Function,
     getHandlers: Function
@@ -53,7 +54,6 @@ const Gradientpicker = ({ gradient, onChange }: Props) => {
             .on('handler:color:change', parseColorStops)
         
         return () => {
-            //@ts-ignore
             gradientPicker!.current!.off('handler:drag:end', parseColorStops)
                 .off('handler:add', parseColorStops)
                 .off('handler:remove', parseColorStops)

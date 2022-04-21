@@ -106,6 +106,9 @@ const FillControlPanel = ({ selection }: Props) => {
         }
     }, [fillMode])
 
+    useEffect(() => {
+        setFillMode(selection?.fill?.type || "solid")
+    }, [selection])
 
     return (
         <>
