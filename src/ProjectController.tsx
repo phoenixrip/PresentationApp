@@ -65,7 +65,7 @@ class ProjectController extends Component<Props, State> {
   }
 
   handleFabricMountConfirmed = async () => {
-    console.log('handleFabricMountConfirmed')
+    // console.log('handleFabricMountConfirmed')
     if (!this.liveEditor || !this.liveEditor?.fabricCanvas) return null
     // Load all the project global objects into the fabricCanvas
     const json: any = {
@@ -161,6 +161,7 @@ class ProjectController extends Component<Props, State> {
         // Here we need to make sure that we aren't resetting values
         // that will become invalid
         if (isObjectInNewScene) {
+          console.log({ isObjectInNewScene })
           // const globalObjectOptions = this.state.project.globalObjects[guid]
           object
             .set({ scaleX: 1, scaleY: 1 })

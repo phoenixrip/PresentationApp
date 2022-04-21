@@ -51,6 +51,7 @@ function setFabricDefaults() {
         'visible'
       ]
     )
+    console.log('getAnimatableValues: ', object)
     return object
   }
 

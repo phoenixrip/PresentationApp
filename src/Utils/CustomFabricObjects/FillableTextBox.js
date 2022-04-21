@@ -1,4 +1,5 @@
 import { fabric } from 'fabric'
+import gsap from 'gsap'
 
 export default function fillableTextBox() {
   if (fabric.FillableTextBox) return
@@ -10,7 +11,15 @@ export default function fillableTextBox() {
       if (!options?.paraStylesSettings) {
         options.paraStylesSettings = {
           defaultParaStyle: 'd',
-          paraStyles: { d: { styles: {} } }
+          paraStyles: {
+            d: {
+              styles: {
+                fontFamily: 'Helvetica Neue, Helvetica',
+                fill: 'white',
+                fontSize: 28
+              }
+            }
+          }
         }
       }
       this.paraBottomPad = options?.paraBottomPad ?? 10
@@ -29,7 +38,7 @@ export default function fillableTextBox() {
       this.cachedAutoGradWidth = null
       this.lineFillablesCacheDict = {}
       this.initSuperScript()
-      console.log(this.paraBottomPad)
+      this.getObjectInTimeline = inAnimations['default'].bind(this)
     },
     initSuperScript: function () {
       this.styles = JSON.parse(JSON.stringify(this?.styles ?? {}))
@@ -471,8 +480,6 @@ export default function fillableTextBox() {
           if (lineIndex !== this._unwrappedTextLines.length - 1) newTextString += '\n'
         }
       })
-      // console.log({ newLineStyles })
-      // this.styles = newLineStyles
       this.text = newTextString
       this.initDimensions()
     },
@@ -498,8 +505,21 @@ export default function fillableTextBox() {
           delete this.styles[lineIndex][charIndex].fill
         }
       }
+    },
+    getAnimatableValues() {
+      const defaults = this.callSuper('getAnimatableValues')
+      const stylesDeepCopy = JSON.parse(JSON.stringify(this.styles))
+      // console.log('Fillable getAnimatableValues: ')
+      return {
+        ...defaults,
+        styles: stylesDeepCopy
+      }
     }
   })
+
+  fabric.FillableTextBox.fromObject = function (object, callback) {
+    return fabric.Object._fromObject('FillableTextBox', object, callback, 'text');
+  }
 }
 
 const autoGrads = {
@@ -518,5 +538,19 @@ const autoGrads = {
         { offset: 1, color: endColor.css() },
       ]
     })
+  }
+}
+
+const inAnimations = {
+  'default': function (animationSettings) {
+    console.log(`inAnimations: default`)
+    // This is the Textbox instance
+    const inTL = gsap.timeline({
+      paused: true,
+      onUpdate: this.canvas.requestRenderAll.bind(this.canvas)
+    })
+    inTL
+      .fromTo(this, { opacity: 0 }, { opacity: 1, duration: 0.1 })
+    return inTL
   }
 }

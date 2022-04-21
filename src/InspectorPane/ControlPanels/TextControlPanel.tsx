@@ -61,7 +61,7 @@ const TextControlPanel = ({ selection }: Props) => {
       setSharedAttributes(findAllSharedAttributesAndValues(selection.getSelectionStyles(0, selection.text.length, true)))
     }
   }
-  
+
 
   const findAllSharedAttributesAndValues = (arr: Array<{ [key: string]: any }>) => {
     let sharedAttributes = arr[0]
@@ -93,7 +93,7 @@ const TextControlPanel = ({ selection }: Props) => {
   return (
     <>
       <Checkbox checked={sharedAttributes?.fontWeight === "normal" && sharedAttributes?.fontStyle === "normal"} onClick={(e: any) => handleStyleChange({ fontWeight: "normal", fontStyle: "normal" })}>i</Checkbox>
-      <Checkbox checked={sharedAttributes?.fontWeight === "bold" } onClick={(e: any) => handleStyleChange({ fontWeight: e.target.checked ? "bold" : "normal" })}><span style={{ fontWeight: "bold" }}>i</span></Checkbox>
+      <Checkbox checked={sharedAttributes?.fontWeight === "bold"} onClick={(e: any) => handleStyleChange({ fontWeight: e.target.checked ? "bold" : "normal" })}><span style={{ fontWeight: "bold" }}>i</span></Checkbox>
       <Checkbox checked={sharedAttributes?.fontStyle === "italic"} onClick={(e: any) => handleStyleChange({ fontStyle: e.target.checked ? "italic" : "normal" })}><span style={{ fontStyle: "italic" }}>i</span></Checkbox>
       <EquationInput addonBefore="Font Size"
         addonAfter="px"
@@ -103,7 +103,7 @@ const TextControlPanel = ({ selection }: Props) => {
         onChange={(e: any) => handleStyleChange({ fontSize: e.value })}
       />
       <Dropdown overlay={<Menu>
-        {context.fonts.map((font) => <Menu.Item onClick={(e: any) => { }}>{font}</Menu.Item>)}
+        {context.fonts.map((font) => <Menu.Item key={`${font}`} onClick={(e: any) => { }}>{font}</Menu.Item>)}
       </Menu>} >
         <Button>{sharedAttributes?.fontFamily}</Button>
       </Dropdown>

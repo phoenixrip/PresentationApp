@@ -474,13 +474,14 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     const newTextBox = new fabric.FillableTextBox('New text', {
       fontFamily: 'Arial',
       textAlign: 'center',
-      fontSize: 39,
-      stroke: 'black',
-      strokeWidth: 2,
+      fontSize: 29,
+      // stroke: 'black',
+      // strokeWidth: 2,
       fill: 'white',
-      width: this.state.project.settings.dimensions.width * 0.96,
+      width: this.state.project.settings.dimensions.width * 0.94,
       top: 0,
-      left: this.state.project.settings.dimensions.width * 0.02
+      left: this.state.project.settings.dimensions.width * 0.03,
+      styles: {}
     })
     this.props.handleAddObject(newTextBox)
   }
