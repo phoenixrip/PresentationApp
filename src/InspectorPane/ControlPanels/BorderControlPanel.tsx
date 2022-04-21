@@ -3,6 +3,7 @@ import { editorContext, EditorContextTypes } from "../../Editor";
 import { CirclePicker } from 'react-color';
 import { Button, InputNumber, Collapse, Switch, Radio } from 'antd';
 import { EquationInput } from "../EquationInput";
+import { Colorpicker } from "./Colorpicker";
 
 interface Props {
 	selection: any | undefined
@@ -19,11 +20,13 @@ const BorderControlPanel = ({selection}: Props) => {
 
   return (
     <>
-      <CirclePicker
-        color={selection.stroke || "rgba(0,0,0,1)"}
-        onChange={e => {
-          setOnFabricObject(selection, {stroke: `rgba(${e.rgb.r},${e.rgb.g},${e.rgb.b},${e.rgb.a})`})
-        }} />
+      <Radio.Group value={getStrokeDashState()} size="small" style={{ marginTop: 16 }}>
+        <Radio.Button value="solid" onClick={() => { }}>-</Radio.Button>
+        <Radio.Button value="dotted" onClick={() => { }}>...</Radio.Button>
+        <Radio.Button value="dashed" onClick={() => { }}>---</Radio.Button>
+        <Radio.Button value="large-dashed" onClick={() => { }}>- -</Radio.Button>
+      </Radio.Group>
+
       <EquationInput
         addonBefore="Thickness"
         addonAfter="px"
@@ -34,12 +37,13 @@ const BorderControlPanel = ({selection}: Props) => {
           setOnFabricObject(selection, {strokeWidth: e.value})
         }} />
 
-      <Radio.Group value={getStrokeDashState()} size="small" style={{ marginTop: 16 }}>
-        <Radio.Button value="solid" onClick={() => { }}>-</Radio.Button>
-        <Radio.Button value="dotted" onClick={() => { }}>...</Radio.Button>
-        <Radio.Button value="dashed" onClick={() => { }}>---</Radio.Button>
-        <Radio.Button value="large-dashed" onClick={() => { }}>- -</Radio.Button>
-      </Radio.Group>
+      <Colorpicker
+        color={selection.stroke || "rgba(0,0,0,1)"}
+        onChange={(e: any) => {
+          setOnFabricObject(selection, {stroke: `rgba(${e.r},${e.g},${e.b},${e.a})`})
+        }} />
+
+
     </>
   )
 }

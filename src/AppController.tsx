@@ -4,6 +4,8 @@ import { SizeType } from "antd/lib/config-provider/SizeContext";
 import { ProjectDataTypes } from "./Types/ProjectDataTypes";
 import { ProjectController } from "./ProjectController";
 import { setFabricDefaults } from "./Utils/SetFabricDefaults";
+import { ContextMenu } from "./ContextMenu"
+import { Context } from "@dnd-kit/sortable/dist/components";
 
 setFabricDefaults()
 
@@ -158,7 +160,10 @@ class AppController extends Component<{}, AppControllerStateTypes> {
 	}
 	render(): ReactNode {
 		if (this.state?.project) {
-			return <ProjectController project={this.state.project} />;
+			return <>
+				<ContextMenu />
+				<ProjectController project={this.state.project} />;
+				</>
 		} else {
 			return <p>NO DATA TO OPEN EDITOR WITH</p>;
 		}

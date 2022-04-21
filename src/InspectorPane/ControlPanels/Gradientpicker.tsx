@@ -43,6 +43,7 @@ const Gradientpicker = ({ gradient, onChange }: Props) => {
         onChange(newFill)
     }, [])
 
+
     useEffect(() => {
         // Create new grapick instance and add color stops from selection
         gradientPicker.current = new Grapick({ el: '#gradientPicker' });
@@ -55,8 +56,10 @@ const Gradientpicker = ({ gradient, onChange }: Props) => {
 
         // When we setColor on a picker the gradient is refreshed so if the new gradient has a handler with the same position and color we reselect it
         for(const handler of gradientPicker.current?.getHandlers()) {
-            if(lastSelectedHandler.current?.color === handler.color && lastSelectedHandler.current?.position === handler.position) {
+            if(lastSelectedHandler.current?.color === handler.color 
+                && lastSelectedHandler.current?.position === handler.position) {
                 handler.select()
+                break
             }
 
         }
@@ -71,10 +74,8 @@ const Gradientpicker = ({ gradient, onChange }: Props) => {
                 .off('handler:add', parseColorStops)
                 .off('handler:remove', parseColorStops)
                 .off('handler:color:change', parseColorStops)
+                .destroy()
         }
-
-
-
     }, [gradient])
 
     return (
