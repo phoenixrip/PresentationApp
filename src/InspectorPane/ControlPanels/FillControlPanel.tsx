@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import { editorContext, EditorContextTypes } from "../../Editor";
-import { Radio, Select } from "antd";
+import { Button, Radio, Select } from "antd";
 import { fabric } from "fabric";
 import { Gradientpicker } from "./Gradientpicker";
 import { Colorpicker } from "./Colorpicker";
@@ -87,7 +87,6 @@ const FillControlPanel = ({ selection }: Props) => {
                                 "offset": 0.45,
                                 "color": "rgba(110,89,215,1)"
                             },
-
                             {
                                 "offset": 0.64,
                                 "color": "rgba(54, 18, 234, 255)"
@@ -121,8 +120,9 @@ const FillControlPanel = ({ selection }: Props) => {
                     onChange={(e: any) => setOnFabricObject(selection, { fill: `rgba(${e.r},${e.g},${e.b},${e.a})` })} />
             }
             {(selection.fill?.type === "linear" || selection.fill?.type === "radial") &&
-                <Gradientpicker gradient={selection.fill} onChange={(e: any) => setOnFabricObject(selection, { fill: e }, "setGradient")} />
+                <Gradientpicker gradient={selection.fill} onChange={(e: any) => setOnFabricObject(selection, { fill: new fabric.Gradient(e) }, "setGradient")} />
             }
+
         </>
     )
 

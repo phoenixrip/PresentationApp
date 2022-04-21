@@ -47,7 +47,14 @@ const Eyedropper = ({ onChange }: EydropperPropsType) => {
 
     return (
         <>
-            <UseFaIcon icon={faEyedropper} onClick={() => setEnabled(!enabled)} />
+            <UseFaIcon 
+            icon={faEyedropper} 
+            onClick={() => setEnabled(!enabled)} 
+            style={{ margin: "0",
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%,-50%)"}}/>
             {enabled &&
                 <div ref={eyedropperPreview}
                     style={{

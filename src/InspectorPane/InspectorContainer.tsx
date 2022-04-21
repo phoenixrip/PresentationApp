@@ -1,18 +1,14 @@
 //@ts-nocheck
 import React, { useContext } from "react";
 import { editorContext, EditorContextTypes } from "../Editor";
-import { Button, InputNumber, Collapse, Switch, Radio } from 'antd';
+import { Button, Collapse} from 'antd';
 const { Panel } = Collapse;
-import { CirclePicker } from 'react-color';
 import { fabric } from "fabric";
-import { Canvas } from "fabric/fabric-impl";
 import { PositionControlPanel } from "./ControlPanels/PositionControlPanel";
 import { DimensionsControlPanel } from "./ControlPanels/DimensionsControlPanel";
 import { FillControlPanel } from "./ControlPanels/FillControlPanel";
 import { BorderControlPanel } from "./ControlPanels/BorderControlPanel";
 import { ShadowControlPanel } from "./ControlPanels/ShadowControlPanel";
-import { GradientControlPanel } from "./ControlPanels/GradientControlPanel"
-import { EditorComponentClass } from "../CustomInteractionModules/EditorComponentClass";
 import { MultiChoiceLabelEditorComponent } from "../CustomInteractionModules/MultiChoiceLabel/EditorComponent";
 import { TextControlPanel } from "./ControlPanels/TextControlPanel"
 
@@ -24,7 +20,6 @@ interface Props {
 const InspectorContainer = ({ availiableCustomInteractionModules }: Props) => {
   const context: EditorContextTypes = useContext(editorContext);
   const selection: any | undefined = context.fabricCanvas?.getActiveObject()
-  const setOnFabricObject: Function = context.setOnFabricObject
 
   return (
     <>

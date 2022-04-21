@@ -1,5 +1,5 @@
-import { Input, InputNumber, Select, } from "antd"
-import { useState, useRef } from "react";
+import { Col, Input, InputNumber, Row, Select, } from "antd"
+import { useState, useRef, useEffect } from "react";
 import { RgbaStringColorPicker } from "react-colorful";
 const tinycolor = require("tinycolor2");
 import c from './Colorpicker.module.css'
@@ -13,14 +13,12 @@ interface ColorpickerPropsType {
 
 const Colorpicker = ({ color, onChange, palette }: ColorpickerPropsType) => {
     const [stringInputMode, setStringInputMode] = useState("HEX")
-
-    const initialColor = tinycolor(color)
-    const internalHexColor = useRef(initialColor.toHex())
-    const internalHSLAColor = useRef(initialColor.toHsl())
-    const internalRGBAColor = useRef(initialColor.toRgb())
     const [tick, setTick] = useState(false)
 
-    console.log(stringInputMode)
+    const internalColor = useRef(tinycolor(color))
+    const internalHexColor = useRef(internalColor.current.toHex())
+    const internalHSLAColor = useRef(internalColor.current.toHsl())
+    const internalRGBAColor = useRef(internalColor.current.toRgb())
 
     let colorPalette
     if (palette) {
@@ -57,13 +55,18 @@ const Colorpicker = ({ color, onChange, palette }: ColorpickerPropsType) => {
     const lightness = useRef<HTMLInputElement>(null)
     const alphahsla = useRef<HTMLInputElement>(null)
 
-    const parseColor = (e: any) => {
+    useEffect(() => {
+        parseColor(color, false)
+    }, [color])
+
+    const parseColor = (e: any, doOnChange:Boolean=true) => {
         const newColor = tinycolor(e)
         if (newColor.isValid()) {
+            internalColor.current = newColor
             internalHexColor.current = newColor.toHex()
             internalHSLAColor.current = newColor.toHsl()
             internalRGBAColor.current = newColor.toRgb()
-            if (onChange) onChange(newColor.toRgb())
+            if (onChange && doOnChange) onChange(newColor.toRgb())
             setTick(!tick)
         }
     }
@@ -74,7 +77,8 @@ const Colorpicker = ({ color, onChange, palette }: ColorpickerPropsType) => {
             // so if it happens in parseColor then valid but short hex strings (e.g fff) will resolve to the full equivalent (fffff)
             internalHexColor.current = e.target.value
             const newColor = tinycolor(e.target.value)
-            if(newColor.isValid()) {
+            if (newColor.isValid()) {
+                internalColor.current = newColor
                 internalHSLAColor.current = newColor.toHsl()
                 internalRGBAColor.current = newColor.toRgb()
                 if (onChange) onChange(newColor.toRgb())
@@ -87,120 +91,125 @@ const Colorpicker = ({ color, onChange, palette }: ColorpickerPropsType) => {
         }
     }
 
-
     return (
         <>
-            <Eyedropper onChange={parseColor} />
-            <RgbaStringColorPicker className={c["react-colorful"]} color={color} onChange={parseColor} />
-            <Input.Group compact>
-                <Select value={stringInputMode} onChange={setStringInputMode} style={{ width: "20%" }}>
-                    <Select.Option value="HEX">HEX</Select.Option>
-                    <Select.Option value="RGBA">RGB</Select.Option>
-                    <Select.Option value="HSLA">HSL</Select.Option>
-                </Select>
+            <RgbaStringColorPicker className={c["react-colorful"]} color={internalColor.current.toRgbString()} onChange={parseColor} />
+            <Row>
+                <Col span={22}>
+                    <Input.Group compact>
+                        <Select value={stringInputMode} onChange={setStringInputMode} style={{ width: "20%" }}>
+                            <Select.Option value="HEX">HEX</Select.Option>
+                            <Select.Option value="RGBA">RGB</Select.Option>
+                            <Select.Option value="HSLA">HSL</Select.Option>
+                        </Select>
 
-                {stringInputMode === "HEX" &&
-                    <Input
-                        ref={hex}
-                        value={internalHexColor.current}
-                        addonBefore={"#"}
-                        maxLength={7}
-                        onChange={handleInput}
-                        style={{ width: "80%" }}
-                    />
-                }
-                {
-                    stringInputMode === "RGBA" &&
-                    <>
-                        <InputNumber
-                            ref={red}
-                            value={internalRGBAColor.current.r}
-                            min={0}
-                            max={255}
-                            precision={0}
-                            onChange={handleInput}
-                            style={{ width: "20%" }}
-                            controls={false}
-                        />
-                        <InputNumber
-                            ref={green}
-                            value={internalRGBAColor.current.g}
-                            min={0}
-                            max={255}
-                            precision={0}
-                            onChange={handleInput}
-                            style={{ width: "20%" }}
-                            controls={false}
-                        />
-                        <InputNumber
-                            ref={blue}
-                            value={internalRGBAColor.current.b}
-                            min={0}
-                            max={255}
-                            precision={0}
-                            onChange={handleInput}
-                            style={{ width: "20%" }}
-                            controls={false}
-                        />
-                        <InputNumber
-                            ref={alphargba}
-                            value={internalRGBAColor.current.a}
-                            min={0}
-                            max={1}
-                            precision={2}
-                            step={0.1}
-                            onChange={handleInput}
-                            style={{ width: "20%" }}
-                            controls={false}
-                        />
-                    </>
-                }
-                {stringInputMode === "HSLA" &&
-                    <>
-                        <InputNumber
-                            ref={hue}
-                            value={internalHSLAColor.current.h}
-                            min={-360}
-                            max={360}
-                            precision={0}
-                            onChange={handleInput}
-                            style={{ width: "20%" }}
-                            controls={false}
-                        />
-                        <InputNumber
-                            ref={saturation}
-                            value={internalHSLAColor.current.s}
-                            min={0}
-                            max={1}
-                            precision={2}
-                            onChange={handleInput}
-                            style={{ width: "20%" }}
-                            controls={false}
-                        />
-                        <InputNumber
-                            ref={lightness}
-                            value={internalHSLAColor.current.l}
-                            min={0}
-                            max={1}
-                            precision={2}
-                            onChange={handleInput}
-                            style={{ width: "20%" }}
-                            controls={false}
-                        />
-                        <InputNumber
-                            ref={alphahsla}
-                            value={internalHSLAColor.current.a}
-                            min={0}
-                            max={1}
-                            precision={2}
-                            step={0.1}
-                            onChange={handleInput}
-                            style={{ width: "20%" }}
-                            controls={false}
-                        />
-                    </>
-                }
-            </Input.Group>
+                        {stringInputMode === "HEX" &&
+                            <Input
+                                ref={hex}
+                                value={internalHexColor.current}
+                                addonBefore={"#"}
+                                maxLength={7}
+                                onChange={handleInput}
+                                style={{ width: "80%" }}
+                            />
+                        }
+                        {
+                            stringInputMode === "RGBA" &&
+                            <>
+                                <InputNumber
+                                    ref={red}
+                                    value={internalRGBAColor.current.r}
+                                    min={0}
+                                    max={255}
+                                    precision={0}
+                                    onChange={handleInput}
+                                    style={{ width: "20%" }}
+                                    controls={false}
+                                />
+                                <InputNumber
+                                    ref={green}
+                                    value={internalRGBAColor.current.g}
+                                    min={0}
+                                    max={255}
+                                    precision={0}
+                                    onChange={handleInput}
+                                    style={{ width: "20%" }}
+                                    controls={false}
+                                />
+                                <InputNumber
+                                    ref={blue}
+                                    value={internalRGBAColor.current.b}
+                                    min={0}
+                                    max={255}
+                                    precision={0}
+                                    onChange={handleInput}
+                                    style={{ width: "20%" }}
+                                    controls={false}
+                                />
+                                <InputNumber
+                                    ref={alphargba}
+                                    value={internalRGBAColor.current.a}
+                                    min={0}
+                                    max={1}
+                                    precision={2}
+                                    step={0.1}
+                                    onChange={handleInput}
+                                    style={{ width: "20%" }}
+                                    controls={false}
+                                />
+                            </>
+                        }
+                        {stringInputMode === "HSLA" &&
+                            <>
+                                <InputNumber
+                                    ref={hue}
+                                    value={internalHSLAColor.current.h}
+                                    min={-360}
+                                    max={360}
+                                    precision={0}
+                                    onChange={handleInput}
+                                    style={{ width: "20%" }}
+                                    controls={false}
+                                />
+                                <InputNumber
+                                    ref={saturation}
+                                    value={internalHSLAColor.current.s}
+                                    min={0}
+                                    max={1}
+                                    precision={2}
+                                    onChange={handleInput}
+                                    style={{ width: "20%" }}
+                                    controls={false}
+                                />
+                                <InputNumber
+                                    ref={lightness}
+                                    value={internalHSLAColor.current.l}
+                                    min={0}
+                                    max={1}
+                                    precision={2}
+                                    onChange={handleInput}
+                                    style={{ width: "20%" }}
+                                    controls={false}
+                                />
+                                <InputNumber
+                                    ref={alphahsla}
+                                    value={internalHSLAColor.current.a}
+                                    min={0}
+                                    max={1}
+                                    precision={2}
+                                    step={0.1}
+                                    onChange={handleInput}
+                                    style={{ width: "20%" }}
+                                    controls={false}
+                                />
+                            </>
+                        }
+                    </Input.Group>
+                </Col>
+                <Col span={2}>
+                    <Eyedropper onChange={parseColor} />
+                </Col>
+            </Row>
             {
                 colorPalette &&
                 <div className={c.colorPickerPalette}>
