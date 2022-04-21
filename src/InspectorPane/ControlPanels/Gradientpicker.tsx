@@ -1,6 +1,6 @@
 import { Button, Slider, } from "antd"
 import Grapick from "grapick";
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import "../../../node_modules/grapick/dist/grapick.min.css"
 import './grapickCustom.css'
 import { Colorpicker } from './Colorpicker'
@@ -20,8 +20,16 @@ type GrapickType = {
     getHandlers: Function
 }
 
+type GrapickHandler = {
+    setColor: Function,
+    color: string,
+    position: number
+}
+
 const Gradientpicker = ({ gradient, onChange }: Props) => {
     const gradientPicker = useRef<GrapickType | null>(null)
+    const lastSelectedHandler = useRef<GrapickHandler | null>(null)
+
 
     const parseColorStops = useCallback(() => {
         let newColorStops = []
@@ -32,12 +40,10 @@ const Gradientpicker = ({ gradient, onChange }: Props) => {
             })
         }
         const newFill = {...gradient, colorStops: newColorStops}
-        console.log("new gradient", newFill)
         onChange(newFill)
     }, [])
 
     useEffect(() => {
-        console.log("render")
         // Create new grapick instance and add color stops from selection
         gradientPicker.current = new Grapick({ el: '#gradientPicker' });
         if (gradient.type === "linear" || gradient.type === "radial") {
@@ -47,24 +53,38 @@ const Gradientpicker = ({ gradient, onChange }: Props) => {
             }
         }
 
+        // When we setColor on a picker the gradient is refreshed so if the new gradient has a handler with the same position and color we reselect it
+        for(const handler of gradientPicker.current?.getHandlers()) {
+            if(lastSelectedHandler.current?.color === handler.color && lastSelectedHandler.current?.position === handler.position) {
+                handler.select()
+            }
+
+        }
+
         gradientPicker!.current!.on('handler:drag:end', parseColorStops)
             .on('handler:add', parseColorStops)
             .on('handler:remove', parseColorStops)
             .on('handler:color:change', parseColorStops)
-        
+
         return () => {
             gradientPicker!.current!.off('handler:drag:end', parseColorStops)
                 .off('handler:add', parseColorStops)
                 .off('handler:remove', parseColorStops)
                 .off('handler:color:change', parseColorStops)
         }
+
+
+
     }, [gradient])
 
     return (
         <>
             <div id="gradientPicker"></div>
-            <Colorpicker color={gradientPicker.current?.getSelected()?.color}
-                onChange={(e: any) => gradientPicker.current?.getSelected()?.setColor(`rgba(${e.r},${e.g},${e.b},${e.a})`)} />
+            <Colorpicker color={gradientPicker.current?.getSelected().color}
+                onChange={(e: any) => { 
+                    // When we setColor on a picker the gradient is refreshed so we cache the current selection to reselect it
+                    lastSelectedHandler.current = gradientPicker.current?.getSelected()
+                    lastSelectedHandler.current?.setColor(`rgba(${e.r},${e.g},${e.b},${e.a})`)}} />
             {
                 gradient.type === "radial" &&
                 <> 
