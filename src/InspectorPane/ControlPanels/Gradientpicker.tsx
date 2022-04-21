@@ -5,7 +5,6 @@ import "../../../node_modules/grapick/dist/grapick.min.css"
 import './grapickCustom.css'
 import { Colorpicker } from './Colorpicker'
 import { Gradient } from "fabric/fabric-impl";
-import { defaultCoordinates } from "@dnd-kit/core";
 
 interface Props {
     gradient: Gradient

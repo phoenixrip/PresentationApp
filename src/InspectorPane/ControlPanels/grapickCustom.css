@@ -12,3 +12,11 @@
 .grp-handler-close {
     display: none;
 }
+
+.grp-wrapper {
+    border-radius: 9px;
+}
+
+.grp-preview {
+    border-radius: 7px;
+}
