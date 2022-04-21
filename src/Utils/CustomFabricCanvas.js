@@ -7,6 +7,8 @@ const dl = (args, ...rest) => console.log(args, ...rest)
 class CustomFabricCanvas extends fabric.Canvas {
   liveObjectsDict = {}
   projectSettings = {}
+  eyedropperActive = false
+
   gridWidth = 1
   gridHeight = 1
   constructor(canvas, options) {
@@ -16,79 +18,86 @@ class CustomFabricCanvas extends fabric.Canvas {
   existingSelectionIsCustomCreated = false
   familyObjectsRemovedFromSelection = false
   _onMouseDown(e) {
-    let target = this.findTarget(e, e?.shiftKey) // On shift click we ignore active selections in findTarget so we get actual element clicked
+    if (this.eyedropperActive) {
+      this.fire("mouse:down", e)
+    } else {
+      let target = this.findTarget(e, e?.shiftKey) // On shift click we ignore active selections in findTarget so we get actual element clicked
 
-    let shouldRunCustomGrabGroup = true
-    const alreadySelected = target === this._activeObject
-    const metaKeyDown = e.metaKey
+      let shouldRunCustomGrabGroup = true
+      const alreadySelected = target === this._activeObject
+      const metaKeyDown = e.metaKey
 
-    if (alreadySelected) shouldRunCustomGrabGroup = false
-    if (metaKeyDown) shouldRunCustomGrabGroup = false
+      if (alreadySelected) shouldRunCustomGrabGroup = false
+      if (metaKeyDown) shouldRunCustomGrabGroup = false
 
 
-    //When shift key isnt held we just select all objects in the family
-    if (shouldRunCustomGrabGroup && target && target.parentID && !e?.shiftKey) {
-      const allObjectsInFamily = this.objectsInFamilyOfGUID(target.guid)
-      const newSelectionObjects = [...allObjectsInFamily]
-      this._discardActiveObject()
-      const newActiveSelection = new fabric.ActiveSelection(newSelectionObjects, { canvas: this })
-      this._setActiveObject(newActiveSelection)
-      // setting this.existingSelectionIsCustomCreated = true here -will make all but the target movable
-      this.renderAll()
-    }
-    else if (shouldRunCustomGrabGroup && target && target.parentID && e?.shiftKey) {
-      const currentSelection = this.getActiveObject()
-
-      // if we have shift clicked and selected an object with a family that's not in our current selection add it
-      if (currentSelection.type === "activeSelection" && !currentSelection.contains(target)) {
+      //When shift key isnt held we just select all objects in the family
+      if (shouldRunCustomGrabGroup && target && target.parentID && !e?.shiftKey) {
         const allObjectsInFamily = this.objectsInFamilyOfGUID(target.guid)
-        const newSelectedObjects = [...currentSelection.getObjects(), ...allObjectsInFamily]
+        const newSelectionObjects = [...allObjectsInFamily]
         this._discardActiveObject()
-        const newActiveSelection = new fabric.ActiveSelection(newSelectedObjects, { canvas: this })
+        const newActiveSelection = new fabric.ActiveSelection(newSelectionObjects, { canvas: this })
         this._setActiveObject(newActiveSelection)
-        //this.existingSelectionIsCustomCreated = true
-        this.renderAll()
-
-        // if we have shift clicked and select an object with a family in our current selection filter it out of our selection
-      } else if (currentSelection.type === "activeSelection" && currentSelection.contains(target)) {
-        const allObjectsInFamily = this.objectsInFamilyOfGUID(target.guid)
-        const newSelectedObjects = currentSelection.getObjects().filter(obj => !allObjectsInFamily.includes(obj))
-        this._discardActiveObject()
-        const newActiveSelection = new fabric.ActiveSelection(newSelectedObjects, { canvas: this })
-        this._setActiveObject(newActiveSelection)
-        this.existingSelectionIsCustomCreated = true
-        this.familyObjectsRemovedFromSelection = true
+        // setting this.existingSelectionIsCustomCreated = true here -will make all but the target movable
         this.renderAll()
       }
+      else if (shouldRunCustomGrabGroup && target && target.parentID && e?.shiftKey) {
+        const currentSelection = this.getActiveObject()
+
+        // if we have shift clicked and selected an object with a family that's not in our current selection add it
+        if (currentSelection.type === "activeSelection" && !currentSelection.contains(target)) {
+          const allObjectsInFamily = this.objectsInFamilyOfGUID(target.guid)
+          const newSelectedObjects = [...currentSelection.getObjects(), ...allObjectsInFamily]
+          this._discardActiveObject()
+          const newActiveSelection = new fabric.ActiveSelection(newSelectedObjects, { canvas: this })
+          this._setActiveObject(newActiveSelection)
+          //this.existingSelectionIsCustomCreated = true
+          this.renderAll()
+
+          // if we have shift clicked and select an object with a family in our current selection filter it out of our selection
+        } else if (currentSelection.type === "activeSelection" && currentSelection.contains(target)) {
+          const allObjectsInFamily = this.objectsInFamilyOfGUID(target.guid)
+          const newSelectedObjects = currentSelection.getObjects().filter(obj => !allObjectsInFamily.includes(obj))
+          this._discardActiveObject()
+          const newActiveSelection = new fabric.ActiveSelection(newSelectedObjects, { canvas: this })
+          this._setActiveObject(newActiveSelection)
+          this.existingSelectionIsCustomCreated = true
+          this.familyObjectsRemovedFromSelection = true
+          this.renderAll()
+        }
+      }
+      super._onMouseDown(e)
     }
-    super._onMouseDown(e)
   }
   _onMouseUp(e) {
     super._onMouseUp(e)
-    if (!this.existingSelectionIsCustomCreated) {
-      const selection = this.getActiveObject()
-      if (selection && selection.type === "activeSelection") {
-        let GUIDsToCheck = []
-        for (const object of selection.getObjects()) {
-          GUIDsToCheck.push(object.guid)
+    if (!this.eyedropperActive) {
+      if (!this.existingSelectionIsCustomCreated) {
+        const selection = this.getActiveObject()
+        if (selection && selection.type === "activeSelection") {
+          let GUIDsToCheck = []
+          for (const object of selection.getObjects()) {
+            GUIDsToCheck.push(object.guid)
+          }
+          const objectsInFamily = this.objectsInFamilyOfGUID(GUIDsToCheck)
+          this._discardActiveObject()
+          const newActiveSelection = new fabric.ActiveSelection(objectsInFamily, { canvas: this })
+          this._setActiveObject(newActiveSelection)
+          this.renderAll()
         }
-        const objectsInFamily = this.objectsInFamilyOfGUID(GUIDsToCheck)
-        this._discardActiveObject()
-        const newActiveSelection = new fabric.ActiveSelection(objectsInFamily, { canvas: this })
-        this._setActiveObject(newActiveSelection)
-        this.renderAll()
+      }
+      this.existingSelectionIsCustomCreated = false // reset to default 
+
+      //Fabric re-adds selected object to selection on shift-click after we remove the whole family. Remove that single element again here
+      if (this.familyObjectsRemovedFromSelection) {
+        const target = this.findTarget(e, true)
+        const currentSelection = this.getActiveObject()
+        currentSelection.removeWithUpdate(target)
+        this.familyObjectsRemovedFromSelection = false
       }
     }
-    this.existingSelectionIsCustomCreated = false // reset to default 
-
-    //Fabric re-adds selected object to selection on shift-click after we remove the whole family. Remove that single element again here
-    if (this.familyObjectsRemovedFromSelection) {
-      const target = this.findTarget(e, true)
-      const currentSelection = this.getActiveObject()
-      currentSelection.removeWithUpdate(target)
-      this.familyObjectsRemovedFromSelection = false
-    }
   }
+
   objectsInFamilyOfGUID(GUIDOrGUIDs) {
     //If it's a single string normalise to an array of GUIDs, otherwise use user-supplied array of string
     let GUIDs

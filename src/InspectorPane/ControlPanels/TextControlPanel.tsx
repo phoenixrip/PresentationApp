@@ -32,19 +32,16 @@ const TextControlPanel = ({ selection }: Props) => {
   const setOnGlobalObject: Function = context.setOnGlobalObject
 
   const [selectedTextIndices, setSelectedTextIndices] = useState([selection.selectionStart, selection.selectionEnd])
-  const [subselectionActive, setSubselectionActive] = useState(false)
   const [sharedAttributes, setSharedAttributes] = useState({} as FabricTextStyles)
 
 
   useEffect(() => {
     checkSelection()
 
-    selection.on("selection:changed", () => {
-      checkSelection()
-    })
+    selection.on("selection:changed", checkSelection)
 
     return () => {
-      selection.off("selection:changed")
+      selection.off("selection:changed", checkSelection)
     }
   }, [])
 
@@ -83,9 +80,7 @@ const TextControlPanel = ({ selection }: Props) => {
       setOnGlobalObject(selection, options)
       context.fabricCanvas?.requestRenderAll()
     } else {
-      selection.setSelectionStyles(options, 0, selection.text.length)
-      setOnGlobalObject(selection, options)
-      context.fabricCanvas?.requestRenderAll()
+      setOnFabricObject(selection, options)
     }
     checkSelection()
   }

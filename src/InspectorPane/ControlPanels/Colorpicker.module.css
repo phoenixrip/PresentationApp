@@ -1,0 +1,37 @@
+.colorPickerTopBar {
+    width: 100%;
+}
+
+
+.colorPickerDropperPreview {
+    width: 100px;
+    height: 10px;
+    margin-left: 3px;
+    margin-right: 3px;
+    border-radius: 5px;
+    display: inline-block;
+}
+
+.react-colorful {
+    width: 100% !important;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.colorPickerPalette {
+    margin-top: 10px;
+    width: 100%;
+    background-color: #3e3e3e;
+    border-radius: 5px;
+    padding-top: 5px;
+}
+
+.colorPickerPaletteOption {
+    width: 25px;
+    height: 25px;
+    margin-left: 3px;
+    margin-right: 3px;
+    border-radius: 5px;
+    display: inline-block;
+    border: solid 1px white;
+}
