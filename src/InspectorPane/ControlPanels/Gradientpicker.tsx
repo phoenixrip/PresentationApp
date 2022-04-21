@@ -64,7 +64,6 @@ const Gradientpicker = ({ gradient, onChange }: Props) => {
     return (
         <>
             <div id="gradientPicker"></div>
-            <Button onClick={() => gradientPicker.current?.getSelected()?.remove()}>Delete Color Stop</Button>
             <Colorpicker color={gradientPicker.current?.getSelected()?.color}
                 onChange={(e: any) => gradientPicker.current?.getSelected()?.setColor(`rgba(${e.r},${e.g},${e.b},${e.a})`)} />
             {

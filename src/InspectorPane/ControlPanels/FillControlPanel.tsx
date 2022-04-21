@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import { editorContext, EditorContextTypes } from "../../Editor";
-import { Button, Radio, Select } from "antd";
+import { Select } from "antd";
 import { fabric } from "fabric";
 import { Gradientpicker } from "./Gradientpicker";
 import { Colorpicker } from "./Colorpicker";
