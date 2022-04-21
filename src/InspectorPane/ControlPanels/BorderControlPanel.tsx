@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { editorContext, EditorContextTypes } from "../../Editor";
 import { CirclePicker } from 'react-color';
 import { Button, InputNumber, Collapse, Switch, Radio } from 'antd';
@@ -6,53 +6,42 @@ import { EquationInput } from "../EquationInput";
 import { Colorpicker } from "./Colorpicker";
 
 interface Props {
-	selection: any | undefined
-  }
+  selection: any | undefined
+}
 
+const strokeDashToString: {[key: string]: string} = {
+  "[5,5]": "dotted",
+  "[10,10]": "dashed",
+  "[15,15]": "largeDashed",
+  "undefined": "solid",
+  "[]": "solid"
+}
 
-const BorderControlPanel = ({selection}: Props) => {
+const stringToStrokeDash: {[key: string]: [] | [number, number]} = {
+  "solid": [],
+  "dotted": [5,5],
+  "dashed": [10,10],
+  "largeDashed": [15,15]
+}
+
+const BorderControlPanel = ({ selection }: Props) => {
   const context: EditorContextTypes = useContext(editorContext);
   const setOnFabricObject: Function = context.setOnFabricObject
-
-  const getStrokeDashState = () => {
-    switch(selection.strokeDashArray) {
-      case [5, 5]:
-        return "dotted"
-      case [10, 10]:
-        return "dashed"
-      case [15, 15]:
-        return "large-dashed"
-      default:
-        return "solid"
-    }
-  }
+  const [strokeDashState, setStrokeDashState] = useState(strokeDashToString[selection.strokeDashArray])
 
   const handleStrokeDashSelect = (e: any) => {
-    let newStrokeDashArray: [number, number] | []
-    switch(e.target.value) {
-      case "dotted":
-        newStrokeDashArray = [5, 5]
-        break
-      case "dashed":
-        newStrokeDashArray = [10, 10]
-        break
-      case "large-dashed":
-        newStrokeDashArray = [15, 15]
-        break
-      default:
-        newStrokeDashArray = []
-        break
-    }
-    setOnFabricObject(selection, {strokeDashArray: newStrokeDashArray})
+    const newStrokeDashArray = stringToStrokeDash[e.target.value]
+    setOnFabricObject(selection, { strokeDashArray: newStrokeDashArray })
+    setStrokeDashState(strokeDashToString[JSON.stringify(newStrokeDashArray)])
   }
 
   return (
     <>
-      <Radio.Group value={getStrokeDashState()} size="small" style={{ marginTop: 16 }}>
+      <Radio.Group value={strokeDashState} size="small" style={{ marginTop: 16 }}>
         <Radio.Button value="solid" onClick={handleStrokeDashSelect}>-</Radio.Button>
         <Radio.Button value="dotted" onClick={handleStrokeDashSelect}>...</Radio.Button>
         <Radio.Button value="dashed" onClick={handleStrokeDashSelect}>---</Radio.Button>
-        <Radio.Button value="large-dashed" onClick={handleStrokeDashSelect}>- -</Radio.Button>
+        <Radio.Button value="largeDashed" onClick={handleStrokeDashSelect}>- -</Radio.Button>
       </Radio.Group>
 
       <EquationInput
@@ -62,13 +51,13 @@ const BorderControlPanel = ({selection}: Props) => {
         max={1000}
         value={selection.strokeWidth || 0}
         onChange={(e: any) => {
-          setOnFabricObject(selection, {strokeWidth: e.value})
+          setOnFabricObject(selection, { strokeWidth: e.value })
         }} />
 
       <Colorpicker
         color={selection.stroke || "rgba(0,0,0,1)"}
         onChange={(e: any) => {
-          setOnFabricObject(selection, {stroke: `rgba(${e.r},${e.g},${e.b},${e.a})`})
+          setOnFabricObject(selection, { stroke: `rgba(${e.r},${e.g},${e.b},${e.a})` })
         }} />
 
 
