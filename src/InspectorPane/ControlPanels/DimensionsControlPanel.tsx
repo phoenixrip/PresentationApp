@@ -1,13 +1,12 @@
-import { useContext } from "react"
+import { useContext, useRef, useState } from "react"
 import { editorContext, EditorContextTypes } from "../../Editor";
-import { InputNumber, Switch, Button, Slider, Row, Col } from "antd"
+import { InputNumber, Switch, Button, Slider, Row, Col, Input } from "antd"
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCoffee, faLock, faUnlock } from '@fortawesome/free-solid-svg-icons'
+import { faCoffee, faLock, faUnlock, faLockOpen } from '@fortawesome/free-solid-svg-icons'
 
 import { EquationInput } from "../EquationInput";
-
-import Input from "rc-input";
+import { UseFaIcon } from "../../Utils/UseFaIcon";
 
 interface Props {
 	selection: any | undefined
@@ -17,50 +16,92 @@ const DimensionsControlPanel = ({ selection }: Props) => {
 	const context: EditorContextTypes = useContext(editorContext)
 	const setOnFabricObject: Function = context.setOnFabricObject
 
+	const [aspectRatioLocked, setAspectRatioLocked] = useState(false)
+	const aspectRatio = useRef(selection.width / selection.height)
+
 	return (
 		<>
-			<Row>
+			<Row align="middle">
 				<Col span={2}>
-					L
+					{!aspectRatioLocked &&
+						<UseFaIcon icon={faLockOpen} onClick={() => {
+							aspectRatio.current = selection.width / selection.height
+							setAspectRatioLocked(true)
+						}}
+						/>}
+					{aspectRatioLocked &&
+						<UseFaIcon icon={faLock} onClick={() => { setAspectRatioLocked(false) }} />
+					}
 				</Col>
 				<Col span={22}>
 					<Row>
-						<EquationInput
-							size={context.state.antdSize}
-							addonBefore="W"
-							min={0}
-							max={1000}
-							precision={0}
-							value={selection.width}
-							equation={selection?.widthEquation}
-							onChange={(e: any) => { setOnFabricObject(selection, { width: e.value, widthEquation: e.equation }, "scale") }}
-						/>
+						<Col span={12}>
+							<EquationInput
+								size={context.state.antdSize}
+								addonBefore="w"
+								min={0}
+								max={1000}
+								precision={0}
+								value={selection.width}
+								equation={selection?.widthEquation}
+								onChange={(e: any) => {
+									if (!aspectRatioLocked) setOnFabricObject(selection, { width: e.value, widthEquation: e.equation }, "scale")
+									else setOnFabricObject(selection, { width: e.value, height: e.value / aspectRatio.current }, "scale")
+								}}
+							/>
+						</Col>
+						<Col span={12}>
+							<EquationInput
+								size={context.state.antdSize}
+								addonBefore="x"
+								min={-1000}
+								max={1000}
+								precision={0}
+								value={selection.left}
+								onChange={(e: any) => { setOnFabricObject(selection, { left: e.value }) }}
+							/>
+						</Col>
 					</Row>
 					<Row>
-					<EquationInput
-				size={context.state.antdSize}
-				addonBefore="Width:"
-				min={0}
-				max={1000}
-				precision={0}
-				value={selection.width}
-				equation={selection?.widthEquation}
-				onChange={(e: any) => { setOnFabricObject(selection, { width: e.value, widthEquation: e.equation }, "scale") }}
-			/>
-
+						<Col span={12}>
+							<EquationInput
+								size={context.state.antdSize}
+								addonBefore="h"
+								min={0}
+								max={1000}
+								precision={0}
+								value={selection.height}
+								equation={selection?.heightEquation}
+								onChange={(e: any) => {
+									if (!aspectRatioLocked) setOnFabricObject(selection, { height: e.value, heightEquation: e.equation }, "scale")
+									else setOnFabricObject(selection, { height: e.value, width: e.value * aspectRatio.current }, "scale")
+								}}
+							/>
+						</Col>
+						<Col span={12}>
+							<EquationInput
+								size={context.state.antdSize}
+								addonBefore="y"
+								min={-1000}
+								max={1000}
+								precision={0}
+								value={selection.top}
+								onChange={(e: any) => { setOnFabricObject(selection, { top: e.value }) }} />
+						</Col>
 					</Row>
 				</Col>
-			</Row>
+			</Row >
+			
 			<EquationInput
 				size={context.state.antdSize}
-				addonBefore="W"
-				min={0}
-				max={1000}
+				addonAfter="°"
+				min={-360}
+				max={360}
 				precision={0}
-				value={selection.width}
-				equation={selection?.widthEquation}
-				onChange={(e: any) => { setOnFabricObject(selection, { width: e.value, widthEquation: e.equation }, "scale") }}
-			/>
+				value={selection.angle}
+				onChange={(e: any) => { setOnFabricObject(selection, { angle: e.value }) }} />
+	
+
 			<p> OOOOOOLLLLLDDD</p>
 			<EquationInput
 				size={context.state.antdSize}
@@ -92,7 +133,8 @@ const DimensionsControlPanel = ({ selection }: Props) => {
 				precision={0}
 				value={selection.height}
 				equation={selection?.heightEquation}
-				onChange={(e: any) => { setOnFabricObject(selection, { height: e.value, heightEquation: e.equation }, "scale") }} />
+				onChange={(e: any) => { setOnFabricObject(selection, { height: e.value, heightEquation: e.equation }, "scale") }}
+			/>
 
 			<EquationInput
 				size={context.state.antdSize}

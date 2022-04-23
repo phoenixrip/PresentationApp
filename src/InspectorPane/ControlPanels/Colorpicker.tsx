@@ -1,4 +1,4 @@
-import { Col, Input, InputNumber, Row, Select, } from "antd"
+import { Col, Input, InputNumber, InputRef, Row, Select, } from "antd"
 import { useState, useRef, useEffect } from "react";
 import { RgbaStringColorPicker } from "react-colorful";
 const tinycolor = require("tinycolor2");
@@ -45,7 +45,7 @@ const Colorpicker = ({ color, onChange, palette }: ColorpickerPropsType) => {
         colorPalette = palette.map((col) => tinycolor(col).toRgbString())
     }
 
-    const hex = useRef<any>(null)
+    const hex = useRef<InputRef>(null)
     const red = useRef<HTMLInputElement>(null)
     const green = useRef<HTMLInputElement>(null)
     const blue = useRef<HTMLInputElement>(null)
@@ -56,44 +56,41 @@ const Colorpicker = ({ color, onChange, palette }: ColorpickerPropsType) => {
     const alphahsla = useRef<HTMLInputElement>(null)
 
     useEffect(() => {
-        parseColor(color, false)
+        parseColor(color, "props", false)
     }, [color])
 
-    const parseColor = (e: any, doOnChange:Boolean=true) => {
+    const parseColor = (e: any, source: string, doOnChange: Boolean = true) => {
         const newColor = tinycolor(e)
         if (newColor.isValid()) {
             internalColor.current = newColor
-            internalHexColor.current = newColor.toHex()
+
+            // Only change controlled input for Hex string when it comes from outside that input
+            if (source !== "hexInput" && source !== "props") {
+                internalHexColor.current = newColor.toHex()
+            }
+
             internalHSLAColor.current = newColor.toHsl()
             internalRGBAColor.current = newColor.toRgb()
-            if (onChange && doOnChange) onChange(newColor.toRgb())
-            setTick(!tick)
+
+            if (doOnChange && onChange) onChange(newColor.toRgb())
         }
+        setTick(!tick)
     }
 
     const handleInput = (e: any) => {
         if (stringInputMode === "HEX") {
-            // this needs to handle its parsing directly here because formatting the hex input field also happens from the actual color picker and eyedropper
-            // so if it happens in parseColor then valid but short hex strings (e.g fff) will resolve to the full equivalent (fffff)
             internalHexColor.current = e.target.value
-            const newColor = tinycolor(e.target.value)
-            if (newColor.isValid()) {
-                internalColor.current = newColor
-                internalHSLAColor.current = newColor.toHsl()
-                internalRGBAColor.current = newColor.toRgb()
-                if (onChange) onChange(newColor.toRgb())
-            }
-            setTick(!tick)
+            parseColor(internalHexColor.current, "hexInput")
         } else if (stringInputMode === "RGBA" && red.current?.value && green.current?.value && blue.current?.value && alphargba.current?.value) {
-            parseColor({ r: red.current.value, g: green.current.value, b: blue.current.value, a: alphargba.current.value })
+            parseColor({ r: red.current.value, g: green.current.value, b: blue.current.value, a: alphargba.current.value }, "rgbaInput")
         } else if (stringInputMode === "HSLA" && hue.current?.value && saturation.current?.value && lightness.current?.value && alphahsla.current?.value) {
-            parseColor({ h: hue.current.value, s: saturation.current.value, l: lightness.current.value, a: alphahsla.current.value })
+            parseColor({ h: hue.current.value, s: saturation.current.value, l: lightness.current.value, a: alphahsla.current.value }, "hslInput")
         }
     }
 
     return (
         <>
-            <RgbaStringColorPicker className={c["react-colorful"]} color={internalColor.current.toRgbString()} onChange={parseColor} />
+            <RgbaStringColorPicker className={c["react-colorful"]} color={internalColor.current.toRgbString()} onChange={(e: any) => parseColor(e, "colorpicker")} />
             <Row>
                 <Col span={22}>
                     <Input.Group compact>
@@ -102,7 +99,6 @@ const Colorpicker = ({ color, onChange, palette }: ColorpickerPropsType) => {
                             <Select.Option value="RGBA">RGB</Select.Option>
                             <Select.Option value="HSLA">HSL</Select.Option>
                         </Select>
-
                         {stringInputMode === "HEX" &&
                             <Input
                                 ref={hex}
@@ -216,7 +212,7 @@ const Colorpicker = ({ color, onChange, palette }: ColorpickerPropsType) => {
                     {colorPalette.map((col) =>
                         <div className={c.colorPickerPaletteOption}
                             style={{ backgroundColor: col }}
-                            onClick={() => { parseColor(col) }}></div>
+                            onClick={() => { parseColor(col, "palette") }}></div>
                     )}
                 </div>
             }

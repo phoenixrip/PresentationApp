@@ -4,6 +4,7 @@ import { CirclePicker } from 'react-color';
 import { Button, InputNumber, Collapse, Switch, Radio } from 'antd';
 import { fabric } from "fabric";
 import { EquationInput } from "../EquationInput";
+import { Colorpicker } from "./Colorpicker";
 
 interface Props {
     selection: any | undefined
@@ -38,10 +39,6 @@ const ShadowControlPanel = ({ selection }: Props) => {
                         value={selection.shadow.blur}
                         onChange={(e: any) => setOnFabricObject(selection, { shadow: { ...selection.shadow, blur: e.value } })}
                     />
-                    <CirclePicker
-                        color={selection.shadow.color || "rgba(10,10,10,0.5)"}
-                        onChange={e => setOnFabricObject(selection, { shadow: { ...selection.shadow, color: `rgba(${e.rgb.r},${e.rgb.g},${e.rgb.b},${e.rgb.a})` } })}
-                    />
                     <EquationInput addonBefore="X-offset"
                         addonAfter="px"
                         min={-1000}
@@ -58,7 +55,11 @@ const ShadowControlPanel = ({ selection }: Props) => {
                         value={selection.shadow.offsetY}
                         onChange={(e: any) => setOnFabricObject(selection, { shadow: { ...selection.shadow, offsetY: e.value } })}
                     />
-                    <pre>{selection && JSON.stringify(selection.shadow, null, 4)}</pre>
+                    <Colorpicker
+                        color={selection.shadow.color || "rgba(10,10,10,0.5)"}
+                        onChange={(e: any) => setOnFabricObject(selection, { shadow: { ...selection.shadow, color: `rgba(${e.r},${e.g},${e.b},${e.a})` } })}
+                    />
+
                 </>
             }
         </>
