@@ -14,6 +14,10 @@ const ShadowControlPanel = ({ selection }: Props) => {
     const context: EditorContextTypes = useContext(editorContext);
     const setOnFabricObject: Function = context.setOnFabricObject
 
+    const handleSetOnShadow = () => {
+
+    }
+
     return (
         <>
             <Switch

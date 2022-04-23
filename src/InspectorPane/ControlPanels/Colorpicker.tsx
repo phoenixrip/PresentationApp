@@ -210,7 +210,7 @@ const Colorpicker = ({ color, onChange, palette }: ColorpickerPropsType) => {
                 colorPalette &&
                 <div className={c.colorPickerPalette}>
                     {colorPalette.map((col) =>
-                        <div className={c.colorPickerPaletteOption}
+                        <div key={col} className={c.colorPickerPaletteOption}
                             style={{ backgroundColor: col }}
                             onClick={() => { parseColor(col, "palette") }}></div>
                     )}

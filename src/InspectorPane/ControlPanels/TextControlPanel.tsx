@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import { editorContext, EditorContextTypes } from "../../Editor";
 import { ChromePicker, CirclePicker } from 'react-color';
-import { Button, InputNumber, Collapse, Switch, Radio, Dropdown, Menu, Checkbox } from 'antd';
+import { Button, InputNumber, Collapse, Switch, Radio, Dropdown, Menu, Checkbox, Select, Row } from 'antd';
 import { EquationInput } from "../EquationInput";
 import { customAttributesToIncludeInFabricCanvasToObject } from "../../Utils/consts";
 import { cornersOfRectangle } from "@dnd-kit/core/dist/utilities/algorithms/helpers";
@@ -34,6 +34,7 @@ const TextControlPanel = ({ selection }: Props) => {
 
   const [selectedTextIndices, setSelectedTextIndices] = useState([selection.selectionStart, selection.selectionEnd])
   const [sharedAttributes, setSharedAttributes] = useState({} as FabricTextStyles)
+  const [colorMode, setColorMode] = useState("TEXT")
 
 
   useEffect(() => {
@@ -88,40 +89,53 @@ const TextControlPanel = ({ selection }: Props) => {
 
   return (
     <>
-      <Checkbox checked={sharedAttributes?.fontWeight === "normal" && sharedAttributes?.fontStyle === "normal"} onClick={(e: any) => handleStyleChange({ fontWeight: "normal", fontStyle: "normal" })}>i</Checkbox>
-      <Checkbox checked={sharedAttributes?.fontWeight === "bold"} onClick={(e: any) => handleStyleChange({ fontWeight: e.target.checked ? "bold" : "normal" })}><span style={{ fontWeight: "bold" }}>i</span></Checkbox>
-      <Checkbox checked={sharedAttributes?.fontStyle === "italic"} onClick={(e: any) => handleStyleChange({ fontStyle: e.target.checked ? "italic" : "normal" })}><span style={{ fontStyle: "italic" }}>i</span></Checkbox>
-      <EquationInput addonBefore="Font Size"
+
+      <Row>
+        <Dropdown overlay={<Menu>
+          {context.fonts.map((font) => <Menu.Item key={`${font}`} onClick={(e: any) => { }}>{font}</Menu.Item>)}
+        </Menu>} >
+          <Button>{sharedAttributes?.fontFamily}</Button>
+        </Dropdown>
+      </Row>
+
+      <EquationInput
+        size={context.state.antdSize}
         addonAfter="px"
         min={1}
         precision={0}
         value={sharedAttributes?.fontSize}
+        style={{ width: "50%" }}
         onChange={(e: any) => handleStyleChange({ fontSize: e.value })}
       />
-      <Dropdown overlay={<Menu>
-        {context.fonts.map((font) => <Menu.Item key={`${font}`} onClick={(e: any) => { }}>{font}</Menu.Item>)}
-      </Menu>} >
-        <Button>{sharedAttributes?.fontFamily}</Button>
-      </Dropdown>
-      <Checkbox checked={sharedAttributes?.overline} onClick={(e: any) => handleStyleChange({ overline: e.target.checked })}>‾</Checkbox>
-      <Checkbox checked={sharedAttributes?.linethrough} onClick={(e: any) => handleStyleChange({ linethrough: e.target.checked })}>-</Checkbox>
-      <Checkbox checked={sharedAttributes?.underline} onClick={(e: any) => handleStyleChange({ underline: e.target.checked })}>_</Checkbox>
-      <Colorpicker
-        color={sharedAttributes?.fill}
-        onChange={(e: any) => {
-          handleStyleChange({ fill: `rgba(${e.r},${e.g},${e.b},${e.a})` })
-        }} />
 
-      <Checkbox checked={Boolean(sharedAttributes?.textBackgroundColor)} onClick={(e: any) => handleStyleChange({ textBackgroundColor: e.target.checked ? "rgba(255,255,255,1)" : null })}>BG Color</Checkbox>
-      {sharedAttributes?.textBackgroundColor && 
-      <Colorpicker
-        color={sharedAttributes?.textBackgroundColor}
-        onChange={(e: any) => {
-          handleStyleChange({ textBackgroundColor: `rgba(${e.r},${e.g},${e.b},${e.a})` })
-        }} />
-      }
+      <Row>
+        <Checkbox checked={sharedAttributes?.fontWeight === "normal" && sharedAttributes?.fontStyle === "normal"} onClick={(e: any) => handleStyleChange({ fontWeight: "normal", fontStyle: "normal" })}>i</Checkbox>
+        <Checkbox checked={sharedAttributes?.fontWeight === "bold"} onClick={(e: any) => handleStyleChange({ fontWeight: e.target.checked ? "bold" : "normal" })}><span style={{ fontWeight: "bold" }}>i</span></Checkbox>
+        <Checkbox checked={sharedAttributes?.fontStyle === "italic"} onClick={(e: any) => handleStyleChange({ fontStyle: e.target.checked ? "italic" : "normal" })}><span style={{ fontStyle: "italic" }}>i</span></Checkbox>
+      </Row>
+
+      <Row>
+        <Checkbox checked={sharedAttributes?.overline} onClick={(e: any) => handleStyleChange({ overline: e.target.checked })}>‾</Checkbox>
+        <Checkbox checked={sharedAttributes?.linethrough} onClick={(e: any) => handleStyleChange({ linethrough: e.target.checked })}>-</Checkbox>
+        <Checkbox checked={sharedAttributes?.underline} onClick={(e: any) => handleStyleChange({ underline: e.target.checked })}>_</Checkbox>
+      </Row>
+
+      <Row>
+        <Select value={colorMode} onChange={setColorMode} bordered={false}>
+          <Select.Option value="TEXT">Text</Select.Option>
+          <Select.Option value="BACKGROUND">Background</Select.Option>
+        </Select>
+
+        <Colorpicker
+          color={colorMode === "TEXT" ? sharedAttributes?.fill : sharedAttributes?.textBackgroundColor}
+          onChange={(e: any) => {
+            if (colorMode === "TEXT") handleStyleChange({ fill: `rgba(${e.r},${e.g},${e.b},${e.a})` })
+            else handleStyleChange({ textBackgroundColor: `rgba(${e.r},${e.g},${e.b},${e.a})` })
+          }} />
+      </Row>
     </>
   )
+
 }
 
 export { TextControlPanel }
