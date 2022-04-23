@@ -3,7 +3,7 @@ import { editorContext, EditorContextTypes } from "../../Editor";
 import { InputNumber, Switch, Button, Slider, Row, Col, Input } from "antd"
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCoffee, faLock, faUnlock, faLockOpen } from '@fortawesome/free-solid-svg-icons'
+import { faLock, faUnlock, faLockOpen, faRotateLeft, faRotateRight, faRepeat, faSquare, faCircleDot, faArrowRight, faArrowUp, faUpRightAndDownLeftFromCenter } from '@fortawesome/free-solid-svg-icons'
 
 import { EquationInput } from "../EquationInput";
 import { UseFaIcon } from "../../Utils/UseFaIcon";
@@ -91,121 +91,109 @@ const DimensionsControlPanel = ({ selection }: Props) => {
 					</Row>
 				</Col>
 			</Row >
-			
-			<EquationInput
-				size={context.state.antdSize}
-				addonAfter="°"
-				min={-360}
-				max={360}
-				precision={0}
-				value={selection.angle}
-				onChange={(e: any) => { setOnFabricObject(selection, { angle: e.value }) }} />
-	
 
-			<p> OOOOOOLLLLLDDD</p>
-			<EquationInput
-				size={context.state.antdSize}
-				addonBefore="Width:"
-				addonAfter={<Switch
-					checkedChildren={<FontAwesomeIcon icon={faUnlock} />}
-					unCheckedChildren={<FontAwesomeIcon icon={faLock} />}
-					checked={!selection.lockMovementX}
-					onChange={e => setOnFabricObject(selection, { lockMovementX: !e })}
-				/>}
-				min={0}
-				max={1000}
-				precision={0}
-				value={selection.width}
-				equation={selection?.widthEquation}
-				onChange={(e: any) => { setOnFabricObject(selection, { width: e.value, widthEquation: e.equation }, "scale") }}
-			/>
-			<EquationInput
-				size={context.state.antdSize}
-				addonBefore="Height:"
-				addonAfter={<Switch
-					checkedChildren={<FontAwesomeIcon icon={faUnlock} />}
-					unCheckedChildren={<FontAwesomeIcon icon={faLock} />}
-					checked={!selection.lockMovementY}
-					onChange={e => setOnFabricObject(selection, { lockMovementY: !e })}
-				/>}
-				min={0}
-				max={1000}
-				precision={0}
-				value={selection.height}
-				equation={selection?.heightEquation}
-				onChange={(e: any) => { setOnFabricObject(selection, { height: e.value, heightEquation: e.equation }, "scale") }}
-			/>
+			<Row align="middle" style={{ marginTop: "20px" }}>
+				<Col span={14}>
+					<Row align="middle">
+						<Col span={4}>
+							<UseFaIcon icon={faCircleDot} />
+						</Col>
+						<Col span={20}>
+							<EquationInput
+								size={context.state.antdSize}
+								addonAfter="°"
+								min={-360}
+								max={360}
+								precision={0}
+								value={selection.angle}
+								onChange={(e: any) => { setOnFabricObject(selection, { angle: e.value }) }}
+							/>
+							<Button size={context.state.antdSize}
+								style={{ width: "25%" }}
+								onClick={() => setOnFabricObject(selection, { angle: selection.angle + 90 })}>
+								<UseFaIcon icon={faRotateLeft} />
+							</Button>
+							<Button size={context.state.antdSize}
+								style={{ width: "25%" }}
+								onClick={() => setOnFabricObject(selection, { angle: selection.angle - 90 })}>
+								<UseFaIcon icon={faRotateRight} />
+							</Button>
+							<Button size={context.state.antdSize}
+								style={{ width: "25%" }}
+								onClick={() => setOnFabricObject(selection, { flipX: !selection.flipX })}>
+								<UseFaIcon icon={faRepeat} />
+							</Button>
+							<Button size={context.state.antdSize}
+								style={{ width: "25%" }}
+								onClick={() => setOnFabricObject(selection, { flipY: !selection.flipY })}>
+								<UseFaIcon className={"fa-rotate-90"} icon={faRepeat} />
+							</Button>
+						</Col>
+					</Row>
+				</Col>
+				<Col span={10}>
+					<Row align="middle">
+						<Col span={8}>
+							<UseFaIcon icon={faSquare} style={{ transform: "skew(-30deg,-10deg)", paddingLeft: "10px" }} />
+						</Col>
+						<Col span={16}>
+							<EquationInput
+								size={context.state.antdSize}
+								addonBefore="x"
+								min={-1000}
+								max={1000}
+								precision={0}
+								value={selection.skewX}
+								onChange={(e: any) => { setOnFabricObject(selection, { skewX: e.value }) }} />
+							<EquationInput
+								size={context.state.antdSize}
+								addonBefore="y"
+								min={-1000}
+								max={1000}
+								precision={0}
+								value={selection.skewY}
+								onChange={(e: any) => { setOnFabricObject(selection, { skewY: e.value }) }} />
+						</Col>
+					</Row>
+				</Col>
+			</Row>
 
-			<EquationInput
-				size={context.state.antdSize}
-				addonBefore="Angle:"
-				addonAfter={<Switch
-					checkedChildren={<FontAwesomeIcon icon={faUnlock} />}
-					unCheckedChildren={<FontAwesomeIcon icon={faLock} />}
-					checked={!selection.lockRotation}
-					onChange={e => setOnFabricObject(selection, { lockRotation: !e })}
-				/>}
-				min={-360}
-				max={360}
-				precision={0}
-				value={selection.angle}
-				onChange={(e: any) => { setOnFabricObject(selection, { angle: e.value }) }} />
-			<EquationInput
-				size={context.state.antdSize}
-				addonBefore="Skew X:"
-				addonAfter="px"
-				min={-1000}
-				max={1000}
-				precision={0}
-				value={selection.skewX}
-				onChange={(e: any) => { setOnFabricObject(selection, { skewX: e.value }) }} />
-			<EquationInput
-				size={context.state.antdSize}
-				addonBefore="Skew Y:"
-				addonAfter="px"
-				min={-1000}
-				max={1000}
-				precision={0}
-				value={selection.skewY}
-				onChange={(e: any) => { setOnFabricObject(selection, { skewY: e.value }) }} />
-			<InputNumber
-				addonBefore={'ScaleX'}
-				value={selection.scaleX}
-			// onChange={(e: any) => { setOnFabricObject(selection, { skewY: e.value }) }} />
-			/>
-			{//TODO: lockScalingX is the only thing checked for both scaling locks
-				//Should we also onchange lockScalingX/Y also lock the other=
-			}
-			<Switch
-				checkedChildren={"Scalable"}
-				unCheckedChildren={"Scaling locked"}
-				checked={!selection.lockScalingX}
-				onChange={e => {
-					setOnFabricObject(selection, { lockScalingX: !e })
-					setOnFabricObject(selection, { lockScalingY: !e })
-				}}
-			/>
-			{//TODO: lockSkewingX is the only thing checked for both skewing locks
-				//Should we also onchange lockSkewingX/Y also lock the other=
-			}
-			<Switch
-				checkedChildren={"Skewing"}
-				unCheckedChildren={"Skewing locked"}
-				checked={!selection.lockSkewingX}
-				onChange={e => {
-					setOnFabricObject(selection, { lockSkewingX: !e })
-					setOnFabricObject(selection, { lockSkewingY: !e })
-				}}
-			/>
-			<Slider
-				value={selection.opacity}
-				min={0}
-				max={1}
-				step={0.01}
-				onChange={value => {
-					setOnFabricObject(selection, { opacity: value })
-				}}
-			/>
+			<Row  style={{ marginTop: "20px" }}>
+				<Col span={6}>
+					<UseFaIcon icon={selection.lockMovementX ? faLock : faLockOpen}
+						style={{ width: "100%" }}
+						onClick={() => setOnFabricObject(selection, { lockMovementX: !selection.lockMovementX })}
+					/>
+					<UseFaIcon icon={faArrowRight} style={{ width: "100%" }} />
+				</Col>
+				<Col span={6}>
+					<UseFaIcon icon={selection.lockMovementY ? faLock : faLockOpen}
+						style={{ width: "100%" }}
+						onClick={() => setOnFabricObject(selection, { lockMovementY: !selection.lockMovementY })}
+					/>
+					<UseFaIcon icon={faArrowUp} style={{ width: "100%" }} />
+				</Col>
+				<Col span={6}>
+					<UseFaIcon icon={selection.lockScalingX && selection.lockScalingY ? faLock : faLockOpen}
+						style={{ width: "100%" }}
+						onClick={() => setOnFabricObject(selection, {
+							lockScalingX: !selection.lockScalingX,
+							lockScalingY: !selection.lockScalingX
+						})}
+					/>
+					<UseFaIcon icon={faUpRightAndDownLeftFromCenter} style={{ width: "100%" }} />
+				</Col>
+				<Col span={6}>
+					<UseFaIcon icon={selection.lockSkewingX && selection.lockSkewingY ? faLock : faLockOpen}
+						style={{ width: "100%" }}
+						onClick={() => setOnFabricObject(selection, {
+							lockSkewingX: !selection.lockSkewingX,
+							lockSkewingY: !selection.lockSkewingX
+						})}
+					/>
+					<UseFaIcon icon={faSquare} style={{ transform: "skew(-30deg,-10deg)", width: "100%" }} />
+				</Col>
+			</Row>
 		</>
 	)
 }

@@ -57,28 +57,25 @@ const InspectorContainer = ({ availiableCustomInteractionModules }: Props) => {
             <Panel header="Dimensions" key="1">
               <DimensionsControlPanel selection={selection} />
             </Panel>
-            <Panel header="Position" key="2">
-              <PositionControlPanel selection={selection} />
-            </Panel>
             {(selection.type !== "CTextBox" || selection.type !== "TextBox") &&
-              < Panel header="Fill" key="3">
+              < Panel header="Fill" key="2">
                 <FillControlPanel selection={selection} />
               </Panel>
             }
-            <Panel header="Border" key="4">
+            <Panel header="Border" key="3">
               <BorderControlPanel selection={selection} />
             </Panel>
-            <Panel header="Shadow" key="5">
+            <Panel header="Shadow" key="4">
               <ShadowControlPanel selection={selection} />
             </Panel>
             {selection.type === "FillableTextBox" &&
-              <Panel header="Text" key="6">
+              <Panel header="Text" key="5">
                 <TextControlPanel selection={selection} />
               </Panel>
             }
             {
               selection.type === 'image' &&
-              <Panel header="Image" key="7">
+              <Panel header="Image" key="6">
                 Image settings
                 <Button onClick={e => {
                   //@ts-ignore
