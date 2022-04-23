@@ -9,7 +9,7 @@ interface Props {
   selection: any | undefined
 }
 
-const strokeDashToString: {[key: string]: string} = {
+const strokeDashToString: { [key: string]: string } = {
   "[5,5]": "dotted",
   "[10,10]": "dashed",
   "[15,15]": "largeDashed",
@@ -17,11 +17,11 @@ const strokeDashToString: {[key: string]: string} = {
   "[]": "solid"
 }
 
-const stringToStrokeDash: {[key: string]: [] | [number, number]} = {
+const stringToStrokeDash: { [key: string]: [] | [number, number] } = {
   "solid": [],
-  "dotted": [5,5],
-  "dashed": [10,10],
-  "largeDashed": [15,15]
+  "dotted": [5, 5],
+  "dashed": [10, 10],
+  "largeDashed": [15, 15]
 }
 
 const BorderControlPanel = ({ selection }: Props) => {
@@ -37,29 +37,30 @@ const BorderControlPanel = ({ selection }: Props) => {
 
   return (
     <>
-      <Radio.Group value={strokeDashState} size="small" style={{ marginTop: 16 }}>
+
+      <EquationInput
+        size={context.state.antdSize}
+        addonAfter="px"
+        min={0}
+        max={1000}
+        value={selection.strokeWidth || 0}
+        style={{ width: "30%" }}
+        onChange={(e: any) => {
+          setOnFabricObject(selection, { strokeWidth: e.value })
+        }} />
+
+      <Radio.Group value={strokeDashState} size="small" style={{marginLeft: "30px" }}>
         <Radio.Button value="solid" onClick={handleStrokeDashSelect}>-</Radio.Button>
         <Radio.Button value="dotted" onClick={handleStrokeDashSelect}>...</Radio.Button>
         <Radio.Button value="dashed" onClick={handleStrokeDashSelect}>---</Radio.Button>
         <Radio.Button value="largeDashed" onClick={handleStrokeDashSelect}>- -</Radio.Button>
       </Radio.Group>
 
-      <EquationInput
-        addonBefore="Thickness"
-        addonAfter="px"
-        min={0}
-        max={1000}
-        value={selection.strokeWidth || 0}
-        onChange={(e: any) => {
-          setOnFabricObject(selection, { strokeWidth: e.value })
-        }} />
-
       <Colorpicker
         color={selection.stroke || "rgba(0,0,0,1)"}
         onChange={(e: any) => {
           setOnFabricObject(selection, { stroke: `rgba(${e.r},${e.g},${e.b},${e.a})` })
         }} />
-
 
     </>
   )
