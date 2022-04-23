@@ -2,8 +2,8 @@ import { useContext, useEffect, useState } from "react";
 import { editorContext, EditorContextTypes } from "../../Editor";
 import { Select } from "antd";
 import { fabric } from "fabric";
-import { Gradientpicker } from "./Gradientpicker";
-import { Colorpicker } from "./Colorpicker";
+import { Gradientpicker } from "../../Colorpickers/Gradientpicker";
+import { Colorpicker } from "../../Colorpickers/Colorpicker";
 
 interface Props {
     selection: any | undefined
@@ -15,104 +15,113 @@ const FillControlPanel = ({ selection }: Props) => {
 
     const [fillMode, setFillMode] = useState(selection?.fill?.type || "solid")
 
-    useEffect(() => {
-        switch (fillMode) {
+    const updateFillMode = (newFillMode: any) => {
+        switch (newFillMode) {
             case "solid":
                 if (typeof selection.fill !== "string") {
-                    setOnFabricObject(selection, { fill: 'rgba(0,0,0,1)' })
+                    setOnFabricObject(selection, { fill: selection.fill.colorStops[0].color || 'rgba(0,0,0,1)' })
+                    setFillMode("solid")
                 }
                 break
             case "linear":
-                if (selection.fill?.type !== "linear") {
-                    const linearGradient = new fabric.Gradient({
-                        type: "linear",
-                        coords: {
-                            x1: 0,
-                            y1: 0,
-                            x2: selection.width,
-                            y2: selection.height,
-                        },
-                        colorStops: [
-                            {
-                                "offset": 0.28,
-                                "color": "#6450c8"
+                if (selection.fill!.type !== "linear") {
+                    if (typeof selection.fill === "string") {
+                        const linearGradient = new fabric.Gradient({
+                            type: "linear",
+                            coords: {
+                                x1: 0,
+                                y1: 0,
+                                x2: selection.width,
+                                y2: selection.height,
                             },
-                            {
-                                "offset": 0.13,
-                                "color": "#0d0827"
+                            colorStops: [
+                                {
+                                    "offset": 0.25,
+                                    "color": selection.fill
+                                },
+                                {
+                                    "offset": 0.75,
+                                    "color": "#000000"
+                                }
+                            ]
+                        })
+                        setOnFabricObject(selection, { fill: linearGradient }, "setGradient")
+                        selection.refreshGradientAngleControls()
+                    } else if (selection.fill!.type === "radial") {
+                        const linearGradient = new fabric.Gradient({
+                            type: "linear",
+                            coords: {
+                                x1: 0,
+                                y1: 0,
+                                x2: selection.width,
+                                y2: selection.height,
                             },
-                            {
-                                "offset": 0.51,
-                                "color": "#a291f5"
-                            },
-                            {
-                                "offset": 0.72,
-                                "color": "#040404"
-                            },
-                            {
-                                "offset": 0.87,
-                                "color": "#e9e7f1"
-                            }
-                        ]
-
-                    })
-                    setOnFabricObject(selection, { fill: linearGradient }, "setGradient")
-                    selection.refreshGradientAngleControls()
+                            colorStops: selection.fill.colorStops
+                        })
+                        setOnFabricObject(selection, { fill: linearGradient }, "setGradient")
+                        selection.refreshGradientAngleControls()
+                    }
+                    setFillMode("linear")
                 }
                 break
             case "radial":
                 if (selection.fill?.type !== "radial") {
-                    const radialGradient = new fabric.Gradient({
-                        type: "radial",
-                        coords: {
-                            r1: selection.height / 2 + selection.width / 4,
-                            r2: selection.width * .05,
+                    if (typeof selection.fill === "string") {
+                        const radialGradient = new fabric.Gradient({
+                            type: "radial",
+                            coords: {
+                                r1: selection.height / 2 + selection.width / 4,
+                                r2: selection.width * .05,
 
-                            x1: selection.width / 2,
-                            y1: selection.height / 2,
+                                x1: selection.width / 2,
+                                y1: selection.height / 2,
 
-                            x2: selection.width / 2,
-                            y2: selection.height / 2
-                        },
-                        colorStops: [
-                            {
-                                "offset": 0.2,
-                                "color": "#fff"
+                                x2: selection.width / 2,
+                                y2: selection.height / 2
                             },
-                            {
-                                "offset": 0.32,
-                                "color": "#000"
+                            colorStops: [
+                                {
+                                    "offset": 0.25,
+                                    "color": selection.fill
+                                },
+                                {
+                                    "offset": 0.75,
+                                    "color": "#000000"
+                                },
+                            ]
+                        })
+                        console.log({radialGradient})
+                        setOnFabricObject(selection, { fill: radialGradient }, "setGradient")
+                        selection.refreshGradientAngleControls()
+                    } else if (selection.fill!.type === "linear") {
+                        const radialGradient = new fabric.Gradient({
+                            type: "radial",
+                            coords: {
+                                r1: selection.height / 2 + selection.width / 4,
+                                r2: selection.width * .05,
+
+                                x1: selection.width / 2,
+                                y1: selection.height / 2,
+
+                                x2: selection.width / 2,
+                                y2: selection.height / 2
                             },
-                            {
-                                "offset": 0.45,
-                                "color": "rgba(110,89,215,1)"
-                            },
-                            {
-                                "offset": 0.64,
-                                "color": "rgba(54, 18, 234, 255)"
-                            },
-                            {
-                                "offset": 0.82,
-                                "color": "rgba(52,15,235,1)"
-                            },
-                        ]
-                    })
-                    setOnFabricObject(selection, { fill: radialGradient }, "setGradient")
-                    selection.refreshGradientAngleControls()
+                            colorStops: selection.fill.colorStops
+                        })
+                        setOnFabricObject(selection, { fill: radialGradient }, "setGradient")
+                        selection.refreshGradientAngleControls()
+                    }
+                    setFillMode("radial")
                 }
                 break
             default:
                 break
         }
-    }, [fillMode])
-
-    useEffect(() => {
-        setFillMode(selection?.fill?.type || "solid")
-    }, [selection])
+    }
 
     return (
         <>
-            <Select value={fillMode} onChange={setFillMode} bordered={false}>
+            <Select value={fillMode} onChange={updateFillMode} bordered={false}>
                 <Select.Option value="solid">Solid</Select.Option>
                 <Select.Option value="linear">Linear</Select.Option>
                 <Select.Option value="radial">Radial</Select.Option>

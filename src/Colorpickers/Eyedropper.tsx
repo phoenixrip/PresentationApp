@@ -1,6 +1,6 @@
-import { editorContext, EditorContextTypes } from "../../Editor";
+import { editorContext, EditorContextTypes } from "../Editor";
 import { useContext, useState, useRef, useEffect, useCallback } from "react";
-import { UseFaIcon } from "../../Utils/UseFaIcon";
+import { UseFaIcon } from "../Utils/UseFaIcon";
 import { faEyedropper } from "@fortawesome/free-solid-svg-icons";
 const tinycolor = require("tinycolor2");
 

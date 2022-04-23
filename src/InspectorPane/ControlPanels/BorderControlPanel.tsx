@@ -1,9 +1,8 @@
 import { useContext, useState } from "react";
 import { editorContext, EditorContextTypes } from "../../Editor";
-import { CirclePicker } from 'react-color';
 import { Button, InputNumber, Collapse, Switch, Radio } from 'antd';
 import { EquationInput } from "../EquationInput";
-import { Colorpicker } from "./Colorpicker";
+import { Colorpicker } from "../../Colorpickers/Colorpicker";
 
 interface Props {
   selection: any | undefined

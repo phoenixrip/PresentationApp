@@ -97,8 +97,6 @@ const InspectorContainer = ({ availiableCustomInteractionModules }: Props) => {
               </Panel>
             }
           </Collapse>
-
-          {/* <pre>{selection && JSON.stringify(selection, null, 4)}</pre> */}
         </>
       }
     </>

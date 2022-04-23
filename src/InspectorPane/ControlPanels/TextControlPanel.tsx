@@ -5,7 +5,7 @@ import { Button, InputNumber, Collapse, Switch, Radio, Dropdown, Menu, Checkbox,
 import { EquationInput } from "../EquationInput";
 import { customAttributesToIncludeInFabricCanvasToObject } from "../../Utils/consts";
 import { cornersOfRectangle } from "@dnd-kit/core/dist/utilities/algorithms/helpers";
-import { Colorpicker } from "./Colorpicker";
+import { Colorpicker } from "../../Colorpickers/Colorpicker";
 
 interface Props {
   selection: any | undefined

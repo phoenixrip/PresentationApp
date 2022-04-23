@@ -4,7 +4,7 @@ import { CirclePicker } from 'react-color';
 import { Button, InputNumber, Collapse, Switch, Radio, Row, Col } from 'antd';
 import { fabric } from "fabric";
 import { EquationInput } from "../EquationInput";
-import { Colorpicker } from "./Colorpicker";
+import { Colorpicker } from "../../Colorpickers/Colorpicker";
 
 interface Props {
     selection: any | undefined

@@ -1,7 +1,7 @@
 import { Button, Slider, } from "antd"
 import Grapick from "grapick";
 import { useEffect, useRef, useCallback, useState } from "react";
-import "../../../node_modules/grapick/dist/grapick.min.css"
+import "../../node_modules/grapick/dist/grapick.min.css"
 import './grapickCustom.css'
 import { Colorpicker } from './Colorpicker'
 import { Gradient } from "fabric/fabric-impl";
@@ -29,7 +29,6 @@ type GrapickHandler = {
 const Gradientpicker = ({ gradient, onChange }: Props) => {
     const gradientPicker = useRef<GrapickType | null>(null)
     const lastSelectedHandler = useRef<GrapickHandler | null>(null)
-
 
     const parseColorStops = useCallback(() => {
         let newColorStops = []
