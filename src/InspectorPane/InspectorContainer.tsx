@@ -4,7 +4,6 @@ import { editorContext, EditorContextTypes } from "../Editor";
 import { Button, Collapse } from 'antd';
 const { Panel } = Collapse;
 import { fabric } from "fabric";
-import { PositionControlPanel } from "./ControlPanels/PositionControlPanel";
 import { DimensionsControlPanel } from "./ControlPanels/DimensionsControlPanel";
 import { FillControlPanel } from "./ControlPanels/FillControlPanel";
 import { BorderControlPanel } from "./ControlPanels/BorderControlPanel";

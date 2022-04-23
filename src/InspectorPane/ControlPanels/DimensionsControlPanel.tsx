@@ -3,7 +3,7 @@ import { editorContext, EditorContextTypes } from "../../Editor";
 import { InputNumber, Switch, Button, Slider, Row, Col, Input } from "antd"
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faLock, faUnlock, faLockOpen, faRotateLeft, faRotateRight, faRepeat, faSquare, faCircleDot, faArrowRight, faArrowUp, faUpRightAndDownLeftFromCenter } from '@fortawesome/free-solid-svg-icons'
+import { faLock, faUnlock, faLockOpen, faRotateLeft, faRotateRight, faRepeat, faSquare, faCircleDot, faArrowRight, faArrowUp, faUpRightAndDownLeftFromCenter, faRotate } from '@fortawesome/free-solid-svg-icons'
 
 import { EquationInput } from "../EquationInput";
 import { UseFaIcon } from "../../Utils/UseFaIcon";
@@ -22,16 +22,14 @@ const DimensionsControlPanel = ({ selection }: Props) => {
 	return (
 		<>
 			<Row align="middle">
-				<Col span={2}>
-					{!aspectRatioLocked &&
-						<UseFaIcon icon={faLockOpen} onClick={() => {
+				<Col span={2} style={{position: "relative"}}>
+					<UseFaIcon icon={aspectRatioLocked ? faLock : faLockOpen}
+						style={{ cursor: "pointer" }}
+						onClick={() => {
 							aspectRatio.current = selection.width / selection.height
-							setAspectRatioLocked(true)
+							setAspectRatioLocked(!aspectRatioLocked)
 						}}
-						/>}
-					{aspectRatioLocked &&
-						<UseFaIcon icon={faLock} onClick={() => { setAspectRatioLocked(false) }} />
-					}
+					/>
 				</Col>
 				<Col span={22}>
 					<Row>
@@ -96,7 +94,7 @@ const DimensionsControlPanel = ({ selection }: Props) => {
 				<Col span={14}>
 					<Row align="middle">
 						<Col span={4}>
-							<UseFaIcon icon={faCircleDot} />
+							<UseFaIcon icon={faRotate} />
 						</Col>
 						<Col span={20}>
 							<EquationInput
@@ -158,24 +156,24 @@ const DimensionsControlPanel = ({ selection }: Props) => {
 				</Col>
 			</Row>
 
-			<Row  style={{ marginTop: "20px" }}>
+			<Row style={{ marginTop: "20px" }}>
 				<Col span={6}>
 					<UseFaIcon icon={selection.lockMovementX ? faLock : faLockOpen}
-						style={{ width: "100%" }}
+						style={{ width: "100%", cursor: "pointer" }}
 						onClick={() => setOnFabricObject(selection, { lockMovementX: !selection.lockMovementX })}
 					/>
 					<UseFaIcon icon={faArrowRight} style={{ width: "100%" }} />
 				</Col>
 				<Col span={6}>
 					<UseFaIcon icon={selection.lockMovementY ? faLock : faLockOpen}
-						style={{ width: "100%" }}
+						style={{ width: "100%", cursor: "pointer" }}
 						onClick={() => setOnFabricObject(selection, { lockMovementY: !selection.lockMovementY })}
 					/>
 					<UseFaIcon icon={faArrowUp} style={{ width: "100%" }} />
 				</Col>
 				<Col span={6}>
 					<UseFaIcon icon={selection.lockScalingX && selection.lockScalingY ? faLock : faLockOpen}
-						style={{ width: "100%" }}
+						style={{ width: "100%", cursor: "pointer" }}
 						onClick={() => setOnFabricObject(selection, {
 							lockScalingX: !selection.lockScalingX,
 							lockScalingY: !selection.lockScalingX
@@ -185,7 +183,7 @@ const DimensionsControlPanel = ({ selection }: Props) => {
 				</Col>
 				<Col span={6}>
 					<UseFaIcon icon={selection.lockSkewingX && selection.lockSkewingY ? faLock : faLockOpen}
-						style={{ width: "100%" }}
+						style={{ width: "100%", cursor: "pointer" }}
 						onClick={() => setOnFabricObject(selection, {
 							lockSkewingX: !selection.lockSkewingX,
 							lockSkewingY: !selection.lockSkewingX
