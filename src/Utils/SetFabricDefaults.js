@@ -1,6 +1,5 @@
 import { fabric } from 'fabric'
 import { customAttributesToIncludeInFabricCanvasToObject } from './consts'
-import { CTextBox } from './CustomFabricObjects/CTextBox'
 import { CustomImageObject } from './CustomFabricObjects/CustomImageObject'
 import { CustomMediaObject } from './CustomFabricObjects/CustomMediaObject'
 import { FakeGroup } from './CustomFabricObjects/FakeGroup'
@@ -113,7 +112,6 @@ function setFabricDefaults() {
     }
   }
 
-  CTextBox()
   FakeGroup()
   CustomImageObject()
   CustomMediaObject()
@@ -263,7 +261,5 @@ function setFabricDefaults() {
 }
 
 export {
-  setFabricDefaults,
-  // CTextBox,
-  // FakeGroup
+  setFabricDefaults
 }
