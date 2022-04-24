@@ -6,7 +6,7 @@ import c from './Colorpicker.module.css'
 import { Eyedropper } from "./Eyedropper";
 import { HexColorInput } from "./HexColorInput";
 import { HSLAColorInput } from "./HSLAColorInput";
-import { RGBAColorInput} from "./RGBAColorInput";
+import { RGBAColorInput } from "./RGBAColorInput";
 
 interface ColorpickerPropsType {
     color: any
@@ -17,6 +17,9 @@ interface ColorpickerPropsType {
 const Colorpicker = ({ color, onChange, palette }: ColorpickerPropsType) => {
     const [stringInputMode, setStringInputMode] = useState("HEX")
     const internalColor = tinycolor(color)
+
+    const lastDispatchedColor = useRef(null)
+    const secondLastDispatchedColor = useRef(null)
 
     let colorPalette
     if (palette) {
@@ -44,16 +47,22 @@ const Colorpicker = ({ color, onChange, palette }: ColorpickerPropsType) => {
     }
 
     const parseColor = (e: any) => {
-        console.log(e)
         const newColor = tinycolor(e)
         if (newColor.isValid()) {
-            if (onChange) onChange(newColor.toRgb())
+            if (onChange) {
+                // Because react-color can only be a controlled component and we can't set defaultValue it can get stuck in a loop
+                // where it flips between two colours. We track which colors we send and never send the same colour as the last two times
+                if (newColor.toHex() == lastDispatchedColor.current || newColor.toHex() == secondLastDispatchedColor.current) return
+                secondLastDispatchedColor.current = lastDispatchedColor.current
+                lastDispatchedColor.current = newColor.toHex()
+                onChange(newColor.toRgb())
+            }
         }
     }
 
     return (
         <>
-            <RgbaStringColorPicker className={c["react-colorful"]} defaultValue={internalColor.toRgbString()} onChange={parseColor} />
+            <RgbaStringColorPicker className={c["react-colorful"]} color={internalColor.toRgbString()} onChange={parseColor} />
             <Row>
                 <Col span={22}>
                     <Input.Group compact>
