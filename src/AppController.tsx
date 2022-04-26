@@ -6,6 +6,7 @@ import { ProjectController } from "./ProjectController";
 import { setFabricDefaults } from "./Utils/SetFabricDefaults";
 import { ContextMenu } from "./ContextMenu"
 import { Context } from "@dnd-kit/sortable/dist/components";
+import { MediaPickerContainer } from "./MediaPicker/MediaPickerContainer";
 
 setFabricDefaults()
 
@@ -163,8 +164,11 @@ class AppController extends Component<{}, AppControllerStateTypes> {
 			return <>
 				{//<ContextMenu />
 				}
-				<ProjectController project={this.state.project} />;
-				</>
+				<ProjectController project={this.state.project} />
+				<MediaPickerContainer
+					open={true}
+				/>
+			</>
 		} else {
 			return <p>NO DATA TO OPEN EDITOR WITH</p>;
 		}
