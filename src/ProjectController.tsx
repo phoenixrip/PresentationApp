@@ -61,7 +61,6 @@ class ProjectController extends Component<Props, State> {
           this.liveObjectScenesReferences[guid].add(currSceneIndex)
         })
     })
-    console.log(this.props.project.scenes)
   }
 
   handleFabricMountConfirmed = async () => {
@@ -132,12 +131,14 @@ class ProjectController extends Component<Props, State> {
   setActiveSceneIndex = (sceneIndex: number) => this.handleSetNewActiveScene(sceneIndex)
 
   handleSetNewActiveScene = (newActiveSceneIndex: number, saveExisting = true) => {
+    const fabricCanvas = this.liveEditor?.fabricCanvas
+    if (!fabricCanvas) return
     let leavingSceneObject: SceneType | null = null
     if (saveExisting) {
       leavingSceneObject = this.getSaveableCurrentSceneState()
     }
 
-    this.liveEditor?.fabricCanvas?.tempDeselect()
+    fabricCanvas.tempDeselect()
     const newActiveSceneObject = this.state.project.scenes[newActiveSceneIndex]
 
     // This restores the state of the newly set activeScene
@@ -151,9 +152,9 @@ class ProjectController extends Component<Props, State> {
         // Update the in memory objects array to contain only objs
         // that are actually in this scene
         if (!isObjectInNewScene && isObjectInCanvasMemory) {
-          this?.liveEditor?.fabricCanvas?.remove(obj)
+          fabricCanvas.remove(obj)
         } else if (isObjectInNewScene && !isObjectInCanvasMemory) {
-          this?.liveEditor?.fabricCanvas?.add(obj)
+          fabricCanvas.add(obj)
         }
 
         // Now for any obects that are in this scene
@@ -161,11 +162,8 @@ class ProjectController extends Component<Props, State> {
         // Here we need to make sure that we aren't resetting values
         // that will become invalid
         if (isObjectInNewScene) {
-          console.log({ isObjectInNewScene })
-          // const globalObjectOptions = this.state.project.globalObjects[guid]
           object
             .set({ scaleX: 1, scaleY: 1 })
-            // .set(globalObjectOptions)
             .set(isObjectInNewScene)
             .setCoords()
           object.parentID = (isObjectInNewScene as CustomFabricOptions)?.parentID || undefined
@@ -173,9 +171,10 @@ class ProjectController extends Component<Props, State> {
       })
 
     // Now run all the updates
-    this.liveEditor?.fabricCanvas?.handleReorderObjectArrayToObjectTreeIndexOrder()
-    this.liveEditor?.fabricCanvas?.tempReselect()
-    this.liveEditor?.fabricCanvas?.requestRenderAll()
+    fabricCanvas
+      .handleReorderObjectArrayToObjectTreeIndexOrder()
+      .tempReselect()
+      .requestRenderAll()
 
     let stateUpdateObject = {
       activeSceneIndexs: [newActiveSceneIndex],
@@ -423,7 +422,6 @@ class ProjectController extends Component<Props, State> {
   }
 
   handleDuplicateScene = () => {
-    console.log('handleDuplicateScene')
     if (this.activeSceneIndex === null) return Modal.warn({ content: 'No active scene to duplicate' })
     // We need to update our objectscrenerefs if the objects are present in the duplicated scene
 
@@ -555,7 +553,7 @@ class ProjectPreviewRendererContainer extends React.Component<IProjectPreviewRen
 
   componentDidMount() {
     const { project } = this.props
-    if (!this.ca1 || !this.ca2) return
+    if (!this.ca1 || !this.ca2) return console.error('Dom canvases not present in ProjectPreviewRendererContainer didMount')
     this.c1 = new fabric.StaticCanvas(this.ca1)
     this.c2 = new fabric.Canvas(this.ca2)
     const both = [this.c1, this.c2]
