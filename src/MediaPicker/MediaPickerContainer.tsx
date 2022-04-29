@@ -1,94 +1,94 @@
-import { faSearch } from "@fortawesome/free-solid-svg-icons"
-import { Modal, Input } from "antd"
+import { enumStringMember } from "@babel/types"
+import { faAdd, faBackward, faChevronLeft, faImage, faSearch } from "@fortawesome/free-solid-svg-icons"
+import { Modal, Input, Tag, Button, Typography } from "antd"
 import { useEffect, useState } from "react"
+import { AppController } from "../AppController"
+import { MediaUploadControllerProps } from "../PlugIns/MediaUploadController/Common/types"
+import { ImageStorageHandler } from "../ProjectController"
 import { useDebounce } from "../Utils/CustomHooks/useDebounce"
 import { UseFaIcon } from "../Utils/UseFaIcon"
+import CropTagContainer from "./CropTag/CropTagContainer"
 import c from './MediaPickerContainer.module.scss'
+import { ImageOptionObject, SearchContainer, SearchParams } from "./Search/SearchContainer"
 
 interface Props {
-  open: boolean
+  open: boolean,
+  storageHandlerClass: ImageStorageHandler,
+  handleInsertImage: Function
 }
+
+export interface UploadNewImageArgs {
+  currentImageTags: string[],
+  altText?: string,
+  format: string,
+  infoObject: {
+    smallKB: number,
+    largeKB?: number
+  },
+  exportVersions: {
+    small: string,
+    large?: string
+  }
+}
+
 const MediaPickerContainer = (props: Props) => {
   const [searchTerm, setSearchTerm] = useState('')
-  const [results, setResults] = useState<ImageOptionObject[]>([])
-  const [isSearching, setIsSearching] = useState(false)
-  const debouncedSearchTerm = useDebounce(searchTerm, 500)
-  const [currentPage, setCurrentPage] = useState(0)
-  const [perPage, setPerPage] = useState(40)
-  // Use effect for all avail apis
+  const [selectedImageOption, setSelectedImageOption] = useState<ImageOptionObject | undefined>(undefined)
+  const [mode, setMode] = useState('search')
   useEffect(() => {
-    if (debouncedSearchTerm) {
-      console.log('SEARCH APIS EFFECT')
-      setIsSearching(true);
-      apis.forEach(apiObject => {
-        const useURL = apiObject.getSearchURL({
-          searchString: debouncedSearchTerm,
-          perPage,
-          page: currentPage
-        })
-        const fetchData = async () => {
-          try {
-            const response = await fetch(useURL)
-            if (!response.ok) throw new Error(response.statusText)
-            const data = (await response.json())
-            const compiledImagesArray = apiObject.handleResponse(data)
-            setResults(compiledImagesArray)
-            console.log(apiObject.sourceApiName, { compiledImagesArray })
-          } catch (error) {
-            console.log('FETCH API ERROR')
-          }
-        }
-        fetchData()
-      })
-    } else {
-      console.log('RESET SEARCH APIS EFFECT')
-      setResults([]);
-      setIsSearching(false);
+    if (selectedImageOption && mode !== 'selected') {
+      setMode('selected')
     }
-  }, [debouncedSearchTerm])
+  }, [selectedImageOption])
 
+  async function handleUploadImage(uploadArgs: UploadNewImageArgs) {
+    console.log('MediaPickerContainer: handleUploadImage')
+    const insertableResponse = await props.storageHandlerClass.handleUploadImage(uploadArgs)
+    console.log({ insertableResponse })
+    props.handleInsertImage(insertableResponse)
+
+  }
   return (
-    <Modal
-      visible={props.open}
-      width={1200}
-      maskClosable
-    >
-      <div className={c.bodyWrapper}>
-        <div className={c.headerWrapper}>
-          <Input
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder={'Enter search term'}
-            addonBefore={<UseFaIcon icon={faSearch} />}
+    <>
+      <Modal
+        visible={props.open}
+        width={1200}
+        bodyStyle={{ height: 700 }}
+        maskClosable
+        footer={null}
+      >
+        {mode === 'search' &&
+          <SearchContainer
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            selectedImageOption={selectedImageOption}
+            setSelectedImageOption={setSelectedImageOption}
           />
-        </div>
-        <div className={c.optionsWrapper}>
-          {results.map(imageObject => (
-            <div className={c.imageOptionContainer}>
-              <img key={imageObject.fullSizeURL} src={imageObject.previewURL} />
+        }
+        {mode === 'selected' &&
+          <div className={c.handleSelectedWrapper}>
+            <div className={c.navBarWrapper}>
+              <Button
+                key={'backButton'}
+                type='primary'
+                icon={<UseFaIcon key={'back'} icon={faChevronLeft} />}
+                onClick={() => setMode('search')}
+              />
+              <span className={c.modeHeader}>
+                Crop & tag image
+              </span>
             </div>
-          ))}
-        </div>
-      </div>
-    </Modal>
+            <div className={c.previewWrapper}>
+              <CropTagContainer
+                selectedImageOption={selectedImageOption}
+                handleUploadImage={handleUploadImage}
+              />
+            </div>
+          </div>
+        }
+      </Modal>
+    </>
   )
-}
-
-interface SearchParams {
-  searchString: string,
-  perPage?: number,
-  page?: number
-}
-
-interface ImageOptionObject {
-  previewURL: string,
-  fullSizeURL: string,
-  previewWidth?: number,
-  previewHeight?: number,
-  imageWidth?: number,
-  imageHeight?: number,
-  imageSize?: number,
-  tags?: Array<string>
 }
 
 // Avail apis
@@ -99,10 +99,10 @@ const apis = [
       return `https://pixabay.com/api/?key=8435795-313810eee26eebfe9f5501a01&q=${encodeURI(searchParams.searchString)}&per_page=${searchParams?.perPage ?? 40}`
     },
     handleResponse(response: any): ImageOptionObject[] {
-      console.log('Pixabay, handleResponseToArrayOfImageObjects', response)
       return response.hits.map((imageObject: any) => ({
         ...imageObject,
-        tags: imageObject.tags.split(', ')
+        tags: imageObject.tags.split(', '),
+        previewURL: imageObject.webformatURL
       }))
     }
   }

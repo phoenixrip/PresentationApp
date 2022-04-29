@@ -1,13 +1,14 @@
-import { Button } from "antd";
+import { Button, Dropdown } from "antd";
 import { useContext } from "react";
 import { editorContext } from "../Editor";
 import { UseFaIcon } from "../Utils/UseFaIcon";
-import { faPlus } from "@fortawesome/free-solid-svg-icons";
+import { faBars, faCopy, faDeleteLeft, faHamburger, faPlus, faTrash } from "@fortawesome/free-solid-svg-icons";
 import c from './ScenesPane.module.css'
 import { ProjectController } from "../ProjectController";
-
+import { Menu } from 'antd'
 interface Props {
-  handleDuplicateScene: ProjectController['handleDuplicateScene']
+  handleDuplicateScene: ProjectController['handleDuplicateScene'],
+  handleDeleteScene: ProjectController['handleDeleteScene']
 }
 const ScenesPane = (props: Props) => {
   const context = useContext(editorContext)
@@ -21,23 +22,34 @@ const ScenesPane = (props: Props) => {
             return (
               <div key={`ScenePill${sceneIndex}`}>
                 <div
-                  onClick={() => { context.setActiveSceneIndex(sceneIndex) }}
+
                   className={`${c.scenePill} ${isCurrent ? c.current : c.idle}`}>
-                  <div className={c.sceneTitleContainer}>
+                  <div className={c.sceneTitleContainer} onClick={() => { context.setActiveSceneIndex(sceneIndex) }}>
                     Scene {sceneIndex + 1}
                   </div>
-                </div>
-                {isCurrent &&
-                  <div className={c.addNewControlsContainer}>
-                    <Button
-                      onClick={props.handleDuplicateScene}
-                      size={context.state.antdSize}
-                      icon={<UseFaIcon icon={faPlus} />}
-                      type='primary'>
-                      Add next scene
-                    </Button>
+                  <div className={c.menuContainer}>
+                    <Dropdown
+                      trigger={['click']}
+                      overlay={
+                        <Menu>
+                          <Menu.Item key='Duplicate above'
+                            icon={<UseFaIcon icon={faCopy} />}
+                            onClick={(e) => props.handleDuplicateScene('above')}
+                          >Duplicate above</Menu.Item>
+                          <Menu.Item key='Duplicate below'
+                            icon={<UseFaIcon icon={faCopy} />}
+                            onClick={(e) => props.handleDuplicateScene('below')}
+                          >Duplicate below</Menu.Item>
+                          <Menu.Item key='Delete'
+                            icon={<UseFaIcon icon={faTrash} />}
+                            onClick={(e) => props.handleDeleteScene()}
+                          >Delete scene</Menu.Item>
+                        </Menu>
+                      }>
+                      <UseFaIcon icon={faBars} />
+                    </Dropdown>
                   </div>
-                }
+                </div>
               </div>
             )
           }

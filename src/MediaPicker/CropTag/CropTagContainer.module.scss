@@ -1,0 +1,23 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  height: 620px;
+}
+.centerContainer{
+  display: flex;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+  .imageInfoContainer{
+    padding: 0px 10px;
+    flex-grow: 1;
+  }
+}
+
+.footerContainer{
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+}

@@ -50,7 +50,6 @@ function setFabricDefaults() {
         'visible'
       ]
     )
-    console.log('getAnimatableValues: ', object)
     return object
   }
 
@@ -72,7 +71,6 @@ function setFabricDefaults() {
   }
 
   fabric.Object.prototype.forEachChild = function (callBack) {
-    this.canvas.logFlatVisual()
     const myStructurePathLength = this.structurePath.length
     let currI = (this?.treeIndex ?? 0) + 1
     while (this.canvas._objects?.[currI] && this.canvas._objects[currI].structurePath.length > myStructurePathLength) {

@@ -23,8 +23,8 @@ const EquationInput = ({ value, equation, onChange, min, max, precision, ...rest
   const context: EditorContextTypes = useContext(editorContext);
   //TODO: is there a better place to pull these values in? this will pull it in for each input and will also do it regardless of whether the values get used or not
   const equationVariableValues = {
-    w: context.state.project.settings.dimensions.width,
-    h: context.state.project.settings.dimensions.height
+    w: context.project.settings.dimensions.width,
+    h: context.project.settings.dimensions.height
   }
 
   //TODO: doesn't only internalDisplayValue and valueIsValid need to be in state?

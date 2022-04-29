@@ -1,0 +1,56 @@
+.bodyWrapper{
+  margin:0px;
+}
+
+.headerWrapper {
+  padding: 0px;
+  margin-right: 30px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  .searchInputWrapper{
+
+  }
+  .sourcesSelectorWrapper{
+    margin-top: 5px;
+    .sourcesTitleSpan{
+      font-size: 12px;
+      margin-right: 5px;
+    }
+  }
+}
+
+.optionsWrapper{
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  margin-top: 10px;
+  height: 600px;
+  overflow: scroll;
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  padding: 5px 20px;
+}
+
+.imageOptionContainer {
+  // transform: scale(1.2);
+  padding: 10px;
+  margin: 10px 0px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: 50ms all;
+  width: 340px;
+  height: 200px;
+  overflow: hidden;
+  border-radius: 4px;
+  &:hover{
+    background-color: rgba(0, 0, 0, 0.307);
+    transform: scale(1.1);
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.389);
+    border: 1px solid #3B7BD5;
+    z-index: 999999999;
+  }
+  &:active{
+    transform: scale(1.09);
+  }
+}

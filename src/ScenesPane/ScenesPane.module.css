@@ -17,6 +17,8 @@
   cursor: pointer;
   transition: 150ms all;
   border: 1px solid transparent;
+  display: flex;
+  justify-content: space-between;
 }
 .scenePill.current {
   background-color: #3b82f7;
@@ -27,6 +29,7 @@
 
 .sceneTitleContainer {
   font-size: 14px;
+  flex-grow: 1;
 }
 
 .addNewControlsContainer {

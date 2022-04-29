@@ -1,3 +1,4 @@
+import { faB } from '@fortawesome/free-solid-svg-icons'
 import { fabric } from 'fabric'
 
 function CustomMediaObject() {
@@ -51,6 +52,7 @@ function CustomMediaObject() {
       }
       return objectRep
     },
+    controls: { ...fabric.Rect.prototype.controls }
   })
   fabric.CustomMediaObject.async = true
   fabric.CustomMediaObject.fromObject = function (_object, callback) {
@@ -84,6 +86,7 @@ function CustomMediaObject() {
   });
 
   function changeHeight(eventData, transform, x, y) {
+    console.log('changeHeight')
     var target = transform.target, localPoint = fabric.controlsUtils.getLocalPoint(transform, transform.originX, transform.originY, x, y),
       strokePadding = target.strokeWidth / (target.strokeUniform ? target.scaleX : 1),
       multiplier = isTransformCentered(transform) ? 2 : 1,

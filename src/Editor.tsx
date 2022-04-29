@@ -27,6 +27,7 @@ import { CustomFabricCanvas } from "./Utils/CustomFabricCanvas";
 import { IProjectControllerState, ProjectController } from "./ProjectController";
 import { MultiChoiceLabelEditorComponent } from "./CustomInteractionModules/MultiChoiceLabel/EditorComponent";
 import { EditorComponentClass } from "./CustomInteractionModules/EditorComponentClass";
+import { requestInsertImage } from "./Events/RequestInsertImage";
 
 interface EditorPropsTypes {
   project: IProjectControllerState['project'];
@@ -39,7 +40,9 @@ interface EditorPropsTypes {
   handleGroupObjects: ProjectController['handleGroupObjects'],
   handleAddObject: ProjectController['handleAddObject'],
   handleDuplicateScene: ProjectController['handleDuplicateScene'],
+  handleDeleteScene: ProjectController['handleDeleteScene'],
   handleOpenProjectPreview: ProjectController['handleOpenProjectPreview'],
+  setOnGlobalObject: ProjectController['setOnGlobalObject'],
 }
 
 const availiableCustomInteractionModules = {
@@ -61,7 +64,7 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     this.state = {
       tick: true,
       isInitted: false,
-      project: props.project,
+      // project: props.project,
       activeSceneIndex: 0,
       antdSize: "small" as SizeType,
       gridCoords: {
@@ -104,7 +107,7 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     canvasPaneDimensions: { width: number; height: number },
     attatchLocalEvents: Function
   ) => {
-    const projectDimensions = this.state.project.settings.dimensions;
+    const projectDimensions = this.props.project.settings.dimensions;
     this.fabricCanvas = new CustomFabricCanvas(domCanvas, {
       ...canvasPaneDimensions,
       preserveObjectStacking: true
@@ -204,38 +207,38 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     return this.setState(prev => ({ selectedGUIDsDict: {} }))
   }
 
-  setOnGlobalObject = (obj: CustomFabricObject, settings: {}) => {
-    if (obj) {
-      // get active scene and options for object in active scene then add/modify corresponding setting to value
-      const activeScene = this.state.project.scenes[this.state.activeSceneIndex];
-      let currentOptions = activeScene.activeSceneObjects[obj.guid];
-      let newSettings = { ...currentOptions, ...settings };
+  // setOnGlobalObject = (obj: CustomFabricObject, settings: {}) => {
+  //   if (obj) {
+  //     // get active scene and options for object in active scene then add/modify corresponding setting to value
+  //     const activeScene = this.state.project.scenes[this.state.activeSceneIndex];
+  //     let currentOptions = activeScene.activeSceneObjects[obj.guid];
+  //     let newSettings = { ...currentOptions, ...settings };
 
-      const newSceneActiveObjectsObject = {
-        ...activeScene.activeSceneObjects,
-        [obj.guid]: newSettings,
-      };
+  //     const newSceneActiveObjectsObject = {
+  //       ...activeScene.activeSceneObjects,
+  //       [obj.guid]: newSettings,
+  //     };
 
-      return this.setState({
-        project: {
-          ...this.state.project,
-          scenes: this.state.project.scenes.map(
-            (currSceneObject: SceneType, currScreenIndex: number) => {
-              if (currScreenIndex !== this.state.activeSceneIndex)
-                return currSceneObject;
-              return {
-                ...currSceneObject,
-                activeSceneObjects: newSceneActiveObjectsObject,
-              };
-            }
-          ),
-        },
-      });
-    }
-  };
+  //     return this.setState({
+  //       project: {
+  //         ...this.state.project,
+  //         scenes: this.state.project.scenes.map(
+  //           (currSceneObject: SceneType, currScreenIndex: number) => {
+  //             if (currScreenIndex !== this.state.activeSceneIndex)
+  //               return currSceneObject;
+  //             return {
+  //               ...currSceneObject,
+  //               activeSceneObjects: newSceneActiveObjectsObject,
+  //             };
+  //           }
+  //         ),
+  //       },
+  //     });
+  //   }
+  // };
 
   setOnFabricObject = (obj: CustomFabricObject, settings: {}, action: string) => {
-    this.setOnGlobalObject(obj, settings);
+    this.props.setOnGlobalObject(obj, settings);
     obj.set(settings);
     obj.setCoords();
     console.log("obj", obj)
@@ -256,44 +259,6 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       return obj
     }
   }
-
-  // normalizeNewSceneState = (reasonForUpdate?: string) => {
-  //   const { activeSceneIndex } = this.state
-  //   const activeObject = this.fabricCanvas?.getActiveObject() as CustomFabricObject | fabric.ActiveSelection | undefined
-
-  //   //Tracking selection state of canvas along with canvas state
-  //   let selectedGUIDs = []
-  //   if (activeObject && !(activeObject instanceof fabric.ActiveSelection)) {
-  //     selectedGUIDs.push(activeObject?.guid)
-  //   } else {
-  //     const allSelectedObjects = activeObject?.getObjects() as Array<CustomFabricObject>
-  //     allSelectedObjects?.forEach(obj => selectedGUIDs.push(obj.guid))
-  //   }
-  //   const newFabricState = this.fabricCanvas?.toObject(customAttributesToIncludeInFabricCanvasToObject)
-  //   const newFlatMappedFabricState = flatMapFabricSceneState(newFabricState)
-
-  //   const newUndoEntryObject: UndoHistoryEntry = {
-  //     selectedGUIDs,
-  //     objectStates: newFlatMappedFabricState
-  //   }
-
-  //   const newSceneObj = {
-  //     ...this.activeSceneObject,
-  //     undoHistory: this.activeSceneObject.undoHistory.concat(newUndoEntryObject)
-  //   }
-  //   const newScenesArray = this.state.project.scenes.map(
-  //     (sceneObj, sceneIndex) => sceneIndex !== activeSceneIndex
-  //       ? sceneObj
-  //       : newSceneObj
-  //   )
-
-  //   return this.setState({
-  //     project: {
-  //       ...this.state.project,
-  //       scenes: newScenesArray
-  //     }
-  //   })
-  // }
 
   /**
    * THE CONVENTION OF OUR DATA STATE
@@ -429,7 +394,7 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
   }
 
   get activeSceneObject() {
-    return this.state.project.scenes[this.state.activeSceneIndex]
+    return this.props.project.scenes[this.props.activeSceneIndexs[0]]
   }
 
   handleSelectElementByGUID = (selectGUID: string) => {
@@ -479,9 +444,9 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       // stroke: 'black',
       // strokeWidth: 2,
       fill: 'white',
-      width: this.state.project.settings.dimensions.width * 0.94,
+      width: this.props.project.settings.dimensions.width * 0.94,
       top: 0,
-      left: this.state.project.settings.dimensions.width * 0.03,
+      left: this.props.project.settings.dimensions.width * 0.03,
       styles: {}
     })
     this.props.handleAddObject(newTextBox)
@@ -490,8 +455,8 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
   addRect = () => {
     //@ts-ignore
     const newRect = new fabric.CRect({
-      width: this.state.project.settings.dimensions.width * 0.1,
-      height: this.state.project.settings.dimensions.height * 0.1,
+      width: this.props.project.settings.dimensions.width * 0.1,
+      height: this.props.project.settings.dimensions.height * 0.1,
       fill: 'rgba(0, 0, 0, 0.5)',
       top: 0,
       left: 0
@@ -566,10 +531,8 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
   }
 
   addImageFromURL = () => {
-    const url = prompt('Enter image url')
-    if (!url) return Modal.warn({ content: 'No image url provided' })
-    try {
-      fabric.Image.fromURL(url, (img) => {
+    requestInsertImage({
+      onInsert: (img: fabric.Image) => {
         const el = img.getElement()
         //@ts-ignore
         const imageObject = new fabric.CustomMediaObject(el, {
@@ -577,16 +540,37 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
           height: 400
         })
         console.log(imageObject)
-        imageObject.scaleToHeight(this.state.project.settings.dimensions.height)
-        if (imageObject.getScaledWidth() > this.state.project.settings.dimensions.width) {
-          imageObject.scaleToWidth(this.state.project.settings.dimensions.width)
+        imageObject.scaleToHeight(this.props.project.settings.dimensions.height)
+        if (imageObject.getScaledWidth() > this.props.project.settings.dimensions.width) {
+          imageObject.scaleToWidth(this.props.project.settings.dimensions.width)
         }
         this.props.handleAddObject(imageObject)
-      }, { crossOrigin: 'Anonymous' })
-    } catch (error) {
-      return Modal.warn({ content: 'Loading image failed' })
-    }
+        // console.log('EDITOR IMAGE INSERT: ', { a })
+      }
+    })
+    // const url = prompt('Enter image url')
+    // if (!url) return Modal.warn({ content: 'No image url provided' })
+    // try {
+    //   fabric.Image.fromURL(url, (img) => {
+    //     const el = img.getElement()
+    //     //@ts-ignore
+    //     const imageObject = new fabric.CustomMediaObject(el, {
+    //       width: 400,
+    //       height: 400
+    //     })
+    //     console.log(imageObject)
+    //     imageObject.scaleToHeight(this.state.project.settings.dimensions.height)
+    //     if (imageObject.getScaledWidth() > this.state.project.settings.dimensions.width) {
+    //       imageObject.scaleToWidth(this.state.project.settings.dimensions.width)
+    //     }
+    //     this.props.handleAddObject(imageObject)
+    //   }, { crossOrigin: 'Anonymous' })
+    // } catch (error) {
+    //   return Modal.warn({ content: 'Loading image failed' })
+    // }
   }
+
+
 
   handleWindowImageDrop = (e: DragEvent) => {
     console.log('handleWindowImageDrop', { e })
@@ -636,7 +620,7 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       activeSceneIndexs: this.props.activeSceneIndexs,
       setActiveSceneIndex: this.props.setActiveSceneIndex,
       setOnFabricObject: this.setOnFabricObject,
-      setOnGlobalObject: this.setOnGlobalObject,
+      setOnGlobalObject: this.props.setOnGlobalObject,
       handleGroupObjects: this.props.handleGroupObjects,
       handleUndo: this.handleUndo,
       handleRedo: this.handleRedo,
@@ -662,6 +646,7 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
             <ReflexElement minSize={100} maxSize={250} size={180}>
               <ScenesPane
                 handleDuplicateScene={this.props.handleDuplicateScene}
+                handleDeleteScene={this.props.handleDeleteScene}
               />
             </ReflexElement>
             <ReflexSplitter />

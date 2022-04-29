@@ -12,7 +12,6 @@ class CustomFabricCanvas extends fabric.Canvas {
   gridWidth = 1
   gridHeight = 1
   constructor(canvas, options) {
-    console.log('custom fabric canvas constructor')
     super(canvas, options)
   }
   existingSelectionIsCustomCreated = false

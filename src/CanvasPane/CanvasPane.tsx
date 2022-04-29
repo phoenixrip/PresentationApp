@@ -236,8 +236,8 @@ class CanvasPane extends Component<CanvasPanePropsTypes, CanvasPaneStateTypes> {
             </defs>
             <g transform={`matrix(${useTransformMatrix})`}>
               <rect
-                width={this.context.state.project.settings.dimensions.width}
-                height={this.context.state.project.settings.dimensions.height}
+                width={this.context.project.settings.dimensions.width}
+                height={this.context.project.settings.dimensions.height}
                 // fill='rgb(255, 255, 255)'
                 fill='url(#gradient-0)'
               />
@@ -255,8 +255,8 @@ class CanvasPane extends Component<CanvasPanePropsTypes, CanvasPaneStateTypes> {
                   fill='white' />
                 <rect
                   transform={`matrix(${useTransformMatrix})`}
-                  width={this.context.state.project.settings.dimensions.width}
-                  height={this.context.state.project.settings.dimensions.height}
+                  width={this.context.project.settings.dimensions.width}
+                  height={this.context.project.settings.dimensions.height}
                   fill='black'
                 />
               </mask>

@@ -9,7 +9,7 @@ import { CustomFabricCanvas } from './Utils/CustomFabricCanvas'
 interface EditorStateTypes {
   tick: Boolean;
   isInitted: Boolean;
-  project: ProjectDataTypes;
+  // project: ProjectDataTypes;
   activeSceneIndex: number;
   antdSize: SizeType;
   gridCoords: {
