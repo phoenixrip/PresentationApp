@@ -1,10 +1,10 @@
 import { fabric } from 'fabric'
 import gsap from 'gsap'
 
-export default function fillableTextBox() {
-  if (fabric.FillableTextBox) return
-  fabric.FillableTextBox = fabric.util.createClass(fabric.Textbox, {
-    type: 'FillableTextBox',
+function BodyTextbox() {
+  if (fabric.BodyTextbox) return
+  fabric.BodyTextbox = fabric.util.createClass(fabric.Textbox, {
+    type: 'BodyTextbox',
     initialize: function (text, options) {
       this.pS = options?.paraStyles || []
       // If no custom paraStylesSettings are present set a default
@@ -28,11 +28,6 @@ export default function fillableTextBox() {
         ...options.paraStylesSettings.paraStyles[options.paraStylesSettings.defaultParaStyle].styles,
       })
       this.paraStylesSettings = options.paraStylesSettings
-      this.engineDefaultTextStyle = {
-        fontFamily: 'Helvetica Neue, Helvetica',
-        fill: 'white',
-        fontSize: 28
-      }
       this.gpc = options.gpc
       this.cachedAutoGradHeight = null
       this.cachedAutoGradWidth = null
@@ -543,8 +538,8 @@ export default function fillableTextBox() {
     }
   })
 
-  fabric.FillableTextBox.fromObject = function (object, callback) {
-    return fabric.Object._fromObject('FillableTextBox', object, callback, 'text');
+  fabric.BodyTextbox.fromObject = function (object, callback) {
+    return fabric.Object._fromObject('BodyTextbox', object, callback, 'text');
   }
 }
 
@@ -579,4 +574,8 @@ const inAnimations = {
       .fromTo(this, { opacity: 0 }, { opacity: 1, duration: 0.1 })
     return inTL
   }
+}
+
+export {
+  BodyTextbox
 }

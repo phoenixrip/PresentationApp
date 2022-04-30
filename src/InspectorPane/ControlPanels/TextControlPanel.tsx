@@ -121,7 +121,6 @@ const TextControlPanel = ({ selection }: Props) => {
 
   return (
     <>
-      Total paras: {selection?.pS?.length}
       <Row style={{ justifyContent: 'center', alignItems: 'center', marginBottom: 10 }}>
         <Dropdown overlay={<Menu>
           {context.availableFonts.map((font) => <Menu.Item key={`${font}`} onClick={() => { handleFontSelect(font) }}>{font}</Menu.Item>)}

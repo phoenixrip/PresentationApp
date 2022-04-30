@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { fabric } from 'fabric'
 import { FakeGroup } from './SetFabricDefaults'
 import { greatestCommonDenominator } from './greatestCommonDenominator';
+import { ProjectParaStylesController } from './CustomControllerClasses/ProjectParaStylesController';
 
 const dl = (args, ...rest) => console.log(args, ...rest)
 class CustomFabricCanvas extends fabric.Canvas {
@@ -16,6 +17,13 @@ class CustomFabricCanvas extends fabric.Canvas {
   }
   existingSelectionIsCustomCreated = false
   familyObjectsRemovedFromSelection = false
+  /**
+   * 
+   * @param {ProjectParaStylesController} projectParaStylesController 
+   */
+  initProjectParaStylesController(projectParaStylesController) {
+    this.projectParaStylesController = projectParaStylesController
+  }
   _onMouseDown(e) {
     if (this.eyedropperActive) {
       this.fire("mouse:down", e)

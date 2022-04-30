@@ -3,7 +3,7 @@ import { customAttributesToIncludeInFabricCanvasToObject } from './consts'
 import { CustomImageObject } from './CustomFabricObjects/CustomImageObject'
 import { CustomMediaObject } from './CustomFabricObjects/CustomMediaObject'
 import { FakeGroup } from './CustomFabricObjects/FakeGroup'
-import fillableTextBox from './CustomFabricObjects/FillableTextBox'
+import { BodyTextbox } from './CustomFabricObjects/BodyTextbox'
 import { createCustomControls } from './fabricCustomControls'
 
 function setFabricDefaults() {
@@ -113,7 +113,7 @@ function setFabricDefaults() {
   FakeGroup()
   CustomImageObject()
   CustomMediaObject()
-  fillableTextBox()
+  BodyTextbox()
 
   fabric.CRect = fabric.util.createClass(fabric.Rect, {
     type: 'CRect',

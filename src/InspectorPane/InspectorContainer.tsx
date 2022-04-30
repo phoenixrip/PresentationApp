@@ -56,7 +56,7 @@ const InspectorContainer = ({ availiableCustomInteractionModules }: Props) => {
             <Panel header="Dimensions" key="1">
               <DimensionsControlPanel selection={selection} />
             </Panel>
-            {selection.type !== 'FillableTextBox' &&
+            {selection.type !== 'BodyTextbox' &&
               < Panel header="Fill" key="2">
                 <FillControlPanel selection={selection} />
               </Panel>
@@ -67,7 +67,7 @@ const InspectorContainer = ({ availiableCustomInteractionModules }: Props) => {
             <Panel header="Shadow" key="4">
               <ShadowControlPanel selection={selection} />
             </Panel>
-            {selection.type === "FillableTextBox" &&
+            {selection.type === "BodyTextbox" &&
               <Panel header="Text" key="5">
                 <TextControlPanel selection={selection} />
               </Panel>
