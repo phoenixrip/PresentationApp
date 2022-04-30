@@ -1,6 +1,6 @@
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 
-import { faImage, faRectangleAd, faSquare } from "@fortawesome/free-solid-svg-icons"
+import { faFont, faImage, faSquare, faTextHeight, faTextWidth } from "@fortawesome/free-solid-svg-icons"
 import { Button, ButtonProps } from "antd"
 
 import { useContext } from "react"
@@ -15,7 +15,12 @@ const ToolbarContainer = () => {
     <div className={c.toolbarContainer}>
       <Button onClick={(e) => context.handleUndo()}>UNDO</Button>
       <Button onClick={(e) => context.handleRedo()}>REDO</Button>
-      <Button onClick={e => context.addText()}>Add text</Button>
+      <CustomIconButton
+        icon={faFont}
+        onClick={e => context.addText()}>
+        Add text
+      </CustomIconButton>
+      {/* <Button onClick={e => context.addText()}>Add text</Button> */}
       <Button onClick={e => context.addSVG()}>Add svg</Button>
       <Button onClick={e => context.addLabel()}>addLabel</Button>
       <CustomIconButton

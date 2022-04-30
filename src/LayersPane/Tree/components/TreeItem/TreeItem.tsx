@@ -22,7 +22,7 @@ const objIcons: ObjIconTypes = {
   'group': faLayerGroup,
   'textbox': faFont,
   'text': faFont,
-  'FillableTextBox': faFont,
+  'BodyTextbox': faFont,
   'path': faBezierCurve,
   'ellipse': faCircle,
   'circle': faCircle,

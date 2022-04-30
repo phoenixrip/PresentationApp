@@ -437,7 +437,7 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     console.log('addText')
     const systemFontStack = `-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"`
     // @ts-ignore
-    const newTextBox = new fabric.FillableTextBox('New text', {
+    const newTextBox = new fabric.BodyTextbox('New text', {
       fontFamily: 'Arial',
       textAlign: 'center',
       fontSize: 29,

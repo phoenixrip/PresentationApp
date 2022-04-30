@@ -11,6 +11,7 @@ import { greatestCommonDenominator } from "./Utils/greatestCommonDenominator";
 import { RequestInsertImageEventTypes } from "./Events/RequestInsertImage";
 import { MediaPickerContainer, UploadNewImageArgs } from "./MediaPicker/MediaPickerContainer";
 import { ICustomMediaStorageApi, ImageStorageHandler } from "./PlugIns/ImageStorageHandler/ImageStorageHandlerClass";
+import { ProjectParaStylesController } from "./Utils/CustomControllerClasses/ProjectParaStylesController";
 
 interface Props {
   project: ProjectDataTypes,
@@ -42,16 +43,18 @@ class ProjectController extends Component<Props, State> {
   }
   onInsertImageFunction?: Function | undefined
   storageHandlerClass: ImageStorageHandler
+  projectParaStylesController: ProjectParaStylesController
   constructor(props: Props) {
     super(props);
     this.storageHandlerClass = new ImageStorageHandler(props.customMediaStorageApi)
+    this.projectParaStylesController = new ProjectParaStylesController(props.project)
     this.liveEditor = null
     this.liveObjectScenesReferences = {}
     this.liveObjectsDict = {}
     this.initObjectScenesReferences()
     this.state = {
       projectAssetsLoaded: true,
-      project: this.props.project,
+      project: props.project,
       activeSceneIndexs: [0],
       projectPreviewOpen: false,
       mediaPickerState: {
@@ -82,6 +85,7 @@ class ProjectController extends Component<Props, State> {
     const json: any = {
       objects: Object.values(this.state.project.globalObjects),
     }
+    this.liveEditor.fabricCanvas.initProjectParaStylesController(this.projectParaStylesController)
     this.liveEditor.fabricCanvas.loadFromJSON(
       json,
       () => {
