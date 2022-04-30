@@ -5,19 +5,25 @@ import { CustomFabricObject, CustomFabricOptions } from "./Types/CustomFabricTyp
 import { ProjectDataTypes, SceneType } from "./Types/ProjectDataTypes";
 import { v4 as uuidv4 } from 'uuid';
 import { customAttributesToIncludeInFabricCanvasToObject } from "./Utils/consts";
-import { flatMapFabricSceneState } from "./Utils/flatMapFabricState";
 import { RenderEngine } from "./RenderEngine/RenderEngine";
 import { fabric } from 'fabric'
 import { greatestCommonDenominator } from "./Utils/greatestCommonDenominator";
+import { RequestInsertImageEventTypes } from "./Events/RequestInsertImage";
+import { MediaPickerContainer, UploadNewImageArgs } from "./MediaPicker/MediaPickerContainer";
+import { ICustomMediaStorageApi, ImageStorageHandler } from "./PlugIns/ImageStorageHandler/ImageStorageHandlerClass";
 
 interface Props {
-  project: ProjectDataTypes
+  project: ProjectDataTypes,
+  customMediaStorageApi: ICustomMediaStorageApi
 }
 interface State {
   projectAssetsLoaded: boolean,
   project: ProjectDataTypes,
   activeSceneIndexs: Array<number>,
-  projectPreviewOpen: boolean
+  projectPreviewOpen: boolean,
+  mediaPickerState: {
+    open: boolean
+  }
 }
 
 interface IAddGroupedObjectsConfig {
@@ -34,8 +40,11 @@ class ProjectController extends Component<Props, State> {
   liveObjectsDict: {
     [key: CustomFabricObject['guid']]: CustomFabricObject
   }
+  onInsertImageFunction?: Function | undefined
+  storageHandlerClass: ImageStorageHandler
   constructor(props: Props) {
     super(props);
+    this.storageHandlerClass = new ImageStorageHandler(props.customMediaStorageApi)
     this.liveEditor = null
     this.liveObjectScenesReferences = {}
     this.liveObjectsDict = {}
@@ -44,7 +53,10 @@ class ProjectController extends Component<Props, State> {
       projectAssetsLoaded: true,
       project: this.props.project,
       activeSceneIndexs: [0],
-      projectPreviewOpen: false
+      projectPreviewOpen: false,
+      mediaPickerState: {
+        open: false
+      }
     }
   }
 
@@ -61,7 +73,6 @@ class ProjectController extends Component<Props, State> {
           this.liveObjectScenesReferences[guid].add(currSceneIndex)
         })
     })
-    console.log(this.props.project.scenes)
   }
 
   handleFabricMountConfirmed = async () => {
@@ -75,7 +86,7 @@ class ProjectController extends Component<Props, State> {
       json,
       () => {
         this.liveEditor?.fabricCanvas?.updatePaths()
-        this.liveEditor?.fabricCanvas?.logFlatVisual()
+        // this.liveEditor?.fabricCanvas?.logFlatVisual()
         this.handleSetNewActiveScene(0, false)
       },
       (options: any, object: any, a: any) => {
@@ -86,6 +97,7 @@ class ProjectController extends Component<Props, State> {
 
   componentDidMount() {
     window.addEventListener('keydown', this.handleKeyDown)
+    window.addEventListener('requestInsertImage', (e) => this.handleStartInsertImageRequest(e as RequestInsertImageEventTypes))
   }
 
   componentWillUnmount() {
@@ -129,15 +141,46 @@ class ProjectController extends Component<Props, State> {
     }
   }
 
+  handleStartInsertImageRequest = (e: RequestInsertImageEventTypes) => {
+    console.log('handleStartInsertImageRequest', e)
+    this.onInsertImageFunction = e.detail.onInsert
+    return this.setState({
+      mediaPickerState: {
+        open: true
+      }
+    })
+  }
+
+  handleInsertImage = (insertImageObject: any) => {
+    console.log('ProjectController handleInsertImage', { insertImageObject })
+    return this.setState({
+      mediaPickerState: { open: false }
+    }, () => {
+      this.onInsertImageFunction?.(insertImageObject)
+      this.onInsertImageFunction = undefined
+    })
+  }
+
+  handleCancelMediaPicker = () => {
+    return this.setState({
+      mediaPickerState: { open: false }
+    }, () => {
+      // this.onInsertImageFunction?.(insertImageObject)
+      this.onInsertImageFunction = undefined
+    })
+  }
+
   setActiveSceneIndex = (sceneIndex: number) => this.handleSetNewActiveScene(sceneIndex)
 
   handleSetNewActiveScene = (newActiveSceneIndex: number, saveExisting = true) => {
+    const fabricCanvas = this.liveEditor?.fabricCanvas
+    if (!fabricCanvas) return
     let leavingSceneObject: SceneType | null = null
     if (saveExisting) {
       leavingSceneObject = this.getSaveableCurrentSceneState()
     }
 
-    this.liveEditor?.fabricCanvas?.tempDeselect()
+    fabricCanvas.tempDeselect()
     const newActiveSceneObject = this.state.project.scenes[newActiveSceneIndex]
 
     // This restores the state of the newly set activeScene
@@ -151,9 +194,9 @@ class ProjectController extends Component<Props, State> {
         // Update the in memory objects array to contain only objs
         // that are actually in this scene
         if (!isObjectInNewScene && isObjectInCanvasMemory) {
-          this?.liveEditor?.fabricCanvas?.remove(obj)
+          fabricCanvas.remove(obj)
         } else if (isObjectInNewScene && !isObjectInCanvasMemory) {
-          this?.liveEditor?.fabricCanvas?.add(obj)
+          fabricCanvas.add(obj)
         }
 
         // Now for any obects that are in this scene
@@ -161,11 +204,8 @@ class ProjectController extends Component<Props, State> {
         // Here we need to make sure that we aren't resetting values
         // that will become invalid
         if (isObjectInNewScene) {
-          console.log({ isObjectInNewScene })
-          // const globalObjectOptions = this.state.project.globalObjects[guid]
           object
             .set({ scaleX: 1, scaleY: 1 })
-            // .set(globalObjectOptions)
             .set(isObjectInNewScene)
             .setCoords()
           object.parentID = (isObjectInNewScene as CustomFabricOptions)?.parentID || undefined
@@ -173,9 +213,10 @@ class ProjectController extends Component<Props, State> {
       })
 
     // Now run all the updates
-    this.liveEditor?.fabricCanvas?.handleReorderObjectArrayToObjectTreeIndexOrder()
-    this.liveEditor?.fabricCanvas?.tempReselect()
-    this.liveEditor?.fabricCanvas?.requestRenderAll()
+    fabricCanvas
+      .handleReorderObjectArrayToObjectTreeIndexOrder()
+      .tempReselect()
+      .requestRenderAll()
 
     let stateUpdateObject = {
       activeSceneIndexs: [newActiveSceneIndex],
@@ -196,6 +237,7 @@ class ProjectController extends Component<Props, State> {
     return this.setState(stateUpdateObject)
   }
 
+  // SHOULD BE ON EDITOR PROBABLY WITH ONLY CALLS TO PROJECTCONTROLLER WHEN NEEDED
   handleGroupObjects = () => {
     if (!this.liveEditor || !this.liveEditor?.fabricCanvas) return
     const orderedSelectedGUIDs = Array.from(this.liveEditor.orderedSelectionGUIDs)
@@ -205,7 +247,6 @@ class ProjectController extends Component<Props, State> {
       .requestRenderAll()
     this.liveEditor.fabricCanvas.logFlatVisual()
   }
-
   handleArrowKeys = (e: KeyboardEvent) => {
     if (!this.liveEditor || !this.liveEditor?.fabricCanvas) return
     const activeObject = this.liveEditor.fabricCanvas.getActiveObject() as CustomFabricObject | fabric.ActiveSelection | null
@@ -289,7 +330,6 @@ class ProjectController extends Component<Props, State> {
     this.liveEditor.fabricCanvas.requestRenderAll()
     return
   }
-
   handleDuplicateObject = (e: KeyboardEvent) => {
     console.log('DUPLICATE OBJECT')
     const activeObject = this.liveEditor?.fabricCanvas?.getActiveObject() as CustomFabricObject | fabric.ActiveSelection | undefined
@@ -310,14 +350,12 @@ class ProjectController extends Component<Props, State> {
       }, customAttributesToIncludeInFabricCanvasToObject)
     }
   }
-
   handleRequestDeleteObject = (e: KeyboardEvent) => {
     const confirm = Modal.confirm({
       content: 'Are you sure you wish to delete this item?',
       onOk: this.handleConfirmedDeleteObject
     })
   }
-
   handleConfirmedDeleteObject = () => {
     if (!this.liveEditor) return
     if (this.activeSceneIndex === null) return
@@ -371,7 +409,6 @@ class ProjectController extends Component<Props, State> {
 
     console.log('DELETE OBJECTS')
   }
-
   handleAddObject = (
     objectToAdd: CustomFabricObject | fabric.Object,
     parentID: CustomFabricObject['parentID'] | undefined = undefined,
@@ -422,14 +459,14 @@ class ProjectController extends Component<Props, State> {
     })
   }
 
-  handleDuplicateScene = () => {
-    console.log('handleDuplicateScene')
+  handleDuplicateScene = (newPosition = 'below') => {
+    console.log('handleDuplicateScene: ', this.activeSceneIndex)
     if (this.activeSceneIndex === null) return Modal.warn({ content: 'No active scene to duplicate' })
     // We need to update our objectscrenerefs if the objects are present in the duplicated scene
 
     const newActiveSceneObject = this.getSaveableCurrentSceneState()
     if (!newActiveSceneObject) return
-
+    console.log({ newActiveSceneObject })
     // Update each objects sceneRefs
     Object.keys(newActiveSceneObject.activeSceneObjects)
       .forEach(guid => {
@@ -441,17 +478,56 @@ class ProjectController extends Component<Props, State> {
     let newScenesArray: Array<SceneType> = []
     this.state.project.scenes.forEach((sceneObject, screenIndex) => {
       if (screenIndex !== this.activeSceneIndex) return newScenesArray.push(sceneObject)
-      newScenesArray.push(newActiveSceneObject)
-      newScenesArray.push(newActiveSceneObject)
+      newScenesArray.push(JSON.parse(JSON.stringify(newActiveSceneObject)))
+      newScenesArray.push(JSON.parse(JSON.stringify(newActiveSceneObject)))
     })
+    const newActiveSceneIndex = newPosition === 'below' ? this.activeSceneIndex + 1 : this.activeSceneIndex
+    const newProjectObject = {
+      ...this.state.project,
+      scenes: JSON.parse(JSON.stringify(newScenesArray))
+    }
     return this.setState({
-      project: {
-        ...this.state.project,
-        scenes: newScenesArray
-      },
-      activeSceneIndexs: [this.activeSceneIndex + 1]
+      project: newProjectObject,
+      activeSceneIndexs: [newActiveSceneIndex]
+    }, () => {
+      console.log({ newScenesArray, newProjectObject })
+      console.log(this.state.project)
     })
   }
+
+  handleDeleteScene = () => {
+    console.log('handleDeleteScene')
+  }
+
+  setOnGlobalObject = (obj: CustomFabricObject, settings: {}) => {
+    if (obj && this.activeSceneIndex !== null) {
+      // get active scene and options for object in active scene then add/modify corresponding setting to value
+      const activeScene = this.state.project.scenes[this.activeSceneIndex];
+      let currentOptions = activeScene.activeSceneObjects[obj.guid];
+      let newSettings = { ...currentOptions, ...settings };
+
+      const newSceneActiveObjectsObject = {
+        ...activeScene.activeSceneObjects,
+        [obj.guid]: newSettings,
+      };
+
+      return this.setState({
+        project: {
+          ...this.state.project,
+          scenes: this.state.project.scenes.map(
+            (currSceneObject: SceneType, currScreenIndex: number) => {
+              if (currScreenIndex !== this.activeSceneIndex)
+                return currSceneObject;
+              return {
+                ...currSceneObject,
+                activeSceneObjects: newSceneActiveObjectsObject,
+              };
+            }
+          ),
+        },
+      });
+    }
+  };
 
   getSaveableCurrentSceneState = () => {
     if (this.activeSceneIndex === null) return null
@@ -493,7 +569,8 @@ class ProjectController extends Component<Props, State> {
     const {
       projectAssetsLoaded,
       project,
-      projectPreviewOpen
+      projectPreviewOpen,
+      mediaPickerState
     } = this.state
 
     if (projectAssetsLoaded) {
@@ -511,7 +588,9 @@ class ProjectController extends Component<Props, State> {
             setActiveSceneIndex={this.setActiveSceneIndex}
             handleAddObject={this.handleAddObject}
             handleDuplicateScene={this.handleDuplicateScene}
+            handleDeleteScene={this.handleDeleteScene}
             handleOpenProjectPreview={this.handleOpenProjectPreview}
+            setOnGlobalObject={this.setOnGlobalObject}
           />
           {
             <Modal
@@ -525,6 +604,14 @@ class ProjectController extends Component<Props, State> {
               />
             </Modal>
           }
+          {
+            <MediaPickerContainer
+              open={mediaPickerState.open}
+              onCancel={this.handleCancelMediaPicker}
+              storageHandlerClass={this.storageHandlerClass}
+              handleInsertImage={this.handleInsertImage}
+            />
+          }
         </>
       )
     } else {
@@ -533,8 +620,9 @@ class ProjectController extends Component<Props, State> {
   }
 }
 
+
 export {
-  ProjectController
+  ProjectController, ImageStorageHandler
 }
 
 interface IProjectPreviewRendererContainerProps {
@@ -555,7 +643,7 @@ class ProjectPreviewRendererContainer extends React.Component<IProjectPreviewRen
 
   componentDidMount() {
     const { project } = this.props
-    if (!this.ca1 || !this.ca2) return
+    if (!this.ca1 || !this.ca2) return console.error('Dom canvases not present in ProjectPreviewRendererContainer didMount')
     this.c1 = new fabric.StaticCanvas(this.ca1)
     this.c2 = new fabric.Canvas(this.ca2)
     const both = [this.c1, this.c2]

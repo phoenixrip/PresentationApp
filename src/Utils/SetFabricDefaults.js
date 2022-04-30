@@ -1,6 +1,5 @@
 import { fabric } from 'fabric'
 import { customAttributesToIncludeInFabricCanvasToObject } from './consts'
-import { CTextBox } from './CustomFabricObjects/CTextBox'
 import { CustomImageObject } from './CustomFabricObjects/CustomImageObject'
 import { CustomMediaObject } from './CustomFabricObjects/CustomMediaObject'
 import { FakeGroup } from './CustomFabricObjects/FakeGroup'
@@ -51,7 +50,6 @@ function setFabricDefaults() {
         'visible'
       ]
     )
-    console.log('getAnimatableValues: ', object)
     return object
   }
 
@@ -73,7 +71,6 @@ function setFabricDefaults() {
   }
 
   fabric.Object.prototype.forEachChild = function (callBack) {
-    this.canvas.logFlatVisual()
     const myStructurePathLength = this.structurePath.length
     let currI = (this?.treeIndex ?? 0) + 1
     while (this.canvas._objects?.[currI] && this.canvas._objects[currI].structurePath.length > myStructurePathLength) {
@@ -113,7 +110,6 @@ function setFabricDefaults() {
     }
   }
 
-  CTextBox()
   FakeGroup()
   CustomImageObject()
   CustomMediaObject()
@@ -263,7 +259,5 @@ function setFabricDefaults() {
 }
 
 export {
-  setFabricDefaults,
-  // CTextBox,
-  // FakeGroup
+  setFabricDefaults
 }

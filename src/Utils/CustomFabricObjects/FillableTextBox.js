@@ -39,6 +39,32 @@ export default function fillableTextBox() {
       this.lineFillablesCacheDict = {}
       this.initSuperScript()
       this.getObjectInTimeline = inAnimations['default'].bind(this)
+      // this.__eventListeners = {}
+      this.__eventListeners['changed'] = this.__eventListeners?.['changed'] || []
+      this.__eventListeners['changed'].push(this.handleTextChanged)
+    },
+    handleTextChanged: function () {
+      // Update the paraStyles array with any paraChanges
+      if (this._unwrappedTextLines.length > this.pS.length) {
+        const { lineIndex } = this.get2DCursorLocation(this.selectionStart)
+        const originParaIndex = this.lineParaIndexes[lineIndex - 1]
+        const originParaStyleObj = this.pS[originParaIndex]
+        this.pS.splice(originParaIndex, 0, originParaStyleObj)
+        console.log('PARA ADDED', this.pS)
+      }
+      if (this._unwrappedTextLines.length < this.pS.length) {
+        console.log('// Para removed')
+        const { charIndex, lineIndex } = this.get2DCursorLocation(this.selectionStart)
+        if (charIndex === 0) {
+          console.log('Completely delete prev para')
+          const originParaIndex = this.lineParaIndexes[lineIndex]
+          this.pS.splice(originParaIndex, 1)
+        } else {
+          console.log('Combine with prev para')
+          const originParaIndex = this.lineParaIndexes[lineIndex]
+          this.pS.splice(originParaIndex + 1, 1)
+        }
+      }
     },
     initSuperScript: function () {
       this.styles = JSON.parse(JSON.stringify(this?.styles ?? {}))

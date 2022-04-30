@@ -1,11 +1,12 @@
 import React, { Component, ReactNode } from "react";
-import { Editor } from "./Editor";
-import { SizeType } from "antd/lib/config-provider/SizeContext";
 import { ProjectDataTypes } from "./Types/ProjectDataTypes";
 import { ProjectController } from "./ProjectController";
 import { setFabricDefaults } from "./Utils/SetFabricDefaults";
 import { ContextMenu } from "./ContextMenu"
-import { Context } from "@dnd-kit/sortable/dist/components";
+import { MediaPickerContainer, UploadNewImageArgs } from "./MediaPicker/MediaPickerContainer";
+import { LocalStorage } from "./PlugIns/MediaUploadController/LocalStorage";
+import { RequestInsertImageEventTypes } from "./Events/RequestInsertImage";
+import { ICustomMediaStorageApi } from "./PlugIns/ImageStorageHandler/ImageStorageHandlerClass";
 
 setFabricDefaults()
 
@@ -137,7 +138,8 @@ const dummyProjectData: ProjectDataTypes = {
 			redoHistory: [],
 		},
 	],
-};
+}
+
 const dummyAppControllerState: AppControllerStateTypes = {
 	userSettings: {
 		name: "Inspector Payne",
@@ -152,19 +154,35 @@ interface AppControllerStateTypes {
 	project?: ProjectDataTypes;
 }
 
+const customMediaStorageApi: ICustomMediaStorageApi = {
+	// Upload an image and then load and return a valid element to make a mediaObject out of
+	handleUploadImage: async function (uploadArgs) {
+		console.log('CUSTOM mediaStorageApi handleUploadImage')
+		return uploadArgs.exportVersions.small
+	}
+}
+
 class AppController extends Component<{}, AppControllerStateTypes> {
 	constructor(props: Object) {
 		super(props);
 		// console.clear()
-		this.state = dummyAppControllerState;
+		this.state = dummyAppControllerState
+	}
+
+	handleUploadImage = async (uploadArgs: UploadNewImageArgs) => {
+		console.log('APP CONTROLLER: handleUploadImage', { uploadArgs })
+		// return
 	}
 	render(): ReactNode {
 		if (this.state?.project) {
 			return <>
 				{<ContextMenu />
 				}
-				<ProjectController project={this.state.project} />;
-				</>
+				<ProjectController
+					project={this.state.project}
+					customMediaStorageApi={customMediaStorageApi}
+				/>
+			</>
 		} else {
 			return <p>NO DATA TO OPEN EDITOR WITH</p>;
 		}

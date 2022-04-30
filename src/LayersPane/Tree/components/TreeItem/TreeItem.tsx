@@ -23,7 +23,6 @@ const objIcons: ObjIconTypes = {
   'textbox': faFont,
   'text': faFont,
   'FillableTextBox': faFont,
-  'CTextBox': faFont,
   'path': faBezierCurve,
   'ellipse': faCircle,
   'circle': faCircle,

@@ -12,7 +12,6 @@ class CustomFabricCanvas extends fabric.Canvas {
   gridWidth = 1
   gridHeight = 1
   constructor(canvas, options) {
-    console.log('custom fabric canvas constructor')
     super(canvas, options)
   }
   existingSelectionIsCustomCreated = false
@@ -238,12 +237,12 @@ class CustomFabricCanvas extends fabric.Canvas {
   }
   tempReselect() {
     // console.trace('tempReselect', this.cachedActiveObjectsArray)
-    if (!this.cachedActiveObjectsArray) return
-    if (!this.cachedActiveObjectsArray.length) return
+    if (!this.cachedActiveObjectsArray) return this
+    if (!this.cachedActiveObjectsArray.length) return this
     if (this.cachedActiveObjectsArray.length === 1) {
       this._setActiveObject(this.cachedActiveObjectsArray[0])
       this.cachedActiveObjectsArray = null
-      return
+      return this
     }
     let newSelectionArray = []
     this.cachedActiveObjectsArray.forEach(obj => {
@@ -252,6 +251,7 @@ class CustomFabricCanvas extends fabric.Canvas {
     const replaceSelection = new fabric.ActiveSelection(newSelectionArray, { canvas: this })
     this._setActiveObject(replaceSelection)
     this.cachedActiveObjectsArray = null
+    return this
   }
   initProjectSettings(projectSettings) {
     this.projectSettings = projectSettings

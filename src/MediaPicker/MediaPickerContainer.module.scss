@@ -1,0 +1,36 @@
+.handleSelectedWrapper{
+  height: 500px;
+}
+
+.navBarWrapper{
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  .modeHeader{
+    margin-left: 10px;
+    font-size: 15px;
+  }
+}
+
+.previewWrapper{
+  display: flex;
+  height: 100%;
+
+}
+.imagePreviewContainer{
+  background-color: black;
+  border: 1px solid gray;
+  border-radius: 4px;
+  background-size: contain;
+  background-position: center center;
+  background-repeat: no-repeat;
+    // flex-grow: 1;
+  width: 66%;
+  height: 100%
+}
+
+.imageInfoContainer{
+  width: 33%;
+  overflow: scroll;
+  padding: 10px;
+}

@@ -9,7 +9,7 @@ import { CustomFabricCanvas } from './Utils/CustomFabricCanvas'
 interface EditorStateTypes {
   tick: Boolean;
   isInitted: Boolean;
-  project: ProjectDataTypes;
+  // project: ProjectDataTypes;
   activeSceneIndex: number;
   antdSize: SizeType;
   gridCoords: {
@@ -39,7 +39,7 @@ interface EditorContextTypes {
   addText: Function,
   addSVG: Function,
   addRect: Editor['addRect'],
-  addImageFromURL: Editor['addImageFromURL'],
+  addImageFromPicker: Editor['addImageFromPicker'],
   handleInitCustomInteractionComponent: Editor['handleInitCustomInteractionComponent'],
   addLabel: Function,
   handleOpenProjectPreview: ProjectController['handleOpenProjectPreview'],

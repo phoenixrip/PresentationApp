@@ -22,8 +22,8 @@ const equationVariables = ["w", "h"]
 const EquationInput = ({ value, equation, onChange, min, max, precision, ...rest }: EquationInputProps) => {
   const context: EditorContextTypes = useContext(editorContext);
   const equationVariableValues = {
-    w: context.state.project.settings.dimensions.width,
-    h: context.state.project.settings.dimensions.height
+    w: context.project.settings.dimensions.width,
+    h: context.project.settings.dimensions.height
   }
 
   //TODO: doesn't only internalDisplayValue and valueIsValid need to be in state?

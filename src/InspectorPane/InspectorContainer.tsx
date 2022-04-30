@@ -52,11 +52,11 @@ const InspectorContainer = ({ availiableCustomInteractionModules }: Props) => {
 
       {selection &&
         <>
-          <Collapse defaultActiveKey={[]}>
+          <Collapse defaultActiveKey={['5']}>
             <Panel header="Dimensions" key="1">
               <DimensionsControlPanel selection={selection} />
             </Panel>
-            {(selection.type !== "CTextBox" || selection.type !== "TextBox") &&
+            {selection.type !== 'FillableTextBox' &&
               < Panel header="Fill" key="2">
                 <FillControlPanel selection={selection} />
               </Panel>
