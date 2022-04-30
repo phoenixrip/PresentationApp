@@ -634,7 +634,24 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       addImageFromPicker: this.addImageFromPicker,
       handleOpenProjectPreview: this.props.handleOpenProjectPreview,
       handleInitCustomInteractionComponent: this.handleInitCustomInteractionComponent,
-      fonts: ["Roboto", "Raleway"]
+      availableFonts: ["Concert One",
+      "Lato",
+      "Merriweather",
+      "Montserrat",
+      "Noto Sans",
+      "Noto Serif",
+      "Nunito Sans",
+      "Open Sans",
+      "Oswald",
+      "Prompt",
+      "PT Sans",
+      "Raleway",
+      "Roboto",
+      "Slabo 27px",
+      "Source Sans Pro",
+      "Work Sans"
+      ],
+      loadedFonts: []
     };
     return (
       <div>

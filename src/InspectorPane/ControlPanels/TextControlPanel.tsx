@@ -19,6 +19,7 @@ import { EquationInput } from "../EquationInput";
 import { customAttributesToIncludeInFabricCanvasToObject } from "../../Utils/consts";
 import { cornersOfRectangle } from "@dnd-kit/core/dist/utilities/algorithms/helpers";
 import { Colorpicker } from "../../Colorpickers/Colorpicker";
+const WebFont = require('webfontloader');
 
 interface Props {
   selection: any | undefined
@@ -101,14 +102,31 @@ const TextControlPanel = ({ selection }: Props) => {
     checkSelection()
   }
 
+  const handleFontSelect = (fontFamily: String) => {
+    if (!context.loadedFonts.includes(fontFamily)) {
+      WebFont.load({
+        google: {
+          families: [fontFamily]
+        },
+        active: () => {
+          context.loadedFonts.push(fontFamily)
+          handleStyleChange({ fontFamily: fontFamily })
+        },
+        inactive: () => { alert("unable to load font") },
+      })
+    } else {
+      handleStyleChange({ fontFamily: fontFamily })
+    }
+  }
+
   return (
     <>
       Total paras: {selection?.pS?.length}
       <Row style={{ justifyContent: 'center', alignItems: 'center', marginBottom: 10 }}>
         <Dropdown overlay={<Menu>
-          {context.fonts.map((font) => <Menu.Item key={`${font}`} onClick={(e: any) => { }}>{font}</Menu.Item>)}
+          {context.availableFonts.map((font) => <Menu.Item key={`${font}`} onClick={() => { handleFontSelect(font) }}>{font}</Menu.Item>)}
         </Menu>} >
-          <Button>{sharedAttributes?.fontFamily}</Button>
+          <Button>{sharedAttributes?.fontFamily || ""}</Button>
         </Dropdown>
       </Row>
       {/* Font size */}
