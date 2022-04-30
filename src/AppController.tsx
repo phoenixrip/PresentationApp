@@ -176,7 +176,7 @@ class AppController extends Component<{}, AppControllerStateTypes> {
 	render(): ReactNode {
 		if (this.state?.project) {
 			return <>
-				{//<ContextMenu />
+				{<ContextMenu />
 				}
 				<ProjectController
 					project={this.state.project}

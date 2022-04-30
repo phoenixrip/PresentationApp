@@ -5,6 +5,7 @@ import "../../node_modules/grapick/dist/grapick.min.css"
 import './grapickCustom.css'
 import { Colorpicker } from './Colorpicker'
 import { Gradient } from "fabric/fabric-impl";
+import { parse } from "@babel/core";
 
 interface Props {
     gradient: Gradient
@@ -29,6 +30,7 @@ type GrapickHandler = {
 const Gradientpicker = ({ gradient, onChange }: Props) => {
     const gradientPicker = useRef<GrapickType | null>(null)
     const lastSelectedHandler = useRef<GrapickHandler | null>(null)
+    const [selectedHandler, setSelectedHandler] = useState<GrapickHandler | null>(null)
 
     const parseColorStops = useCallback(() => {
         let newColorStops = []
@@ -38,10 +40,14 @@ const Gradientpicker = ({ gradient, onChange }: Props) => {
                 color: handler.color
             })
         }
-        const newFill = {...gradient, colorStops: newColorStops}
+        const newFill = { ...gradient, colorStops: newColorStops }
         onChange(newFill)
     }, [])
 
+    const handleAddHandler = useCallback((e: any) => {
+        lastSelectedHandler.current = e
+        parseColorStops()
+    }, [])
 
     useEffect(() => {
         // Create new grapick instance and add color stops from selection
@@ -54,8 +60,8 @@ const Gradientpicker = ({ gradient, onChange }: Props) => {
         }
 
         // When we setColor on a picker the gradient is refreshed so if the new gradient has a handler with the same position and color we reselect it
-        for(const handler of gradientPicker.current?.getHandlers()) {
-            if(lastSelectedHandler.current?.color === handler.color 
+        for (const handler of gradientPicker.current?.getHandlers()) {
+            if (lastSelectedHandler.current?.color === handler.color
                 && lastSelectedHandler.current?.position === handler.position) {
                 handler.select()
                 break
@@ -64,15 +70,17 @@ const Gradientpicker = ({ gradient, onChange }: Props) => {
         }
 
         gradientPicker!.current!.on('handler:drag:end', parseColorStops)
-            .on('handler:add', parseColorStops)
+            .on('handler:add', handleAddHandler)
             .on('handler:remove', parseColorStops)
             .on('handler:color:change', parseColorStops)
+            .on('handler:select', setSelectedHandler)
 
         return () => {
             gradientPicker!.current!.off('handler:drag:end', parseColorStops)
-                .off('handler:add', parseColorStops)
+                .off('handler:add', handleAddHandler)
                 .off('handler:remove', parseColorStops)
                 .off('handler:color:change', parseColorStops)
+                .off('handler:select', setSelectedHandler)
                 .destroy()
         }
     }, [gradient])
@@ -80,16 +88,17 @@ const Gradientpicker = ({ gradient, onChange }: Props) => {
     return (
         <>
             <div id="gradientPicker"></div>
-            <Colorpicker color={gradientPicker.current?.getSelected().color}
-                onChange={(e: any) => { 
+            <Colorpicker color={selectedHandler && selectedHandler.color}
+                onChange={(e: any) => {
                     // When we setColor on a picker the gradient is refreshed so we cache the current selection to reselect it
                     lastSelectedHandler.current = gradientPicker.current?.getSelected()
-                    lastSelectedHandler.current?.setColor(`rgba(${e.r},${e.g},${e.b},${e.a})`)}} />
+                    lastSelectedHandler.current?.setColor(`rgba(${e.r},${e.g},${e.b},${e.a})`)
+                }} />
             {
                 gradient.type === "radial" &&
-                <> 
-                <span>R1: </span><Slider value={gradient.coords!.r1} onChange={(e) => onChange({...gradient, coords: {...gradient.coords, r1: e}})}/>
-                <span>R2: </span><Slider value={gradient.coords!.r2} onChange={(e) => onChange({...gradient, coords: {...gradient.coords, r2: e}})}/>
+                <>
+                    <span>R1: </span><Slider value={gradient.coords!.r1} onChange={(e) => onChange({ ...gradient, coords: { ...gradient.coords, r1: e } })} />
+                    <span>R2: </span><Slider value={gradient.coords!.r2} onChange={(e) => onChange({ ...gradient, coords: { ...gradient.coords, r2: e } })} />
                 </>
             }
         </>

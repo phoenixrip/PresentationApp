@@ -21,7 +21,6 @@ const equationVariables = ["w", "h"]
 
 const EquationInput = ({ value, equation, onChange, min, max, precision, ...rest }: EquationInputProps) => {
   const context: EditorContextTypes = useContext(editorContext);
-  //TODO: is there a better place to pull these values in? this will pull it in for each input and will also do it regardless of whether the values get used or not
   const equationVariableValues = {
     w: context.project.settings.dimensions.width,
     h: context.project.settings.dimensions.height
@@ -160,38 +159,6 @@ const EquationInput = ({ value, equation, onChange, min, max, precision, ...rest
       }
     }
   }
-
-  // const handleKeyDown = (e: any) => {
-  //   if (e?.key === "Shift") {
-  //     let equation = e.target.value
-  //     let calculatedValue
-  //     // If string has mathematical operators in it or any variable names see if we can calculate a valid number from it
-  //     if (operations.some(el => equation.includes(el)) || equationVariables.some(el => equation.includes(el))) {
-  //       let tempEquationString = equation
-  //       //If it contains any pre-set variables then replace them in the string with parentheses to preserve multiplication, eg if h is 500 then 2*h is the same as 2(500)
-  //       for (const equationVariable of equationVariables) {
-  //         if (tempEquationString.includes(equationVariable)) {
-  //           //@ts-ignore because of replaceAll
-  //           tempEquationString = tempEquationString.replaceAll(equationVariable, `(${equationVariableValues[equationVariable]})`)
-  //         }
-  //       }
-  //       // Catch errors, eg dividing by 0, if it throws exception equation is invalid so we return early
-  //       try { calculatedValue = calculateFromString(tempEquationString) }
-  //       catch { return }
-
-  //       if (!Number.isNaN(calculatedValue)) {
-  //         setInternalDisplayValue(calculatedValue)
-  //       }
-
-  //     }
-  //   }
-  // }
-
-  // const handleKeyUp = (e: any) => {
-  //   if (e?.key === "Shift") {
-  //     setInternalDisplayValue(internalEquation ? internalEquation : internalValue)
-  //   }
-  // }
 
   //Update state on prop change
   useEffect(() => {
