@@ -1,7 +1,20 @@
 import { useContext, useEffect, useState } from "react";
 import { editorContext, EditorContextTypes } from "../../Editor";
 import { ChromePicker, CirclePicker } from 'react-color';
-import { Button, InputNumber, Collapse, Switch, Radio, Dropdown, Menu, Checkbox, Select, Row } from 'antd';
+import {
+  Button,
+  InputNumber,
+  Collapse,
+  Switch,
+  Radio,
+  Slider,
+  Dropdown,
+  Menu,
+  Checkbox,
+  Select,
+  Row,
+  Col
+} from 'antd';
 import { EquationInput } from "../EquationInput";
 import { customAttributesToIncludeInFabricCanvasToObject } from "../../Utils/consts";
 import { cornersOfRectangle } from "@dnd-kit/core/dist/utilities/algorithms/helpers";
@@ -16,7 +29,7 @@ interface FabricTextStyles {
   strokeWidth: string,
   fill: string,
   fontFamily: string,
-  fontSize: string,
+  fontSize: number,
   fontWeight: string,
   fontStyle: string,
   underline: boolean,
@@ -89,35 +102,66 @@ const TextControlPanel = ({ selection }: Props) => {
 
   return (
     <>
-
-      <Row>
+      Total paras: {selection?.pS?.length}
+      <Row style={{ justifyContent: 'center', alignItems: 'center', marginBottom: 10 }}>
         <Dropdown overlay={<Menu>
           {context.fonts.map((font) => <Menu.Item key={`${font}`} onClick={(e: any) => { }}>{font}</Menu.Item>)}
         </Menu>} >
           <Button>{sharedAttributes?.fontFamily}</Button>
         </Dropdown>
       </Row>
+      {/* Font size */}
+      <Row style={{ width: '100%', justifyContent: 'space-between' }}>
+        <Col span={15}>
+          <Slider
+            onChange={(value) => handleStyleChange({ fontSize: value })}
+            value={sharedAttributes?.fontSize} />
+        </Col>
+        <Col span={8}>
+          <InputNumber
+            // size='small'
+            addonAfter='px'
+            value={`${sharedAttributes?.fontSize}`}
+            onChange={(value) => handleStyleChange({ fontSize: parseInt(`${value}`) })}
+          />
+        </Col>
+      </Row>
 
-      <EquationInput
-        size={context.state.antdSize}
-        addonAfter="px"
-        min={1}
-        precision={0}
-        value={sharedAttributes?.fontSize}
-        style={{ width: "50%" }}
-        onChange={(e: any) => handleStyleChange({ fontSize: e.value })}
-      />
-
+      {/* FONT STYLES */}
       <Row>
-        <Checkbox checked={sharedAttributes?.fontWeight === "normal" && sharedAttributes?.fontStyle === "normal"} onClick={(e: any) => handleStyleChange({ fontWeight: "normal", fontStyle: "normal" })}>i</Checkbox>
-        <Checkbox checked={sharedAttributes?.fontWeight === "bold"} onClick={(e: any) => handleStyleChange({ fontWeight: e.target.checked ? "bold" : "normal" })}><span style={{ fontWeight: "bold" }}>i</span></Checkbox>
-        <Checkbox checked={sharedAttributes?.fontStyle === "italic"} onClick={(e: any) => handleStyleChange({ fontStyle: e.target.checked ? "italic" : "normal" })}><span style={{ fontStyle: "italic" }}>i</span></Checkbox>
+        <Checkbox
+          checked={sharedAttributes?.fontWeight === "normal" && sharedAttributes?.fontStyle === "normal"}
+          onClick={(e: any) => handleStyleChange({ fontWeight: "normal", fontStyle: "normal" })}>
+          Normal
+        </Checkbox>
+        <Checkbox
+          checked={sharedAttributes?.fontWeight === "bold"}
+          onClick={(e: any) => handleStyleChange({ fontWeight: e.target.checked ? "bold" : "normal" })}>
+          Bold
+        </Checkbox>
+        <Checkbox
+          checked={sharedAttributes?.fontStyle === "italic"}
+          onClick={(e: any) => handleStyleChange({ fontStyle: e.target.checked ? "italic" : "normal" })}>
+          <span style={{ fontStyle: "italic" }}>Italic</span>
+        </Checkbox>
       </Row>
 
       <Row>
-        <Checkbox checked={sharedAttributes?.overline} onClick={(e: any) => handleStyleChange({ overline: e.target.checked })}>‾</Checkbox>
-        <Checkbox checked={sharedAttributes?.linethrough} onClick={(e: any) => handleStyleChange({ linethrough: e.target.checked })}>-</Checkbox>
-        <Checkbox checked={sharedAttributes?.underline} onClick={(e: any) => handleStyleChange({ underline: e.target.checked })}>_</Checkbox>
+        <Checkbox
+          checked={sharedAttributes?.overline}
+          onClick={(e: any) => handleStyleChange({ overline: e.target.checked })}>
+          Overline
+        </Checkbox>
+        <Checkbox
+          checked={sharedAttributes?.linethrough}
+          onClick={(e: any) => handleStyleChange({ linethrough: e.target.checked })}>
+          Line-through
+        </Checkbox>
+        <Checkbox
+          checked={sharedAttributes?.underline}
+          onClick={(e: any) => handleStyleChange({ underline: e.target.checked })}>
+          Underline
+        </Checkbox>
       </Row>
 
       <Row>

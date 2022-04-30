@@ -161,6 +161,15 @@ class ProjectController extends Component<Props, State> {
     })
   }
 
+  handleCancelMediaPicker = () => {
+    return this.setState({
+      mediaPickerState: { open: false }
+    }, () => {
+      // this.onInsertImageFunction?.(insertImageObject)
+      this.onInsertImageFunction = undefined
+    })
+  }
+
   setActiveSceneIndex = (sceneIndex: number) => this.handleSetNewActiveScene(sceneIndex)
 
   handleSetNewActiveScene = (newActiveSceneIndex: number, saveExisting = true) => {
@@ -598,6 +607,7 @@ class ProjectController extends Component<Props, State> {
           {
             <MediaPickerContainer
               open={mediaPickerState.open}
+              onCancel={this.handleCancelMediaPicker}
               storageHandlerClass={this.storageHandlerClass}
               handleInsertImage={this.handleInsertImage}
             />

@@ -39,7 +39,7 @@ interface EditorContextTypes {
   addText: Function,
   addSVG: Function,
   addRect: Editor['addRect'],
-  addImageFromURL: Editor['addImageFromURL'],
+  addImageFromPicker: Editor['addImageFromPicker'],
   handleInitCustomInteractionComponent: Editor['handleInitCustomInteractionComponent'],
   addLabel: Function,
   handleOpenProjectPreview: ProjectController['handleOpenProjectPreview'],

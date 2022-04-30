@@ -52,7 +52,7 @@ const InspectorContainer = ({ availiableCustomInteractionModules }: Props) => {
 
       {selection &&
         <>
-          <Collapse defaultActiveKey={[]}>
+          <Collapse defaultActiveKey={['5']}>
             <Panel header="Dimensions" key="1">
               <DimensionsControlPanel selection={selection} />
             </Panel>

@@ -530,7 +530,7 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     this.props.handleAddObject(label)
   }
 
-  addImageFromURL = () => {
+  addImageFromPicker = () => {
     requestInsertImage({
       onInsert: (img: fabric.Image) => {
         const el = img.getElement()
@@ -631,7 +631,7 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       addSVG: this.addSVG,
       addRect: this.addRect,
       addLabel: this.addLabel,
-      addImageFromURL: this.addImageFromURL,
+      addImageFromPicker: this.addImageFromPicker,
       handleOpenProjectPreview: this.props.handleOpenProjectPreview,
       handleInitCustomInteractionComponent: this.handleInitCustomInteractionComponent,
       fonts: ["Roboto", "Raleway"]

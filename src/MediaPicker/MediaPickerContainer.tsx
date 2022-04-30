@@ -13,6 +13,7 @@ import { ImageOptionObject, SearchContainer, SearchParams } from "./Search/Searc
 
 interface Props {
   open: boolean,
+  onCancel(): void,
   storageHandlerClass: ImageStorageHandler,
   handleInsertImage: Function
 }
@@ -42,11 +43,14 @@ const MediaPickerContainer = (props: Props) => {
   }, [selectedImageOption])
 
   async function handleUploadImage(uploadArgs: UploadNewImageArgs) {
-    console.log('MediaPickerContainer: handleUploadImage')
     const insertableResponse = await props.storageHandlerClass.handleUploadImage(uploadArgs)
-    console.log({ insertableResponse })
     props.handleInsertImage(insertableResponse)
+  }
 
+  function onCancel() {
+    setMode('search')
+    setSearchTerm('')
+    return props.onCancel()
   }
   return (
     <>
@@ -55,6 +59,7 @@ const MediaPickerContainer = (props: Props) => {
         width={1200}
         bodyStyle={{ height: 700 }}
         maskClosable
+        onCancel={onCancel}
         footer={null}
       >
         {mode === 'search' &&

@@ -22,7 +22,6 @@ const ScenesPane = (props: Props) => {
             return (
               <div key={`ScenePill${sceneIndex}`}>
                 <div
-
                   className={`${c.scenePill} ${isCurrent ? c.current : c.idle}`}>
                   <div className={c.sceneTitleContainer} onClick={() => { context.setActiveSceneIndex(sceneIndex) }}>
                     Scene {sceneIndex + 1}
