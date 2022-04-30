@@ -47,12 +47,16 @@ const Colorpicker = ({ color, onChange, palette }: ColorpickerPropsType) => {
     }
 
     const parseColor = (e: any) => {
-        const newColor = tinycolor(e)
+        let newColor = tinycolor(e)
         if (newColor.isValid()) {
             if (onChange) {
                 // Because react-color can only be a controlled component and we can't set defaultValue it can get stuck in a loop
-                // where it flips between two colours. We track which colors we send and never send the same colour as the last two times
-                if (newColor.toHex() == lastDispatchedColor.current || newColor.toHex() == secondLastDispatchedColor.current) return
+                // where it flips between two colours. We track which colors we send and early return if it's the same colour as last two times
+                if (newColor.toHex() == lastDispatchedColor.current || newColor.toHex() == secondLastDispatchedColor.current) {
+                    secondLastDispatchedColor.current = null
+                    lastDispatchedColor.current = null
+                    return
+                }
                 secondLastDispatchedColor.current = lastDispatchedColor.current
                 lastDispatchedColor.current = newColor.toHex()
                 onChange(newColor.toRgb())
