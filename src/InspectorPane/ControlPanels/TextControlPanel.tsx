@@ -82,6 +82,7 @@ const TextControlPanel = ({ selection }: Props) => {
       setOnGlobalObject(selection, options)
       context.fabricCanvas?.requestRenderAll()
     } else {
+
       setOnFabricObject(selection, options)
     }
     checkSelection()
