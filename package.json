@@ -27,7 +27,8 @@
     "react-reflex": "4.0.6",
     "react-scripts": "5.0.0",
     "tinycolor2": "^1.4.2",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "webfontloader": "^1.6.28"
   },
   "devDependencies": {
     "@types/chroma-js": "^2.1.3",

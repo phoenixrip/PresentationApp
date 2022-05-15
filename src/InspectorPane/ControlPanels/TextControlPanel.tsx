@@ -139,7 +139,7 @@ const TextControlPanel = ({ selection, projectParaStylesController }: Props) => 
       {/* Font Family */}
       <Row style={{ justifyContent: 'center', alignItems: 'center', marginBottom: 10 }}>
         <Dropdown overlay={<Menu>
-          {context.fonts.map((font) => <Menu.Item key={`${font}`} onClick={(e: any) => { }}>{font}</Menu.Item>)}
+          {context.availableFonts.map((font) => <Menu.Item key={`${font}`} onClick={() => { console.log(font) }}>{font}</Menu.Item>)}
         </Menu>} >
           <Button>{s?.fontFamily}</Button>
         </Dropdown>
