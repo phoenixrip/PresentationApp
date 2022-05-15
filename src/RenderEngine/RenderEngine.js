@@ -12,6 +12,7 @@ class RenderEngine {
     this.projectDataObject = projectDataObject
     this.c1 = c1
     this.c2 = c2
+    this.c2.renderOffScreen = true
     this.liveObjectsDict = {}
     this.mainTL = new gsap.timeline({ paused: true })
   }

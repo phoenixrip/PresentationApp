@@ -5,6 +5,7 @@ import { CustomMediaObject } from './CustomFabricObjects/CustomMediaObject'
 import { FakeGroup } from './CustomFabricObjects/FakeGroup'
 import { BodyTextbox } from './CustomFabricObjects/BodyTextbox'
 import { createCustomControls } from './fabricCustomControls'
+import { CRect } from './CustomFabricObjects/CRect'
 
 function setFabricDefaults() {
   // All object default settings
@@ -70,34 +71,6 @@ function setFabricDefaults() {
     return this
   }
 
-  fabric.Object.prototype.forEachChild = function (callBack) {
-    const myStructurePathLength = this.structurePath.length
-    let currI = (this?.treeIndex ?? 0) + 1
-    while (this.canvas._objects?.[currI] && this.canvas._objects[currI].structurePath.length > myStructurePathLength) {
-      const currChildObject = this.canvas._objects[currI]
-      console.log(currChildObject.type, currChildObject.structurePath)
-      callBack(currChildObject)
-      currI++
-    }
-  }
-
-  fabric.Object.prototype.toggleVisibility = function () {
-    if (!this.visible) {
-      this.set({ visible: true })
-    } else {
-      this.set({ visible: false })
-    }
-    if (this?.handleChildrenMode) {
-      if (this.visible) {
-        this.forEachChild(obj => obj.set({ visible: true }))
-      } else {
-        this.forEachChild(obj => obj.set({ visible: false }))
-      }
-    }
-    this.canvas?.requestRenderAll()
-    return this
-  }
-
   fabric.Object.prototype.setUserLocked = function (newUserLockedValue = true) {
     if (newUserLockedValue) {
       this.userLocked = true
@@ -110,42 +83,34 @@ function setFabricDefaults() {
     }
   }
 
+  fabric.Object.prototype.forEachChild = function (callBack) {
+    const myStructurePathLength = this.structurePath.length
+    let currI = (this?.treeIndex ?? 0) + 1
+    while (this.canvas._objects?.[currI] && this.canvas._objects[currI].structurePath.length > myStructurePathLength) {
+      const currChildObject = this.canvas._objects[currI]
+      callBack(currChildObject)
+      currI++
+    }
+  }
+
+  fabric.Object.prototype.toggleVisibility = function () {
+    this.set({ visible: !this.visible })
+    if (this?.handleChildrenMode) {
+      if (this.visible) {
+        this.forEachChild(obj => obj.set({ visible: true }))
+      } else {
+        this.forEachChild(obj => obj.set({ visible: false }))
+      }
+    }
+    this.canvas?.requestRenderAll()
+    return this
+  }
+
   FakeGroup()
   CustomImageObject()
   CustomMediaObject()
   BodyTextbox()
-
-  fabric.CRect = fabric.util.createClass(fabric.Rect, {
-    type: 'CRect',
-    initialize(options) {
-      this.callSuper('initialize', options)
-      if (Array.isArray(options.fill)) {
-        this.fillLayers = options.fill
-      }
-      this.objectCaching = false
-    },
-    drawObject(ctx, forClipping = false) {
-      if (this.fillLayers) {
-        this.fillLayers.forEach(fill => {
-          this.fill = fill
-          this._setFillStyles(ctx, this)
-          this._render(ctx)
-        })
-      } else {
-        this.callSuper('drawObject', ctx, forClipping)
-      }
-    },
-    addNewLayerFillAtIndex(addAtIndex, newLayerData = 'red') {
-
-    },
-    updateLayerFill(layerIndex, newLayerData = 'blue') {
-
-    }
-  })
-  fabric.CRect.fromObject = function (object, callback) {
-    const obj = fabric.Object._fromObject('CRect', object, callback);
-    return obj
-  }
+  CRect()
 
   fabric.LabelElement = fabric.util.createClass(fabric.Textbox, {
     type: 'LabelElement',

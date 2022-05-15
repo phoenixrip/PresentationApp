@@ -7,6 +7,7 @@ import { MediaPickerContainer, UploadNewImageArgs } from "./MediaPicker/MediaPic
 import { LocalStorage } from "./PlugIns/MediaUploadController/LocalStorage";
 import { RequestInsertImageEventTypes } from "./Events/RequestInsertImage";
 import { ICustomMediaStorageApi } from "./PlugIns/ImageStorageHandler/ImageStorageHandlerClass";
+import { Gradient } from "fabric/fabric-impl";
 
 setFabricDefaults()
 
@@ -23,56 +24,22 @@ const dummyProjectData: ProjectDataTypes = {
 			type: "CRect",
 			top: 0,
 			left: 0,
-			width: 160,
-			height: 90,
-			fill: ["red", 'rgba(0, 0, 0, 0.75)'],
+			width: 100,
+			height: 100,
+			fill: undefined,
+			// fill: {
+			// 	type: 'linear',
+			// 	coords: {
+			// 		x1: 0, y1: 0, x2: 75, y2: 75
+			// 	},
+			// 	colorStops: [
+			// 		{ offset: 0.2, color: 'rgba(0, 255, 0, 1)' },
+			// 		{ offset: 0.8, color: 'rgba(0, 0, 255, 1)' }
+			// 	]
+			// } as Gradient,
 			firstOccurrenceIndex: 1,
 			userSetName: 'My red rect'
-		},
-		"rectangle2": {
-			guid: "rectangle2",
-			type: "CRect",
-			top: 0,
-			left: 160,
-			width: 160,
-			height: 90,
-			fill: 'green',
-			firstOccurrenceIndex: 1,
-			userSetName: 'My green rect'
-		},
-		"rectangle3": {
-			guid: "rectangle3",
-			type: "CRect",
-			top: 0,
-			left: 320,
-			width: 160,
-			height: 90,
-			fill: 'purple',
-			firstOccurrenceIndex: 1,
-			userSetName: 'My purple rect'
-		},
-		"rectangle4": {
-			guid: "rectangle4",
-			type: "CRect",
-			top: 0,
-			left: 480,
-			width: 160,
-			height: 90,
-			fill: 'black',
-			firstOccurrenceIndex: 1,
-			userSetName: 'My black rect'
-		},
-		"rectangle5": {
-			guid: "rectangle5",
-			type: "CRect",
-			top: 0,
-			left: 640,
-			width: 160,
-			height: 90,
-			fill: 'blue',
-			firstOccurrenceIndex: 1,
-			userSetName: 'My blue rect'
-		},
+		}
 	},
 	scenes: [
 		{
@@ -80,59 +47,12 @@ const dummyProjectData: ProjectDataTypes = {
 			activeSceneObjects: {
 				"rectangle1": {
 					guid: "rectangle1",
-					// type: "CRect",
 					top: 0,
 					left: 0,
-					width: 160,
-					height: 90,
-					// fill: ["red", 'rgba(0, 0, 0, 0.75)'],
-					// firstOccurrenceIndex: 1,
+					width: 100,
+					height: 100,
 					userSetName: 'My red rect'
-				},
-				"rectangle2": {
-					guid: "rectangle2",
-					// type: "CRect",
-					top: 0,
-					left: 160,
-					width: 160,
-					height: 90,
-					// fill: 'green',
-					// firstOccurrenceIndex: 1,
-					userSetName: 'My green rect'
-				},
-				"rectangle3": {
-					guid: "rectangle3",
-					// type: "CRect",
-					top: 0,
-					left: 320,
-					width: 160,
-					height: 90,
-					// fill: 'purple',
-					// firstOccurrenceIndex: 1,
-					userSetName: 'My purple rect'
-				},
-				"rectangle4": {
-					guid: "rectangle4",
-					// type: "CRect",
-					top: 0,
-					left: 480,
-					width: 160,
-					height: 90,
-					// fill: 'black',
-					// firstOccurrenceIndex: 1,
-					userSetName: 'My black rect'
-				},
-				"rectangle5": {
-					guid: "rectangle5",
-					// type: "CRect",
-					top: 0,
-					left: 640,
-					width: 160,
-					height: 90,
-					// fill: 'blue',
-					// firstOccurrenceIndex: 1,
-					userSetName: 'My blue rect'
-				},
+				}
 			},
 			undoHistory: [],
 			redoHistory: [],
@@ -176,8 +96,8 @@ class AppController extends Component<{}, AppControllerStateTypes> {
 	render(): ReactNode {
 		if (this.state?.project) {
 			return <>
-				{<ContextMenu />
-				}
+				{/* {<ContextMenu />
+				} */}
 				<ProjectController
 					project={this.state.project}
 					customMediaStorageApi={customMediaStorageApi}

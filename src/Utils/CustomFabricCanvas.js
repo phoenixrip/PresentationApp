@@ -9,7 +9,6 @@ class CustomFabricCanvas extends fabric.Canvas {
   liveObjectsDict = {}
   projectSettings = {}
   eyedropperActive = false
-
   gridWidth = 1
   gridHeight = 1
   constructor(canvas, options) {
@@ -18,7 +17,6 @@ class CustomFabricCanvas extends fabric.Canvas {
   existingSelectionIsCustomCreated = false
   familyObjectsRemovedFromSelection = false
   /**
-   * 
    * @param {ProjectParaStylesController} projectParaStylesController 
    */
   initProjectParaStylesController(projectParaStylesController) {
@@ -104,7 +102,6 @@ class CustomFabricCanvas extends fabric.Canvas {
       }
     }
   }
-
   objectsInFamilyOfGUID(GUIDOrGUIDs) {
     //If it's a single string normalise to an array of GUIDs, otherwise use user-supplied array of string
     let GUIDs
@@ -132,7 +129,7 @@ class CustomFabricCanvas extends fabric.Canvas {
     return allChildrenAndSelectionArray
   }
   updatePaths() {
-    dl('updatePaths')
+    // dl('updatePaths')
     let currPath = []
     let currentPath = new Set()
     let currentTopLevelIndex = 0

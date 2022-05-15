@@ -28,7 +28,7 @@ const HexColorInput = ({ color, onChange }: HexColorInputPropsType) => {
             addonBefore={"#"}
             maxLength={7}
             onChange={(e: any) => handleInput(e.target.value)}
-            style={{ width: "80%" }}
+        // style={{ flexGrow: 1 }}
         />
     )
 }

@@ -1,8 +1,11 @@
 import { useContext, useState } from "react";
 import { editorContext, EditorContextTypes } from "../../Editor";
-import { Button, InputNumber, Collapse, Switch, Radio } from 'antd';
+import { Button, InputNumber, Collapse, Switch, Radio, Row } from 'antd';
 import { EquationInput } from "../EquationInput";
-import { Colorpicker } from "../../Colorpickers/Colorpicker";
+import { Colorpicker } from "../../OLDColorpickers/Colorpicker";
+import { FillPicker } from "../../FillPicker/FillPicker";
+import { SkinnyNumberInput } from "../SkinnyNumberInput";
+import { valueType } from "antd/lib/statistic/utils";
 
 interface Props {
   selection: any | undefined
@@ -35,9 +38,14 @@ const BorderControlPanel = ({ selection }: Props) => {
   }
 
   return (
-    <>
-
-      <EquationInput
+    <Row justify='space-between'>
+      <SkinnyNumberInput
+        value={selection.strokeWidth || 0}
+        onChange={(newValue: valueType) => {
+          const setObject = { strokeWidth: newValue }
+          setOnFabricObject(selection, setObject)
+        }} />
+      {/* <EquationInput
         size={context.state.antdSize}
         addonAfter="px"
         min={0}
@@ -46,22 +54,22 @@ const BorderControlPanel = ({ selection }: Props) => {
         style={{ width: "30%" }}
         onChange={(e: any) => {
           setOnFabricObject(selection, { strokeWidth: e.value })
-        }} />
+        }} /> */}
 
-      <Radio.Group value={strokeDashState} size="small" style={{marginLeft: "30px" }}>
+      {/* <Radio.Group value={strokeDashState} size="small" style={{ marginLeft: "30px" }}>
         <Radio.Button value="solid" onClick={handleStrokeDashSelect}>-</Radio.Button>
         <Radio.Button value="dotted" onClick={handleStrokeDashSelect}>...</Radio.Button>
         <Radio.Button value="dashed" onClick={handleStrokeDashSelect}>---</Radio.Button>
         <Radio.Button value="largeDashed" onClick={handleStrokeDashSelect}>- -</Radio.Button>
-      </Radio.Group>
-
-      <Colorpicker
-        color={selection.stroke || "rgba(0,0,0,1)"}
-        onChange={(e: any) => {
-          setOnFabricObject(selection, { stroke: `rgba(${e.r},${e.g},${e.b},${e.a})` })
+      </Radio.Group> */}
+      <FillPicker
+        title='Border fill'
+        liveObject={selection}
+        fillValue={selection.stroke}
+        onChange={(color: string) => {
+          setOnFabricObject(selection, { stroke: color })
         }} />
-
-    </>
+    </Row>
   )
 }
 

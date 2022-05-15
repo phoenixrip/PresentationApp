@@ -86,6 +86,8 @@ class ProjectController extends Component<Props, State> {
       objects: Object.values(this.state.project.globalObjects),
     }
     this.liveEditor.fabricCanvas.initProjectParaStylesController(this.projectParaStylesController)
+    //@ts-ignore
+    fabric.BodyTextbox.prototype.projectParaStylesController = this.projectParaStylesController
     this.liveEditor.fabricCanvas.loadFromJSON(
       json,
       () => {
@@ -110,7 +112,7 @@ class ProjectController extends Component<Props, State> {
 
   handleKeyDown = (e: KeyboardEvent) => {
     if (document.activeElement !== document.body) {
-      console.log('not firing editor key down listeners: ', document.activeElement)
+      // console.log('not firing editor key down listeners: ', document.activeElement)
       return
     }
     e.preventDefault()
@@ -589,6 +591,7 @@ class ProjectController extends Component<Props, State> {
             handleRequestDeleteObject={this.handleRequestDeleteObject}
             liveObjectsDict={this.liveObjectsDict}
             liveObjectScenesReferences={this.liveObjectScenesReferences}
+            projectParaStylesController={this.projectParaStylesController}
             setActiveSceneIndex={this.setActiveSceneIndex}
             handleAddObject={this.handleAddObject}
             handleDuplicateScene={this.handleDuplicateScene}
@@ -638,11 +641,13 @@ class ProjectPreviewRendererContainer extends React.Component<IProjectPreviewRen
   ca2: HTMLCanvasElement | null
   c1: fabric.StaticCanvas | undefined
   c2: fabric.Canvas | undefined
+  projectParaStylesController: ProjectParaStylesController
   renderEngine: RenderEngine | undefined
   constructor(props: IProjectPreviewRendererContainerProps) {
     super(props)
     this.ca1 = null
     this.ca2 = null
+    this.projectParaStylesController = new ProjectParaStylesController(props.project)
   }
 
   componentDidMount() {
@@ -650,6 +655,8 @@ class ProjectPreviewRendererContainer extends React.Component<IProjectPreviewRen
     if (!this.ca1 || !this.ca2) return console.error('Dom canvases not present in ProjectPreviewRendererContainer didMount')
     this.c1 = new fabric.StaticCanvas(this.ca1)
     this.c2 = new fabric.Canvas(this.ca2)
+    //@ts-ignore
+    this.c2.projectParaStylesController = this.projectParaStylesController
     const both = [this.c1, this.c2]
     both.forEach(c => {
       c.setDimensions({

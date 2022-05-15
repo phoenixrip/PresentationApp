@@ -10,18 +10,24 @@ import { BorderControlPanel } from "./ControlPanels/BorderControlPanel";
 import { ShadowControlPanel } from "./ControlPanels/ShadowControlPanel";
 import { MultiChoiceLabelEditorComponent } from "../CustomInteractionModules/MultiChoiceLabel/EditorComponent";
 import { TextControlPanel } from "./ControlPanels/TextControlPanel"
+import { ProjectParaStylesController } from "../Utils/CustomControllerClasses/ProjectParaStylesController";
+import c from './InspectorContainer.module.scss'
+import { UseFaIcon } from "../Utils/UseFaIcon";
+import { faMinus, faPlus } from "@fortawesome/free-solid-svg-icons";
+import { ArrangeControls } from "./ArrangeControls";
 
 interface Props {
   availiableCustomInteractionModules: {
     [key: string]: MultiChoiceLabelEditorComponent
   },
+  projectParaStylesController: ProjectParaStylesController
 }
-const InspectorContainer = ({ availiableCustomInteractionModules }: Props) => {
+const InspectorContainer = ({ availiableCustomInteractionModules, projectParaStylesController }: Props) => {
   const context: EditorContextTypes = useContext(editorContext);
   const selection: any | undefined = context.fabricCanvas?.getActiveObject()
 
   return (
-    <>
+    <div className={c.container}>
       {!selection &&
         <p>Project inspector pane</p>
       }
@@ -49,10 +55,19 @@ const InspectorContainer = ({ availiableCustomInteractionModules }: Props) => {
             console.log({ isAddable })
           })
       }
-
+      {
+        selection &&
+        <ArrangeControls
+          selection={selection}
+        />
+      }
       {selection &&
         <>
-          <Collapse defaultActiveKey={['5']}>
+          <Collapse
+            destroyInactivePanel={true}
+            expandIcon={({ isActive }) => isActive ? <UseFaIcon icon={faMinus} /> : <UseFaIcon icon={faPlus} />}
+            defaultActiveKey={['5', '2']}
+            className={c.customCollapse}>
             <Panel header="Dimensions" key="1">
               <DimensionsControlPanel selection={selection} />
             </Panel>
@@ -69,7 +84,10 @@ const InspectorContainer = ({ availiableCustomInteractionModules }: Props) => {
             </Panel>
             {selection.type === "BodyTextbox" &&
               <Panel header="Text" key="5">
-                <TextControlPanel selection={selection} />
+                <TextControlPanel
+                  selection={selection}
+                  projectParaStylesController={projectParaStylesController}
+                />
               </Panel>
             }
             {
@@ -99,7 +117,7 @@ const InspectorContainer = ({ availiableCustomInteractionModules }: Props) => {
           </Collapse>
         </>
       }
-    </>
+    </div>
   );
 };
 

@@ -1,0 +1,31 @@
+@import '/src/scssVars.scss';
+
+:global {
+  .reflex-splitter {
+    background-color: rgb(96, 96, 96)!important;
+    border-color:  rgb(96, 96, 96)!important;
+    &:hover {
+      background-color: white !important;
+      border-color: $highlightColor !important;
+    }
+    &.active {
+      background-color: white !important;
+      border-color: $highlightColor !important;
+    }
+  }
+}
+
+.reflexContainer{
+
+}
+
+// .scenesArraySplitter {
+//     .active:global {
+//       border-color: $highlightColor !important;
+//     }
+//   // border-color: rgb(58, 58, 58)!important;
+//   // border-color: $highlightColor!important;
+//   // &.active{
+//   //   border-color: $highlightColor!important;
+//   // }
+// }

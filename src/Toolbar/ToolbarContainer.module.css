@@ -1,7 +1,9 @@
 .toolbarContainer{
   width: 100%;
   height: 100%;
+  padding: 0px 10px;
   background-color: #29252F;
   display: flex;
   align-items: center;
+  justify-content: space-between;
 }

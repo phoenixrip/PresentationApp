@@ -1,5 +1,6 @@
 import { Gradient, IObjectOptions, Pattern } from "fabric/fabric-impl";
 import React, { MouseEventHandler } from "react";
+import { LinearGradientControls } from "../Utils/CustomControls/LinearGradient";
 
 
 interface OurCustomFabricOptions {
@@ -31,6 +32,10 @@ interface CustomFabricObject extends SimpleSpread<CustomFabricOptions, FabricObj
   set(options: Partial<CustomFabricOptions>): this
   toggleUserLocked(): this
   toggleVisibility(): this
+  enterGradientEdit(): this
+  linearGradientControls?: LinearGradientControls
+  activeStopIndex?: number | null
+  isFillEditing?: boolean
 }
 
 type SimpleSpread<L, R> = R & Pick<L, Exclude<keyof L, keyof R>>;

@@ -22,7 +22,7 @@ const DimensionsControlPanel = ({ selection }: Props) => {
 	return (
 		<>
 			<Row align="middle">
-				<Col span={2} style={{position: "relative"}}>
+				<Col span={2} style={{ position: "relative" }}>
 					<UseFaIcon icon={aspectRatioLocked ? faLock : faLockOpen}
 						style={{ cursor: "pointer" }}
 						onClick={() => {
@@ -156,7 +156,8 @@ const DimensionsControlPanel = ({ selection }: Props) => {
 				</Col>
 			</Row>
 
-			<Row style={{ marginTop: "20px" }}>
+			{/* Locking movements */}
+			{/* <Row style={{ marginTop: "20px" }}>
 				<Col span={6}>
 					<UseFaIcon icon={selection.lockMovementX ? faLock : faLockOpen}
 						style={{ width: "100%", cursor: "pointer" }}
@@ -191,7 +192,7 @@ const DimensionsControlPanel = ({ selection }: Props) => {
 					/>
 					<UseFaIcon icon={faSquare} style={{ transform: "skew(-30deg,-10deg)", width: "100%" }} />
 				</Col>
-			</Row>
+			</Row> */}
 		</>
 	)
 }
