@@ -5,7 +5,7 @@ import { ScenesPane } from "./ScenesPane/ScenesPane";
 import CanvasPane from "./CanvasPane/CanvasPane";
 import { InspectorContainer } from "./InspectorPane/InspectorContainer";
 import classNames from 'classnames'
-import "./Utils/fabricCustomControls"
+// import "./Utils/fabricCustomControls"
 import "./styles.css";
 import "react-reflex/styles.css";
 import "./dark.css";
@@ -22,7 +22,7 @@ import {
   CustomFabricObject,
 } from "./Types/CustomFabricTypes";
 
-import { Modal } from "antd";
+import { Modal, PageHeader } from "antd";
 import { v4 as uuidv4 } from 'uuid';
 import { normalizeAllObjectCoords } from "./Utils/flatMapFabricState";
 import { editorContext, EditorContextTypes, EditorStateTypes } from "./EditorContext";
@@ -130,6 +130,27 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
 
     // Tick the react state throttled on every render
     this.fabricCanvas.on("after:render", throttle(this.updateTick, 100));
+    // this.fabricCanvas.on('mouse:move', (e) => {
+    //   if (!this.fabricCanvas) return
+    //   //@ts-ignore
+    //   const useContext = this.fabricCanvas.contextCache as unknown as CanvasRenderingContext2D
+    //   const pathObject = this.fabricCanvas?._objects[0] as fabric.Path
+    //   // @ts-ignore
+    //   const path2d = pathObject.totalPath
+    //   // const usePoint = e.absolutePointer
+    //   const usePoint = pathObject.getLocalPointer(e.e)
+    //   // console.log(usePoint)
+    //   usePoint.x -= pathObject.pathOffset.x
+    //   usePoint.y -= pathObject.pathOffset.y
+    //   if (useContext && path2d && usePoint) {
+    //     useContext.lineWidth = 20
+    //     const isPointInStroke = useContext.isPointInStroke(path2d, usePoint.x, usePoint.y)
+    //     if (isPointInStroke) {
+    //       console.log(usePoint)
+    //     }
+    //   }
+    // })
+
     // Attach events local to the canvas pane like zoom and drag
     // so that dom updates on those nodes can be very surgical
     attatchLocalEvents(this.fabricCanvas)
@@ -420,6 +441,19 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
     })
     return this.props.handleAddObject(newRect)
   }
+  addRoundedRect = () => {
+    //@ts-ignore
+    const newRect = new fabric.CRect({
+      width: this.props.project.settings.dimensions.width * 0.1,
+      height: this.props.project.settings.dimensions.height * 0.1,
+      fill: 'rgba(0, 0, 0, 0.5)',
+      top: 0,
+      left: 0,
+      rx: 20,
+      ry: 20
+    })
+    return this.props.handleAddObject(newRect)
+  }
 
   addSVG = () => {
     // const svgString = prompt('Enter svg string')
@@ -587,26 +621,27 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
       addText: this.addText,
       addSVG: this.addSVG,
       addRect: this.addRect,
+      addRoundedRect: this.addRoundedRect,
       addLabel: this.addLabel,
       addImageFromPicker: this.addImageFromPicker,
       handleOpenProjectPreview: this.props.handleOpenProjectPreview,
       handleInitCustomInteractionComponent: this.handleInitCustomInteractionComponent,
       availableFonts: ["Concert One",
-      "Lato",
-      "Merriweather",
-      "Montserrat",
-      "Noto Sans",
-      "Noto Serif",
-      "Nunito Sans",
-      "Open Sans",
-      "Oswald",
-      "Prompt",
-      "PT Sans",
-      "Raleway",
-      "Roboto",
-      "Slabo 27px",
-      "Source Sans Pro",
-      "Work Sans"
+        "Lato",
+        "Merriweather",
+        "Montserrat",
+        "Noto Sans",
+        "Noto Serif",
+        "Nunito Sans",
+        "Open Sans",
+        "Oswald",
+        "Prompt",
+        "PT Sans",
+        "Raleway",
+        "Roboto",
+        "Slabo 27px",
+        "Source Sans Pro",
+        "Work Sans"
       ],
       loadedFonts: []
     };
@@ -649,7 +684,7 @@ class Editor extends Component<EditorPropsTypes, EditorStateTypes> {
                         dimensions={{ width: 100, height: 100 }}
                       />
                     </ReflexElement>
-                    <ReflexElement size={300}>
+                    <ReflexElement size={340}>
                       <InspectorContainer
                         availiableCustomInteractionModules={availiableCustomInteractionModules}
                         projectParaStylesController={this.props.projectParaStylesController}

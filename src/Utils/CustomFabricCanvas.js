@@ -35,7 +35,6 @@ class CustomFabricCanvas extends fabric.Canvas {
       if (alreadySelected) shouldRunCustomGrabGroup = false
       if (metaKeyDown) shouldRunCustomGrabGroup = false
 
-
       //When shift key isnt held we just select all objects in the family
       if (shouldRunCustomGrabGroup && target && target.parentID && !e?.shiftKey) {
         const allObjectsInFamily = this.objectsInFamilyOfGUID(target.guid)
@@ -130,9 +129,9 @@ class CustomFabricCanvas extends fabric.Canvas {
   }
   updatePaths() {
     // dl('updatePaths')
-    let currPath = []
-    let currentPath = new Set()
-    let currentTopLevelIndex = 0
+    // let currPath = []
+    // let currentPath = new Set()
+    // let currentTopLevelIndex = 0
     this._objects.forEach(
       (obj, i) => {
         if (!obj.parentID) {

@@ -54,7 +54,7 @@ const ArrangeControls = (props: IArrangeControlsProps) => {
       <Button {...commonButtonProps} onClick={handleCenterCenter}>
         <svg
           style={{ fill: 'white' }}
-          width='100%' height='100%'
+          height='100%'
           xmlns="http://www.w3.org/2000/svg"
           preserveAspectRatio="none"
           viewBox="0 0 100 100"
@@ -87,7 +87,7 @@ const ArrangeControls = (props: IArrangeControlsProps) => {
         </svg>
       </Button>
       <Button {...commonButtonProps} onClick={handleHCenter}>
-        <svg width="100%" height="100%" preserveAspectRatio="none" viewBox="0 0 100 100" style={{ fill: 'white' }}>
+        <svg height='100%' preserveAspectRatio="none" viewBox="0 0 100 100" style={{ fill: 'white' }}>
           <path
             fill="inherit"
             fillOpacity="0.2"
@@ -110,7 +110,7 @@ const ArrangeControls = (props: IArrangeControlsProps) => {
         </svg>
       </Button>
       <Button {...commonButtonProps} onClick={handleVCenter}>
-        <svg width="100%" height="100%" preserveAspectRatio="none" viewBox="0 0 100 100" style={{ fill: 'white' }}>
+        <svg height="100%" preserveAspectRatio="none" viewBox="0 0 100 100" style={{ fill: 'white' }}>
           <path
             fill="inherit"
             fillOpacity="0.2"

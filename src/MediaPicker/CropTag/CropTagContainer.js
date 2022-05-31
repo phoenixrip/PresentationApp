@@ -31,6 +31,7 @@ export default class CropTagContainer extends Component {
       fontSize: 12,
       fontFamily: 'Arial',
       fill: 'white',
+      objectCaching: false
     }))
     fabric.Image.fromURL(selectedImageOption.largeImageURL, (img) => {
       this.img = img
@@ -66,7 +67,8 @@ export default class CropTagContainer extends Component {
       stroke: 'rgba(0, 0, 0, 0.75)',
       strokeWidth: 1,
       selectable: false,
-      evented: false
+      evented: false,
+      objectCaching: false
     }
     this.top = new fabric.Rect(bgRectSettings)
     this.right = new fabric.Rect(bgRectSettings)
@@ -83,7 +85,8 @@ export default class CropTagContainer extends Component {
       strokeWidth: 2,
       selectable: true,
       originX: 'center', originY: 'center',
-      strokeDashArray: [4, 4]
+      strokeDashArray: [4, 4],
+      objectCaching: false
     })
     this.fabricCanvas
       .add(this.cropRect)

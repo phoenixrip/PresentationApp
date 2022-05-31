@@ -18,3 +18,14 @@
     }
   }
 }
+
+.pathCommandsPanel{
+  :global {
+    .ant-collapse-content {
+      .ant-collapse-content-box{
+        padding: 4px;
+      }
+    }
+  }
+  
+}

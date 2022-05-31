@@ -72,7 +72,6 @@ class RenderEngine {
 
 class SceneController {
   /**
-   * 
    * @param {RenderEngine} re 
    * @param {number} sceneIndex 
    * @param {Array<import('../Types/ProjectDataTypes').SceneType>} scenesArray 

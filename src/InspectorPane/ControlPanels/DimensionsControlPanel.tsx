@@ -7,6 +7,7 @@ import { faLock, faUnlock, faLockOpen, faRotateLeft, faRotateRight, faRepeat, fa
 
 import { EquationInput } from "../EquationInput";
 import { UseFaIcon } from "../../Utils/UseFaIcon";
+import { SkinnyNumberInput } from "../SkinnyNumberInput";
 
 interface Props {
 	selection: any | undefined
@@ -22,7 +23,7 @@ const DimensionsControlPanel = ({ selection }: Props) => {
 	return (
 		<>
 			<Row align="middle">
-				<Col span={2} style={{ position: "relative" }}>
+				{/* <Col span={2} style={{ position: "relative" }}>
 					<UseFaIcon icon={aspectRatioLocked ? faLock : faLockOpen}
 						style={{ cursor: "pointer" }}
 						onClick={() => {
@@ -30,8 +31,45 @@ const DimensionsControlPanel = ({ selection }: Props) => {
 							setAspectRatioLocked(!aspectRatioLocked)
 						}}
 					/>
-				</Col>
-				<Col span={22}>
+				</Col> */}
+				<Col>
+					<Row>
+						<Col span={12}>
+							<InputNumber
+								addonBefore="x"
+								value={selection.left}
+								onChange={(e: any) => {
+									setOnFabricObject(selection, { left: parseInt(e) })
+								}}
+							/>
+							{/* <EquationInput
+								size={context.state.antdSize}
+								addonBefore="x"
+								min={-1000}
+								max={1000}
+								precision={0}
+								value={selection.left}
+								onChange={(e: any) => { setOnFabricObject(selection, { left: e.value }) }}
+							/> */}
+						</Col>
+						<Col span={12}>
+							<InputNumber
+								addonBefore="y"
+								value={selection.top}
+								onChange={(e: any) => {
+									setOnFabricObject(selection, { top: parseInt(e) })
+								}}
+							/>
+							{/* <EquationInput
+								size={context.state.antdSize}
+								addonBefore="y"
+								min={-1000}
+								max={1000}
+								precision={0}
+								value={selection.top}
+								onChange={(e: any) => { setOnFabricObject(selection, { top: e.value }) }} /> */}
+						</Col>
+					</Row>
 					<Row>
 						<Col span={12}>
 							<EquationInput
@@ -51,19 +89,6 @@ const DimensionsControlPanel = ({ selection }: Props) => {
 						<Col span={12}>
 							<EquationInput
 								size={context.state.antdSize}
-								addonBefore="x"
-								min={-1000}
-								max={1000}
-								precision={0}
-								value={selection.left}
-								onChange={(e: any) => { setOnFabricObject(selection, { left: e.value }) }}
-							/>
-						</Col>
-					</Row>
-					<Row>
-						<Col span={12}>
-							<EquationInput
-								size={context.state.antdSize}
 								addonBefore="h"
 								min={0}
 								max={1000}
@@ -76,19 +101,9 @@ const DimensionsControlPanel = ({ selection }: Props) => {
 								}}
 							/>
 						</Col>
-						<Col span={12}>
-							<EquationInput
-								size={context.state.antdSize}
-								addonBefore="y"
-								min={-1000}
-								max={1000}
-								precision={0}
-								value={selection.top}
-								onChange={(e: any) => { setOnFabricObject(selection, { top: e.value }) }} />
-						</Col>
 					</Row>
 				</Col>
-			</Row >
+			</Row>
 
 			<Row align="middle" style={{ marginTop: "20px" }}>
 				<Col span={14}>
@@ -100,6 +115,7 @@ const DimensionsControlPanel = ({ selection }: Props) => {
 							<EquationInput
 								size={context.state.antdSize}
 								addonAfter="°"
+								addonBefore={<UseFaIcon icon={faRotate} />}
 								min={-360}
 								max={360}
 								precision={0}
@@ -156,6 +172,17 @@ const DimensionsControlPanel = ({ selection }: Props) => {
 				</Col>
 			</Row>
 
+			{selection?.type === 'CRect' &&
+				<Row>
+					<InputNumber
+						min={0}
+						addonBefore='cornerRad'
+						value={selection.rx || 0}
+						onChange={newRx => setOnFabricObject(selection, { rx: newRx, ry: newRx })}
+					/>
+					{/* <InputNumber addonBefore='ry' value={selection.ry || 0} onChange={newRy => setOnFabricObject(selection, { ry: newRy })} /> */}
+				</Row>
+			}
 			{/* Locking movements */}
 			{/* <Row style={{ marginTop: "20px" }}>
 				<Col span={6}>

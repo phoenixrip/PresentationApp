@@ -4,13 +4,12 @@ import { CustomImageObject } from './CustomFabricObjects/CustomImageObject'
 import { CustomMediaObject } from './CustomFabricObjects/CustomMediaObject'
 import { FakeGroup } from './CustomFabricObjects/FakeGroup'
 import { BodyTextbox } from './CustomFabricObjects/BodyTextbox'
-import { createCustomControls } from './fabricCustomControls'
 import { CRect } from './CustomFabricObjects/CRect'
+import { LinearGradientControls } from './CustomControls/LinearGradient'
+import { EditablePath } from './CustomFabricObjects/EditablePath'
 
 function setFabricDefaults() {
   // All object default settings
-  createCustomControls()
-
   fabric.Object.prototype.set({
     cornerStyle: 'circle',
     transparentCorners: false,
@@ -18,12 +17,13 @@ function setFabricDefaults() {
     cornerStrokeColor: '#fff',
     borderColor: '#70ABFF',
     lockScalingFlip: true,
-    paintFirst: "stroke",
-    setUserName: "",
+    // paintFirst: "stroke",
     includeDefaultValues: false,
+    setUserName: "",
     strokeWidth: 0,
   })
 
+  // Custom additions for only the editor
 
   fabric.Object.prototype.controls = {
     ...fabric.Object.prototype.controls,
@@ -32,6 +32,37 @@ function setFabricDefaults() {
   fabric.Textbox.prototype.controls = {
     ...fabric.Textbox.prototype.controls,
     mtr: new fabric.Control({ visible: false })
+  }
+
+  // Custom run on deselect object to reset editingstate and controls 
+  fabric.Object.prototype.onDeselect = function (obj) {
+    if (this.editingType === 'fill') {
+      this.exitFillEditingMode(false)
+    }
+    this.resetControls()
+  }
+
+  fabric.Object.prototype.resetControls = function () {
+    this.hasBorders = fabric.Object.prototype.hasBorders
+    this.cornerColor = fabric.Object.prototype.cornerColor
+    this.cornerSize = fabric.Object.prototype.cornerSize
+    this.controls = fabric.Object.prototype.controls
+    return this
+  }
+
+  fabric.Object.prototype.handleDeleteKeyPress = function () {
+    if (this.editingType === 'fill') {
+      alert('delete pressed in fill editing mode')
+      return true
+    }
+    // return true if delete press has been handled and used
+    let handledByObjectProto = false
+    if (this._handleDeleteKeyPress) {
+      handledByObjectProto = this._handleDeleteKeyPress()
+    }
+    if (handledByObjectProto) return true
+    // return false if the object has nothing to apply the delete keypress to
+    return false
   }
 
   fabric.Object.prototype.getAnimatableValues = function () {
@@ -48,7 +79,10 @@ function setFabricDefaults() {
         'scaleX',
         'scaleY',
         'opacity',
-        'visible'
+        'visible',
+        'rx',
+        'ry',
+        'strokeWidth'
       ]
     )
     return object
@@ -105,6 +139,34 @@ function setFabricDefaults() {
     this.canvas?.requestRenderAll()
     return this
   }
+
+  fabric.Object.prototype.hoveredControl = null
+  fabric.Object.hoveringControlKey = false
+  fabric.Object.selectedControlKeys = []
+
+  // Monkey patch in a stable cornerHover
+  fabric.Object.prototype._findTargetCorner = (function (originFunction) {
+    return function (pointer, forTouch) {
+      const currentHoveringControlKey = originFunction.call(this, pointer, forTouch)
+      this.handleNewControlHoverState.call(this, currentHoveringControlKey)
+      return currentHoveringControlKey
+    }
+  })(fabric.Object.prototype._findTargetCorner)
+
+  fabric.Object.prototype.handleNewControlHoverState = function (newControlHoverState) {
+    if (newControlHoverState === this.hoveringControlKey) return
+    this.hoveringControlKey = newControlHoverState
+    const newlyHoveredControl = this.controls[this.hoveringControlKey]
+    if (newlyHoveredControl) {
+      this.hoveredControl = newlyHoveredControl
+    } else {
+      this.hoveredControl = null
+    }
+    this.canvas.requestRenderAll()
+  }
+  // CUSTOM CONTROLS AND STATES FOR FILL EDITORS
+  addFillEditControls()
+  EditablePath()
 
   FakeGroup()
   CustomImageObject()
@@ -221,6 +283,105 @@ function setFabricDefaults() {
     }
   })
 
+}
+
+function addFillEditControls() {
+  fabric.Object.prototype.handleChangeFillMode = function ({ location, index = null, newValue }) {
+    if (typeof index !== 'number') {
+      this[location] = newValue
+      return this.enterFillEditingMode({
+        location,
+        index
+      })
+    }
+  }
+
+  fabric.Object.prototype.enterFillEditingMode = function ({
+    location = 'fill',
+    index = null
+  }) {
+    this?.exitCurrentEditingType?.()
+    this.activeStopIndex = null
+    this.editingType = 'fill'
+    this.editingLocation = location
+    this.editingIndex = index
+    this.activeFillValue = this.getActiveEditingFill()
+    if (this.activeFillValue?.type === 'linear') {
+      new LinearGradientControls(this)
+    } else {
+      this.controls = fabric.Object.prototype.controls
+    }
+    this.canvas?.requestRenderAll()
+    return this
+  }
+
+  fabric.Object.prototype.exitFillEditingMode = function (render = true) {
+    if (!this.editingType) return
+    this.activeStopIndex = null
+    this.editingType = ''
+    delete this.editingLocation
+    delete this.editingIndex
+    delete this.activeFillValue
+    this.controls = fabric.Object.prototype.controls
+    if (render) {
+      this.canvas?.requestRenderAll()
+    }
+  }
+
+  fabric.Object.prototype.getActiveEditingFill = function () {
+    const { editingIndex, editingLocation } = this
+    if (typeof editingIndex !== 'number') {
+      return this[editingLocation]
+    }
+  }
+
+  fabric.Object.prototype.drawControls = (function (originalFn) {
+    return function (ctx, styleOverride) {
+      if (this.editingType === 'fill') {
+        const curr = this.getActiveEditingFill()
+        if (curr?.type === 'linear') {
+          ctx.save();
+          var retinaScaling = this.canvas.getRetinaScaling(), p;
+          ctx.setTransform(retinaScaling, 0, 0, retinaScaling, 0, 0);
+          this.setCoords()
+          const gradStart = fabric.util.transformPoint(
+            { x: this.activeFillValue.coords.x1 - (this.width * .5), y: this.activeFillValue.coords.y1 - (this.height * .5) },
+            fabric.util.multiplyTransformMatrices(
+              this.canvas.viewportTransform,
+              this.calcTransformMatrix()
+            )
+          )
+          const gradEnd = fabric.util.transformPoint(
+            { x: this.activeFillValue.coords.x2 - (this.width * .5), y: this.activeFillValue.coords.y2 - (this.height * .5) },
+            fabric.util.multiplyTransformMatrices(
+              this.canvas.viewportTransform,
+              this.calcTransformMatrix()
+            )
+          )
+          ctx.beginPath()
+          ctx.moveTo(gradStart.x, gradStart.y)
+          ctx.lineTo(gradEnd.x, gradEnd.y)
+          ctx.closePath()
+          ctx.strokeStyle = 'black'
+          ctx.lineWidth = 3
+          ctx.stroke()
+          ctx.strokeStyle = 'white'
+          ctx.lineWidth = 1
+          ctx.stroke()
+          this.forEachControl(function (control, key, fabricObject) {
+            if (control.getVisibility(fabricObject, key)) {
+              p = fabricObject.oCoords[key];
+              control.render(ctx, p.x, p.y, styleOverride, fabricObject);
+            }
+          });
+          ctx.restore();
+          return this;
+        }
+      }
+      originalFn.call(this, ctx, styleOverride)
+      return this
+    }
+  })(fabric.Object.prototype.drawControls)
 }
 
 export {

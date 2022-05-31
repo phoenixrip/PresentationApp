@@ -188,7 +188,7 @@ const TextControlPanel = ({ selection, projectParaStylesController }: Props) => 
             type={s.overline ? 'primary' : 'default'}
             onClick={(e) => handleStyleChange({ overline: !s.overline })}
           >
-            <svg width='100%' height='100%' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 500">
+            <svg height='1em' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 500">
               <circle
                 cx="782.507"
                 cy="628.031"
@@ -214,9 +214,11 @@ const TextControlPanel = ({ selection, projectParaStylesController }: Props) => 
       <Row justify='space-between' align='middle'>
         <Col style={{ fontSize: dividerProps.style?.fontSize || 12 }}>Text fill</Col>
         <FillPicker
+          fillLocation='text'
           title='Para fill'
           fillValue={s.fill}
           liveObject={selection}
+          open={(selection?.editingType === 'fill' && selection.editingLocation === 'text') ? true : false}
           // color={s.fill as string}
           onChange={handleTextFillColorChange}
         />

@@ -20,6 +20,7 @@
     "fabric": "5.2.1",
     "grapick": "^0.1.13",
     "gsap": "^3.10.2",
+    "makerjs": "^0.17.1",
     "react": "17.0.2",
     "react-color": "^2.19.3",
     "react-colorful": "^5.5.1",

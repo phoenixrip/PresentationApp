@@ -14,7 +14,7 @@ interface ProjectSettingsTypes {
 }
 
 interface SceneType {
-  activeSceneObjects: { [key: CustomFabricObject['guid']]: CustomFabricOptions },
+  activeSceneObjects: { [key: CustomFabricObject['guid']]: Partial<CustomFabricOptions> },
   sceneSettings: {},
   animationSettings?: {}
   // undoHistory: Array<{ [key: string]: fabric.IObjectOptions }>,

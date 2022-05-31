@@ -9,11 +9,14 @@ import { UseFaIcon } from '../Utils/UseFaIcon';
 import c from './FillPicker.module.scss'
 import { LinearGradientEditor } from './LinearGradientEditor';
 import { SolidFillEditor } from './SolidFillEditor';
-
+import chroma from 'chroma-js'
 // custom css to alter the color picker appearance
 import './ColorPickerOverrides.scss'
 
 export interface IFillPickerProps {
+  open: boolean,
+  fillLocation: string,
+  fillIndex?: number,
   onChange(color: CustomFabricObject['fill']): void,
   title: string,
   fillValue: CustomFabricObject['fill'],
@@ -21,49 +24,105 @@ export interface IFillPickerProps {
 }
 
 function FillPicker(props: IFillPickerProps) {
-  const [settingsOpen, setSettingsOpen] = useState<boolean>(false)
+  // const [settingsOpen, setSettingsOpen] = useState<boolean>(false)
   const typeInfo: ICompiledFillInfo = getModeFromFillValue(props.fillValue)
+  const [cachedTypeValues, setCachedTypeValues] = useState<Record<string, CustomFabricObject['fill']>>({})
 
   function handleSettingsPopoverVisibilityChange(visible: boolean) {
-    if (!settingsOpen && visible) {
-      setSettingsOpen(visible)
-      if (typeInfo.type === 'linearGradient' && props.liveObject && props.liveObject?.enterGradientEdit) {
-        props.liveObject.enterGradientEdit()
-      }
+    if (props.open) {
+      console.log('already open', visible)
+    }
+    if (!props.open && visible) {
+      props.liveObject.enterFillEditingMode({
+        location: props.fillLocation,
+        index: props.fillIndex
+      })
+      // setSettingsOpen(visible)
     }
   }
 
   function handleChangeFillType(e: RadioChangeEvent) {
+    const { liveObject } = props
+    if (!liveObject) return
     const newFillType = e.target.value as ICompiledFillInfo['type']
+    const currentFillType = typeInfo.type
     const currentFillValue = props.fillValue
+    const isCurrentGradientType = currentFillType === 'linearGradient' || currentFillType === 'radialGradient'
+    // const cachedValueForNewType = cachedTypeValues[newFillType]
 
-    if (!currentFillValue) {
-      // Starting from nothing set
-      if (newFillType === 'solidFill') {
-        return props.onChange(`rgba(0, 0, 0, 1)`)
+    let newFillValue
+    // Create the new fill
+    if (newFillType === 'solidFill') {
+      if (isCurrentGradientType) {
+        const currFill = props.fillValue as fabric.Gradient
+        newFillValue = currFill?.colorStops?.[0].color || 'rgb(22, 22, 22)'
+      } else {
+        newFillValue = 'rgb(22, 22, 22)'
       }
-      if (newFillType === 'linearGradient') {
-        props.onChange(
-          new fabric.Gradient(getDefaultLinearGradLayout(props.liveObject, ['black', 'white']))
-        )
+    } else if (newFillType === 'linearGradient') {
+      if (isCurrentGradientType) {
+        const currFill = props.fillValue as fabric.Gradient
+        newFillValue = new fabric.Gradient({
+          type: 'linear',
+          colorStops: JSON.parse(JSON.stringify(currFill.colorStops)),
+          coords: { x1: 0, y1: 0, x2: liveObject.width, y2: liveObject.height }
+        })
+      } else if (currentFillType === 'solidFill') {
+        // create a nice gradient from current solid fill
+        newFillValue = new fabric.Gradient({
+          type: 'linear',
+          colorStops: getColorStopsFromSolidColor((currentFillValue as string)),
+          coords: { x1: 0, y1: 0, x2: liveObject.width, y2: liveObject.height }
+        })
+      } else {
+        newFillValue = new fabric.Gradient({
+          type: 'linear',
+          colorStops: colorStringsToColorStops(['rgb(22, 22, 22)', 'rgb(230, 230, 230)']),
+          coords: { x1: 0, y1: 0, x2: liveObject.width, y2: liveObject.height }
+        })
+      }
+    } else if (newFillType === 'radialGradient') {
+      const coords = { x1: liveObject.width! / 2, y1: liveObject.height! / 2, r1: liveObject.width! * .25, x2: liveObject.width! / 2, y2: liveObject.height! / 2, r2: liveObject.width! * .75 }
+      if (isCurrentGradientType) {
+        const currFill = props.fillValue as fabric.Gradient
+        newFillValue = new fabric.Gradient({
+          type: 'radial',
+          colorStops: JSON.parse(JSON.stringify(currFill.colorStops)),
+          coords,
+        })
+      } else if (currentFillType === 'solidFill') {
+        // create a nice gradient from current solid fill
+        newFillValue = new fabric.Gradient({
+          type: 'radial',
+          colorStops: getColorStopsFromSolidColor((currentFillValue as string)),
+          coords
+        })
+      } else {
+        newFillValue = new fabric.Gradient({
+          type: 'radial',
+          colorStops: colorStringsToColorStops(['rgb(22, 22, 22)', 'rgb(230, 230, 230)']),
+          coords
+        })
       }
     }
-    if (typeInfo.type === 'solidFill') {
-      const currentFillString = currentFillValue as string
-      if (newFillType === 'linearGradient') {
-        props.onChange(
-          new fabric.Gradient(getDefaultLinearGradLayout(props.liveObject, [currentFillString, currentFillString]))
-        )
-      }
-    }
+    return liveObject.handleChangeFillMode({
+      location: props.fillLocation,
+      index: props.fillIndex,
+      newValue: newFillValue
+    })
   }
 
   function handleSolidFillOnChange(color: string) {
     props.onChange(color)
   }
 
+  function handleMouseDownWithinPopoverContents(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
+    console.log('handleMouseDownWithinPopoverContents')
+    e.stopPropagation()
+  }
+
   return (
-    <div className={c.container}>
+    <div className={c.container} onMouseDown={handleMouseDownWithinPopoverContents}>
       <div className={c.typeInfo}>
         {typeInfo.hudDisplayValue}
       </div>
@@ -75,7 +134,7 @@ function FillPicker(props: IFillPickerProps) {
         </div>
       </div>
       <Popover
-        visible={settingsOpen}
+        visible={props.open}
         trigger={['click']}
         placement='topRight'
         overlayClassName={c.customOverlayContents}
@@ -114,11 +173,18 @@ function FillPicker(props: IFillPickerProps) {
                 liveObject={props.liveObject}
               />
             }
+            {
+              typeInfo.type === 'radialGradient' &&
+              <LinearGradientEditor
+                fillValue={props.fillValue as fabric.Gradient}
+                liveObject={props.liveObject}
+              />
+            }
           </div>
         )}>
         <div className={classNames(
           c.settingsHUDButton,
-          !settingsOpen ? c.idle : c.active,
+          !props.open ? c.idle : c.active,
         )}>
           <UseFaIcon icon={faGear} />
         </div>
@@ -141,7 +207,6 @@ interface ICompiledFillInfo {
 
 function getModeFromFillValue(fillValue: IObjectOptions['fill']) {
   if (typeof fillValue === 'string') {
-    console.log({ fillValue })
     return {
       type: 'solidFill' as CompiledFillType.solidFill,
       hudDisplayValue: fillValue,
@@ -149,14 +214,20 @@ function getModeFromFillValue(fillValue: IObjectOptions['fill']) {
     }
   }
   if (fillValue instanceof fabric.Gradient) {
+    const stopVals = [...fillValue.colorStops!]
+      .sort((a, b) => a.offset - b.offset)
+      .map(stopObject => `${stopObject.color} ${stopObject.offset * 100}%`)
+      .join(',')
     if (fillValue?.type === 'linear') {
-      const stopVals = [...fillValue.colorStops!]
-        .sort((a, b) => a.offset - b.offset)
-        .map(stopObject => `${stopObject.color} ${stopObject.offset * 100}%`)
-        .join(',')
       return {
         type: 'linearGradient' as CompiledFillType.linearGradient,
         hudDisplayValue: `#Linear`,
+        previewBackgroundCss: `linear-gradient(to right, ${stopVals})`
+      }
+    } else {
+      return {
+        type: 'radialGradient' as CompiledFillType.radialGradient,
+        hudDisplayValue: `#Radial`,
         previewBackgroundCss: `linear-gradient(to right, ${stopVals})`
       }
     }
@@ -174,6 +245,14 @@ function getDefaultLinearGradLayout(liveObject: CustomFabricObject, colors: stri
     coords: { x1: 0, y1: 0, x2: liveObject.width, y2: liveObject.height },
     colorStops: colorStringsToColorStops(colors)
   }
+}
+
+function getColorStopsFromSolidColor(color: string) {
+  const currColor = chroma(color)
+  const currHue = currColor.get('hsl.h')
+  const secondHue = ((currHue + 35 > 360) ? currHue - 35 : currHue + 35)
+  const secondColor = currColor.set('hsl.h', secondHue).css()
+  return colorStringsToColorStops([color, secondColor])
 }
 
 function colorStringsToColorStops(colors: string[]) {

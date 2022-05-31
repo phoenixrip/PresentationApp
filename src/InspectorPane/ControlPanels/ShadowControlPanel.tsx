@@ -63,9 +63,11 @@ const ShadowControlPanel = ({ selection }: Props) => {
 						</Col>
 					</Row>
 					<FillPicker
+						fillLocation='shadow'
 						title='Shadow fill'
 						liveObject={selection}
 						fillValue={selection.shadow.color || "rgba(10,10,10,0.5)"}
+						open={(selection?.editingType === 'fill' && selection.editingLocation === 'shadow') ? true : false}
 						onChange={(color: string) => setOnFabricObject(selection, { shadow: { ...selection.shadow, color } })}
 					/>
 				</>

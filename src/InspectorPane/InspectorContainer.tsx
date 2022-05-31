@@ -15,6 +15,7 @@ import c from './InspectorContainer.module.scss'
 import { UseFaIcon } from "../Utils/UseFaIcon";
 import { faMinus, faPlus } from "@fortawesome/free-solid-svg-icons";
 import { ArrangeControls } from "./ArrangeControls";
+import { PathCommandsContainer } from "./ControlPanels/PathCommands/PathCommandsContainer";
 
 interface Props {
   availiableCustomInteractionModules: {
@@ -26,8 +27,14 @@ const InspectorContainer = ({ availiableCustomInteractionModules, projectParaSty
   const context: EditorContextTypes = useContext(editorContext);
   const selection: any | undefined = context.fabricCanvas?.getActiveObject()
 
+  function handleInspectorPaneMouseDown(e: MouseEvent) {
+    if (selection && selection.editingType === 'fill') {
+      selection.exitFillEditingMode()
+    }
+    console.log('handleInspectorPaneMouseDown', e)
+  }
   return (
-    <div className={c.container}>
+    <div className={c.container} onMouseDown={handleInspectorPaneMouseDown}>
       {!selection &&
         <p>Project inspector pane</p>
       }
@@ -96,9 +103,7 @@ const InspectorContainer = ({ availiableCustomInteractionModules, projectParaSty
                 Image settings
                 <Button onClick={e => {
                   //@ts-ignore
-                  var filter = new fabric.Image.filters.Blur({
-                    blur: 0.5
-                  });
+                  var filter = new fabric.Image.filters.Blur({ blur: 0.5 })
                   selection.filters.push(filter)
                   selection.applyFilters()
                   // var filter = new fabric.Image.filters.Convolute({
@@ -112,6 +117,14 @@ const InspectorContainer = ({ availiableCustomInteractionModules, projectParaSty
                 }}>
                   BLUR
                 </Button>
+              </Panel>
+            }
+            {
+              selection.type === 'path' &&
+              <Panel header='Path commands' key='pathCommands' className={c.pathCommandsPanel}>
+                <PathCommandsContainer
+                  selection={selection as fabric.Path}
+                />
               </Panel>
             }
           </Collapse>

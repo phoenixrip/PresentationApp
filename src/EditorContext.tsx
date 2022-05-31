@@ -40,6 +40,7 @@ interface EditorContextTypes {
   addText: Function,
   addSVG: Function,
   addRect: Editor['addRect'],
+  addRoundedRect: Editor['addRoundedRect'],
   addImageFromPicker: Editor['addImageFromPicker'],
   handleInitCustomInteractionComponent: Editor['handleInitCustomInteractionComponent'],
   addLabel: Function,

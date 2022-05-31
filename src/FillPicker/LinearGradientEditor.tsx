@@ -67,6 +67,7 @@ function LinearGradientEditor(props: ILinearGradientEditorProps) {
 
   function handleDraggingColorStop(stopIndex: number, e: React.DragEvent<HTMLDivElement>) {
     const newOffset = getRelativeOffset(e)
+    console.log({ newOffset })
     //@ts-ignore
     props.fillValue.colorStops[stopIndex].offset = newOffset
     context.fabricCanvas?.requestRenderAll()
@@ -112,7 +113,7 @@ function LinearGradientEditor(props: ILinearGradientEditorProps) {
     const activeStopIndex = props.liveObject?.activeStopIndex ?? 0
     if (props?.liveObject !== undefined) {
       //@ts-ignore
-      props.liveObject.fill.colorStops[activeStopIndex].color = color
+      props.liveObject.activeFillValue.colorStops[activeStopIndex].color = color
       props.liveObject.dirty = true
       props.liveObject.canvas?.requestRenderAll()
       setTick(!tick)
@@ -157,7 +158,7 @@ function LinearGradientEditor(props: ILinearGradientEditorProps) {
       </div>
       <div className={c.fullColorPickerContainer}>
         <RgbaStringColorPicker
-          color={props?.fillValue?.colorStops?.[activeStopIndex].color || 'rgba(0, 0, 0, 1)'}
+          color={props?.fillValue?.colorStops?.[activeStopIndex]?.color || 'rgba(0, 0, 0, 1)'}
           onChange={handleChangeStopColor}
         />
       </div>

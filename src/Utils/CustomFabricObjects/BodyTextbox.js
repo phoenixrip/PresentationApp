@@ -53,7 +53,6 @@ function BodyTextbox() {
         })
     },
     calcTextHeight: function () {
-      console.log('calcTextHeight')
       let lineHeight
       let height = 0
       let currentParaIndex = -1
@@ -1172,7 +1171,7 @@ function BodyTextbox() {
         obj.path = this.path.toObject();
       }
       return obj;
-    },
+    }
   })
 
   fabric.BodyTextbox.fromObject = function (object, callback) {

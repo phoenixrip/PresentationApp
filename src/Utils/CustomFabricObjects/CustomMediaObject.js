@@ -36,14 +36,6 @@ function CustomMediaObject() {
     getSrc() {
       return this._element.src;
     },
-    // setSrc: function (src, options) {
-    //   var _this = this;
-    //   return fabric.util.loadImage(src, options).then(function (img) {
-    //     _this.setElement(img, options);
-    //     _this._setWidthHeight();
-    //     return _this;
-    //   });
-    // },
     toObject: function (propertiesToInclude) {
       const objectRep = {
         ...this.callSuper('toObject', propertiesToInclude),
@@ -52,7 +44,14 @@ function CustomMediaObject() {
       }
       return objectRep
     },
-    controls: { ...fabric.Rect.prototype.controls }
+    controls: { ...fabric.Rect.prototype.controls },
+    resetControls: function () {
+      this.hasBorders = fabric.CustomMediaObject.prototype.hasBorders
+      this.cornerColor = fabric.CustomMediaObject.prototype.cornerColor
+      this.cornerSize = fabric.CustomMediaObject.prototype.cornerSize
+      this.controls = fabric.CustomMediaObject.prototype.controls
+      return this
+    }
   })
   fabric.CustomMediaObject.async = true
   fabric.CustomMediaObject.fromObject = function (_object, callback) {
@@ -86,7 +85,6 @@ function CustomMediaObject() {
   });
 
   function changeHeight(eventData, transform, x, y) {
-    console.log('changeHeight')
     var target = transform.target, localPoint = fabric.controlsUtils.getLocalPoint(transform, transform.originX, transform.originY, x, y),
       strokePadding = target.strokeWidth / (target.strokeUniform ? target.scaleX : 1),
       multiplier = isTransformCentered(transform) ? 2 : 1,
@@ -96,7 +94,6 @@ function CustomMediaObject() {
 
     const scaledGridHeight = target.canvas.gridHeight / target.scaleY
     const snap = Math.round(useNewHeight / scaledGridHeight) * scaledGridHeight
-
 
     target.set('height', snap);
     //  check against actual target width in case `newWidth` was rejected

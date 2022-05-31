@@ -10,22 +10,20 @@ const stopControlSize = {
 const selectedStopColor = '#2389ff'
 
 class CustomControl extends fabric.Control {
-
 }
 
 class LinearGradientControls {
   // fabricObject: CustomFabricObject
   /**
-   * 
    * @param {CustomFabricObject} fabricObject 
-   * @param {string} location 
+  //  * @param {string} location 
    */
   constructor(
     fabricObject, /* : CustomFabricObject */
-    location
+    // location
   ) {
     this.fabricObject = fabricObject
-    this.location = location
+    // this.location = location
     this.fabricObject.linearGradientControls = this
     this.initControls()
   }
@@ -57,8 +55,7 @@ class LinearGradientControls {
     })
 
     // Create individual controls for each stop
-
-    fabricObject.fill.colorStops
+    fabricObject.activeFillValue.colorStops
       .forEach((stopObject, stopIndex) => {
         fabricObject.controls[`stop:${stopIndex}`] = this.createControlForStop(stopObject, stopIndex)
       })
@@ -73,7 +70,14 @@ class LinearGradientControls {
       positionHandler: getLinearEndPointPositionController(1),
       actionHandler: getLinearEndPointActionHandler(1),
       mouseDownHandler(eventData, transformData, x, y) {
-        console.trace('mouseDown on grab1')
+        const fabricObject = transformData.target
+        const { index: firstIndex } = fabricObject.activeFillValue.colorStops
+          .reduce((acc, curr, i) => {
+            if (curr.offset < acc.offset) return { offset: curr.offset, index: i }
+            return acc
+          }, { offset: 1, index: null })
+        fabricObject.activeStopIndex = firstIndex
+        fabricObject.canvas.requestRenderAll()
       }
     })
     fabricObject.controls['grab2'] = new fabric.Control({
@@ -84,7 +88,15 @@ class LinearGradientControls {
       positionHandler: getLinearEndPointPositionController(2),
       actionHandler: getLinearEndPointActionHandler(2),
       mouseDownHandler(eventData, transformData, x, y) {
-        console.trace('mouseDown on grab2')
+        const fabricObject = transformData.target
+        const { index: lastIndex } = fabricObject.activeFillValue.colorStops
+          .reduce((acc, curr, i) => {
+            if (curr.offset > acc.offset) return { offset: curr.offset, index: i }
+            return acc
+          }, { offset: 0, index: null })
+        fabricObject.activeStopIndex = lastIndex
+        fabricObject.canvas.requestRenderAll()
+        console.log('mouseDown on grab2', { lastIndex })
       }
     })
     fabricObject.canvas.requestRenderAll()
@@ -95,10 +107,10 @@ class LinearGradientControls {
       stopIndex,
       ...stopControlSize,
       positionHandler(dim, finalMatrix, fabricObject) {
-        const c = fabricObject.fill.coords
+        const c = fabricObject.activeFillValue.coords
         const xDist = c.x2 - c.x1
         const yDist = c.y2 - c.y1
-        const stopOffset = fabricObject.fill.colorStops[this.stopIndex].offset
+        const stopOffset = fabricObject.activeFillValue.colorStops[this.stopIndex].offset
         const point = new fabric.Point(
           c.x1 + (xDist * stopOffset) - fabricObject.width / 2,
           c.y1 + (yDist * stopOffset) - fabricObject.height / 2
@@ -110,7 +122,7 @@ class LinearGradientControls {
           ))
       },
       render(ctx, left, top, styleOverride, fabricObject) {
-        const stop = fabricObject.fill.colorStops[this.stopIndex]
+        const stop = fabricObject.activeFillValue.colorStops[this.stopIndex]
         const stopColor = stop.color
         const isSelected = fabricObject.activeStopIndex === this.stopIndex
         // console.log({ stopColor })
@@ -127,29 +139,44 @@ class LinearGradientControls {
         ctx.fillStyle = stopColor || styleOverride.cornerColor || fabricObject.cornerColor;
         ctx.strokeStyle = isSelected ? selectedStopColor : (styleOverride.cornerStrokeColor || fabricObject.cornerStrokeColor);
         size = xSize;
-        // this is still wrong
-        ctx.lineWidth = 1;
+
+        // Fill the stop color
         ctx.beginPath();
         ctx.arc(myLeft, myTop, size / 2, 0, 2 * Math.PI, false);
-        ctx[methodName]();
-        if (stroke) {
-          ctx.stroke();
-        }
+        ctx.fill();
+
+        // Thick outter line
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = isSelected ? selectedStopColor : 'black'
+        ctx.stroke();
+
+        // Thin inner line
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'white'
+        ctx.stroke();
+        // if (stroke) {
+        //   ctx.stroke();
+        // }
         ctx.restore();
       },
       actionHandler(eventData, transform, x, y) {
-        const localPoint = fabric.controlsUtils.getLocalPoint(transform, transform.originX, transform.originY, x, y)
-        const fabricObject = transform.target
-        const c = fabricObject.fill.coords
+        var o = transform.target,
+          mouseLocalPosition = o.toLocalPoint(new fabric.Point(x, y), 'center', 'center'),
+          polygonBaseSize = getObjectSizeWithStroke(o),
+          size = o._getTransformedDimensions(0, 0);
+        const newX = mouseLocalPosition.x * polygonBaseSize.x / size.x + (o.width / 2)
+        const newY = mouseLocalPosition.y * polygonBaseSize.y / size.y + (o.height / 2)
+        const localPoint = new fabric.Point(newX, newY)
+        const c = o.activeFillValue.coords
         const nearestPoint = calcNearestPointOnLine(
           { x: c.x1, y: c.y1 },
           { x: c.x2, y: c.y2 },
           localPoint
         )
         const mappedToOffset = clamp(0, 1, mapRange(c.x1, c.x2, 0, 1, nearestPoint.x))
-        fabricObject.fill.colorStops[stopIndex].offset = mappedToOffset
-        fabricObject.dirty = true
-        fabricObject.canvas.requestRenderAll()
+        o.activeFillValue.colorStops[stopIndex].offset = mappedToOffset
+        o.dirty = true
+        o.canvas.requestRenderAll()
       },
       mouseDownHandler: function (eventData, transformData, x, y) {
         const fabricObject = transformData.target
@@ -167,8 +194,8 @@ export {
 
 function getLinearEndPointPositionController(pointIndex) {
   return function (dim, finalMatrix, fabricObject) {
-    const x = (fabricObject.fill.coords[`x${pointIndex}`]) - fabricObject.width / 2
-    const y = (fabricObject.fill.coords[`y${pointIndex}`]) - fabricObject.height / 2
+    const x = (fabricObject.activeFillValue.coords[`x${pointIndex}`]) - fabricObject.width / 2
+    const y = (fabricObject.activeFillValue.coords[`y${pointIndex}`]) - fabricObject.height / 2
     return fabric.util.transformPoint(
       { x: x, y: y },
       fabric.util.multiplyTransformMatrices(
@@ -179,23 +206,40 @@ function getLinearEndPointPositionController(pointIndex) {
   }
 }
 
-function getLinearEndPointActionHandler(pointIndex) {
+/* function getLinearEndPointActionHandler(pointIndex) {
   return function (eventData, transform, x, y) {
     const localPoint = fabric.controlsUtils.getLocalPoint(transform, transform.originX, transform.originY, x, y)
     const fabricObject = transform.target
-    fabricObject.fill.coords[`x${pointIndex}`] = localPoint.x
-    fabricObject.fill.coords[`y${pointIndex}`] = localPoint.y
+    fabricObject.activeFillValue.coords[`x${pointIndex}`] = localPoint.x
+    fabricObject.activeFillValue.coords[`y${pointIndex}`] = localPoint.y
     fabricObject.dirty = true
     fabricObject.canvas?.requestRenderAll()
   }
+} */
+function getLinearEndPointActionHandler(pointIndex) {
+  return function (eventData, transform, x, y) {
+    var o = transform.target,
+      mouseLocalPosition = o.toLocalPoint(new fabric.Point(x, y), 'center', 'center'),
+      polygonBaseSize = getObjectSizeWithStroke(o),
+      size = o._getTransformedDimensions(0, 0);
+    const newX = mouseLocalPosition.x * polygonBaseSize.x / size.x + (o.width / 2)
+    const newY = mouseLocalPosition.y * polygonBaseSize.y / size.y + (o.height / 2)
+    o.activeFillValue.coords[`x${pointIndex}`] = newX
+    o.activeFillValue.coords[`y${pointIndex}`] = newY
+    o.dirty = true
+    o.canvas?.requestRenderAll()
+  }
+}
+
+function getObjectSizeWithStroke(object) {
+  var stroke = new fabric.Point(
+    object.strokeUniform ? 1 / object.scaleX : 1,
+    object.strokeUniform ? 1 / object.scaleY : 1
+  ).multiply(object.strokeWidth);
+  return new fabric.Point(object.width + stroke.x, object.height + stroke.y);
 }
 
 function renderGradLineHandle(ctx, left, top, styleOverride, fabricObject) {
-  // const isSelected = fabricObject.__corner === this.key
-  // styleOverride = {
-  //   cornerColor: 'white',
-  //   cornerStrokeColor: 'black'
-  // }
   var xSize = this.sizeX,
     ySize = this.sizeY,
     transparentCorners = typeof styleOverride.transparentCorners !== 'undefined' ?
@@ -207,7 +251,6 @@ function renderGradLineHandle(ctx, left, top, styleOverride, fabricObject) {
   ctx.save();
   ctx.fillStyle = 'white'
   ctx.strokeStyle = 'black'
-
   // this is still wrong
   ctx.lineWidth = 1;
   ctx.beginPath();

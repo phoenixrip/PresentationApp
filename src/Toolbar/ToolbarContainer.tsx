@@ -32,7 +32,7 @@ const ToolbarContainer = () => {
             >Rect</Menu.Item>
             <Menu.Item key={'roundedRect'}
               icon={<RoundedRect />}
-              onClick={e => context.addRect()}
+              onClick={e => context.addRoundedRect()}
             >Rounded rect</Menu.Item>
             <Menu.Item key={'ellipse'}
               icon={<EllipseIcon />}

@@ -79,7 +79,6 @@ class ProjectController extends Component<Props, State> {
   }
 
   handleFabricMountConfirmed = async () => {
-    // console.log('handleFabricMountConfirmed')
     if (!this.liveEditor || !this.liveEditor?.fabricCanvas) return null
     // Load all the project global objects into the fabricCanvas
     const json: any = {
@@ -112,12 +111,11 @@ class ProjectController extends Component<Props, State> {
 
   handleKeyDown = (e: KeyboardEvent) => {
     if (document.activeElement !== document.body) {
-      // console.log('not firing editor key down listeners: ', document.activeElement)
+      console.log('not firing editor key down listeners: ', document.activeElement)
       return
     }
     e.preventDefault()
     e.stopPropagation()
-    // console.log(document.activeElement)
     // TODO: Some library that handles multiples for us
     console.log(`Key pressed: ${e.key}, meta: ${e.metaKey}, control: ${e.ctrlKey}`)
     switch (e.key) {
@@ -140,10 +138,23 @@ class ProjectController extends Component<Props, State> {
     } else {
       switch (e.key) {
         case 'Backspace':
-          return this.handleRequestDeleteObject(e)
+          return this.handleBackspace(e)
+        case 'Escape':
+          return this.handleEscape(e)
         default:
           return null
       }
+    }
+  }
+
+  handleEscape = (e: KeyboardEvent) => {
+    const fabricCanvas = this.liveEditor?.fabricCanvas
+    if (!fabricCanvas) return
+    const hasSelection = fabricCanvas.getActiveObject()
+    if (hasSelection) {
+      fabricCanvas
+        .discardActiveObject()
+        .requestRenderAll()
     }
   }
 
@@ -179,8 +190,19 @@ class ProjectController extends Component<Props, State> {
   setActiveSceneIndex = (sceneIndex: number) => this.handleSetNewActiveScene(sceneIndex)
 
   handleSetNewActiveScene = (newActiveSceneIndex: number, saveExisting = true) => {
+    console.log('handleSetNewActiveScene', { newActiveSceneIndex, saveExisting, asi: this.activeSceneIndex })
     const fabricCanvas = this.liveEditor?.fabricCanvas
     if (!fabricCanvas) return
+    if (newActiveSceneIndex === this.activeSceneIndex) {
+      // We've clicked on the currently selected scene
+      console.log(`// We've clicked on the currently selected scene`)
+      if (fabricCanvas.getActiveObject()) {
+        fabricCanvas.discardActiveObject().requestRenderAll()
+        return
+      } else {
+        return
+      }
+    }
     let leavingSceneObject: SceneType | null = null
     if (saveExisting) {
       leavingSceneObject = this.getSaveableCurrentSceneState()
@@ -356,6 +378,17 @@ class ProjectController extends Component<Props, State> {
       }, customAttributesToIncludeInFabricCanvasToObject)
     }
   }
+  handleBackspace = (e: KeyboardEvent) => {
+    const activeObject: CustomFabricObject = (this.liveEditor?.fabricCanvas?.getActiveObject() as CustomFabricObject)
+    if (!activeObject) return
+    const hasObjectHandledDelete = activeObject.handleDeleteKeyPress()
+    if (hasObjectHandledDelete) {
+      return
+    }
+    // const isObjectInEditingMode = activeObject?.isFillEditing
+    console.log('hasObjectHandledDelete: ', hasObjectHandledDelete)
+    return this.handleRequestDeleteObject(e)
+  }
   handleRequestDeleteObject = (e: KeyboardEvent) => {
     const confirm = Modal.confirm({
       content: 'Are you sure you wish to delete this item?',
@@ -430,7 +463,7 @@ class ProjectController extends Component<Props, State> {
     const useAsCustom = (objectToAdd as CustomFabricObject)
     const { activeSceneIndexs } = this.state
     if (this.activeSceneIndex === null) return Modal.warn({ content: 'No active scene index to add to' })
-    console.log('handle add single object to current scene')
+    // console.log('handle add single object to current scene')
 
     const newGUID = uuidv4()
     // Apply custom settings to object
@@ -457,12 +490,6 @@ class ProjectController extends Component<Props, State> {
     this.liveEditor?.fabricCanvas?.setActiveObject(useAsCustom)
     this.liveEditor?.fabricCanvas?.requestRenderAll()
     return objectToAdd
-  }
-
-  handleAddGroupedObjects = (addGroupedObjectsConfig: IAddGroupedObjectsConfig) => {
-    console.log({
-      addGroupedObjectsConfig
-    })
   }
 
   handleDuplicateScene = (newPosition = 'below') => {
